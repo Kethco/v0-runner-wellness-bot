@@ -13,11 +13,18 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function InstallPrompt() {
+  const [mounted, setMounted] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [deviceType, setDeviceType] = useState<DeviceType>("unknown");
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
+  // Ensure component only runs on client
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     // Check if already installed (standalone mode)
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches
       || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -78,7 +85,7 @@ export function InstallPrompt() {
       window.removeEventListener("appinstalled", handleAppInstalled);
       mediaQuery.removeEventListener("change", handleDisplayModeChange);
     };
-  }, []);
+  }, [mounted]);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
