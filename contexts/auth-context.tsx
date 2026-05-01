@@ -24,6 +24,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Skip auth initialization if not in secure context (prevents "operation is insecure" error)
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const supabase = createClient();
 

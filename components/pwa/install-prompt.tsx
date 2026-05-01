@@ -22,13 +22,26 @@ export function InstallPrompt() {
     if (typeof window === "undefined") return;
     if (window.location.hostname.includes("v0.dev")) return;
     if (window.location.hostname.includes("vusercontent")) return;
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
     
-    // Check if dismissed recently
-    const dismissed = localStorage.getItem("pwa-install-dismissed");
-    if (dismissed) {
-      const dismissedTime = parseInt(dismissed);
-      if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) return;
+    // Check for secure context (required for localStorage on some mobile browsers)
+    if (!window.isSecureContext) return;
+    
+    try {
+      if (window.matchMedia("(display-mode: standalone)").matches) return;
+    } catch {
+      // matchMedia may fail in some contexts
+    }
+    
+    // Check if dismissed recently (with try-catch for localStorage)
+    try {
+      const dismissed = localStorage.getItem("pwa-install-dismissed");
+      if (dismissed) {
+        const dismissedTime = parseInt(dismissed);
+        if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) return;
+      }
+    } catch {
+      // localStorage may not be available
+      return;
     }
 
     // Detect device
@@ -46,7 +59,11 @@ export function InstallPrompt() {
   }, [mounted]);
 
   const handleDismiss = () => {
-    localStorage.setItem("pwa-install-dismissed", Date.now().toString());
+    try {
+      localStorage.setItem("pwa-install-dismissed", Date.now().toString());
+    } catch {
+      // localStorage may not be available
+    }
     setShowPrompt(false);
   };
 
