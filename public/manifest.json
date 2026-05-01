@@ -1,0 +1,34 @@
+{
+  "name": "Runner Wellness",
+  "short_name": "RunWellness",
+  "description": "Track your wellness, optimize your training. Daily check-ins for sleep, energy, soreness, and readiness.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#e85c4a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "fitness", "sports"],
+  "shortcuts": [
+    {
+      "name": "Check In",
+      "short_name": "Check In",
+      "description": "Start your daily wellness check-in",
+      "url": "/?action=checkin",
+      "icons": [{ "src": "/icons/icon-192x192.jpg", "sizes": "192x192" }]
+    }
+  ]
+}
