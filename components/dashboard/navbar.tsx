@@ -15,7 +15,7 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
+import { useAuth } from "@/contexts/auth-context";
 
 const navLinks = [
   { label: "Dashboard", href: "/" },
@@ -26,14 +26,12 @@ const navLinks = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
   
-  // Temporarily use static values until auth is properly set up
-  const userName = "Runner";
-  const userInitials = "RW";
-  
-  const handleSignOut = () => {
-    window.location.href = "/login";
-  };
+  const userName = user?.user_metadata?.first_name || user?.email?.split("@")[0] || "Runner";
+  const userInitials = user?.user_metadata?.first_name 
+    ? `${user.user_metadata.first_name[0]}${user.user_metadata.last_name?.[0] || ""}`.toUpperCase()
+    : userName.slice(0, 2).toUpperCase();
   
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-card/80 backdrop-blur-xl border-b border-border">
@@ -158,7 +156,7 @@ export function Navbar() {
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="text-destructive cursor-pointer"
-              onClick={handleSignOut}
+              onClick={() => signOut()}
             >
               Sign out
             </DropdownMenuItem>
