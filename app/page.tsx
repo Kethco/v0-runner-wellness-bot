@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Navbar } from "@/components/dashboard/navbar";
 import { WeeklyChart } from "@/components/dashboard/weekly-chart";
 import { WellnessMetrics } from "@/components/dashboard/wellness-metrics";
@@ -7,8 +10,24 @@ import { AICoachCard } from "@/components/dashboard/ai-coach-card";
 import { CheckInHistory } from "@/components/dashboard/checkin-history";
 import { GoalCard } from "@/components/dashboard/goal-card";
 import { TrendsChart } from "@/components/dashboard/trends-chart";
+import { useAuth } from "@/contexts/auth-context";
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const [greeting, setGreeting] = useState("Hello");
+  
+  useEffect(() => {
+    setGreeting(getGreeting());
+  }, []);
+  
+  const userName = user?.user_metadata?.first_name || "Runner";
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -18,7 +37,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground mb-2">
-              Good morning, Jordan
+              {greeting}, {userName}
             </p>
             <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-none">
               27.3
