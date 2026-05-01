@@ -60,7 +60,7 @@ export default function Dashboard() {
           {/* Right Column - Sidebar */}
           <div className="lg:col-span-4 space-y-6">
             {/* Check-in Card & Streak */}
-            <CheckInCard />
+            <CheckInCard streak={12} hasCheckedInToday={false} />
 
             {/* Wellness Metrics */}
             <WellnessMetrics />

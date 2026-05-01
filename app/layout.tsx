@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { AuthProvider } from '@/contexts/auth-context'
-import { InstallPrompt } from '@/components/pwa/install-prompt'
+
 import './globals.css'
 
 const inter = Inter({ 
@@ -54,10 +53,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192x192.jpg" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
-        <AuthProvider>
-          {children}
-          <InstallPrompt />
-        </AuthProvider>
+        {children}
         {process.env.NODE_ENV === 'production' && (
           <script
             dangerouslySetInnerHTML={{
