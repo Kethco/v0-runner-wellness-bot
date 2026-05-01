@@ -26,11 +26,21 @@ export function InstallPrompt() {
     // Check for secure context (required for localStorage on some mobile browsers)
     if (!window.isSecureContext) return;
     
+    // Check if already running as installed PWA
+    // iOS Safari uses navigator.standalone
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isIOSStandalone = (navigator as any).standalone === true;
+    
+    // Other browsers use display-mode: standalone
+    let isStandalone = false;
     try {
-      if (window.matchMedia("(display-mode: standalone)").matches) return;
+      isStandalone = window.matchMedia("(display-mode: standalone)").matches;
     } catch {
       // matchMedia may fail in some contexts
     }
+    
+    // If running as installed app, don't show prompt
+    if (isIOSStandalone || isStandalone) return;
     
     // Check if dismissed recently (with try-catch for localStorage)
     try {
