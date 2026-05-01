@@ -84,9 +84,9 @@ export default function Dashboard() {
             <span className="text-sm font-bold tracking-tight text-primary">WELLNESS</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-            <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-            <a href="#" className="hover:text-foreground transition-colors">Help</a>
+            <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a>
+            <a href="/terms" className="hover:text-foreground transition-colors">Terms</a>
+            <a href="/help" className="hover:text-foreground transition-colors">Help</a>
           </div>
           <p className="text-xs text-muted-foreground">
             AI assistant — NOT a doctor. Consult your coach for health decisions.

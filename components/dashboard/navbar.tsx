@@ -107,9 +107,11 @@ export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps
         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
           <Bell className="w-5 h-5" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hidden sm:flex">
-          <Settings className="w-5 h-5" />
-        </Button>
+        <a href="/settings">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hidden sm:flex">
+            <Settings className="w-5 h-5" />
+          </Button>
+        </a>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -129,7 +131,12 @@ export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps
             <DropdownMenuItem asChild>
               <a href="/coach">Coach Dashboard</a>
             </DropdownMenuItem>
-            <DropdownMenuItem>Help</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a href="/settings">Settings</a>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a href="/help">Help</a>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">Sign out</DropdownMenuItem>
           </DropdownMenuContent>

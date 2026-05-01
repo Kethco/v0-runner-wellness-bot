@@ -406,14 +406,14 @@ export default function ProfilePage() {
 
           {/* Legal Links */}
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground justify-center pt-4">
-            <a href="#" className="hover:text-foreground flex items-center gap-1">
+            <a href="/privacy" className="hover:text-foreground flex items-center gap-1">
               Privacy Policy <ExternalLink className="w-3 h-3" />
             </a>
-            <a href="#" className="hover:text-foreground flex items-center gap-1">
+            <a href="/terms" className="hover:text-foreground flex items-center gap-1">
               Terms of Service <ExternalLink className="w-3 h-3" />
             </a>
-            <a href="#" className="hover:text-foreground flex items-center gap-1">
-              Data Usage <ExternalLink className="w-3 h-3" />
+            <a href="/help" className="hover:text-foreground flex items-center gap-1">
+              Help Center <ExternalLink className="w-3 h-3" />
             </a>
           </div>
         </div>
