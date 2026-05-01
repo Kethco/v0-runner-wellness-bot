@@ -266,9 +266,9 @@ export default function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-foreground">Auto-sync WhatsApp Data</h4>
+                  <h4 className="font-medium text-foreground">Auto-sync SMS Data</h4>
                   <p className="text-sm text-muted-foreground">
-                    Automatically sync check-ins from WhatsApp to dashboard
+                    Automatically sync check-ins from SMS to dashboard
                   </p>
                 </div>
                 <Switch

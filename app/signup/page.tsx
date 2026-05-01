@@ -14,7 +14,7 @@ const FEATURES = [
   "AI-powered training recommendations",
   "7-day trends and injury prevention alerts",
   "Connect with your coach for team insights",
-  "WhatsApp integration for easy check-ins",
+  "SMS integration for easy check-ins via toll-free number",
 ];
 
 export default function SignUpPage() {
@@ -40,7 +40,7 @@ export default function SignUpPage() {
       newErrors.email = "Please enter a valid email";
     }
     if (!formData.phone.trim()) {
-      newErrors.phone = "Phone is required for WhatsApp integration";
+      newErrors.phone = "Phone is required for SMS check-ins";
     }
     if (!formData.password) {
       newErrors.password = "Password is required";
@@ -164,7 +164,7 @@ export default function SignUpPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone (WhatsApp)</Label>
+                    <Label htmlFor="phone">Phone (for SMS check-ins)</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input

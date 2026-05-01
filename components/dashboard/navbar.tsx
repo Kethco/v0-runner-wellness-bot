@@ -100,6 +100,20 @@ export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps
                   </a>
                 );
               })}
+              <div className="border-t border-border mt-4 pt-4">
+                <a
+                  href="/login"
+                  className="px-4 py-3 text-sm font-medium tracking-wide uppercase transition-colors rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary/50 block"
+                >
+                  Login
+                </a>
+                <a
+                  href="/signup"
+                  className="px-4 py-3 text-sm font-medium tracking-wide uppercase transition-colors rounded-lg text-primary hover:bg-primary/10 block"
+                >
+                  Sign Up
+                </a>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
@@ -138,7 +152,9 @@ export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps
               <a href="/help">Help</a>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Sign out</DropdownMenuItem>
+            <DropdownMenuItem asChild className="text-destructive">
+              <a href="/login">Sign out</a>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

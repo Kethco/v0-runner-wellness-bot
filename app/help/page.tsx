@@ -35,7 +35,7 @@ const faqs = [
     questions: [
       {
         q: "How do I start my daily check-in?",
-        a: "You can start a check-in by clicking the 'Start Check-in' button on your dashboard, or by sending 'checkin' to our WhatsApp bot. The check-in takes about 30 seconds and asks about your sleep, energy, soreness, and readiness.",
+        a: "You can start a check-in by clicking the 'Start Check-in' button on your dashboard, or by texting 'checkin' to our toll-free SMS number. The check-in takes about 30 seconds and asks about your sleep, energy, soreness, and readiness.",
       },
       {
         q: "What time should I do my morning check-in?",
@@ -189,8 +189,8 @@ export default function HelpPage() {
                 <MessageCircle className="w-5 h-5 text-emerald-500" />
               </div>
               <div>
-                <h3 className="font-medium text-foreground">WhatsApp Commands</h3>
-                <p className="text-xs text-muted-foreground">Bot reference</p>
+                <h3 className="font-medium text-foreground">SMS Commands</h3>
+                <p className="text-xs text-muted-foreground">Text command reference</p>
               </div>
             </CardContent>
           </Card>

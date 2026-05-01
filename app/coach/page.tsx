@@ -193,7 +193,7 @@ export default function CoachDashboard() {
               <DialogHeader>
                 <DialogTitle>Invite an Athlete</DialogTitle>
                 <DialogDescription>
-                  Send an invitation via WhatsApp to add them to your team.
+                  Send an invitation via SMS to add them to your team.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">

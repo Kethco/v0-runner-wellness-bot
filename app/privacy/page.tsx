@@ -56,7 +56,7 @@ export default function PrivacyPage() {
                 <h4 className="font-medium text-foreground mb-2">Account Information</h4>
                 <ul className="list-disc list-inside text-muted-foreground space-y-1">
                   <li>Name and email address</li>
-                  <li>Phone number (for WhatsApp integration)</li>
+                  <li>Phone number (for SMS check-ins)</li>
                   <li>Age and gender (optional, for personalized insights)</li>
                 </ul>
               </div>

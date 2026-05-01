@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [loginMethod, setLoginMethod] = useState<"email" | "whatsapp">("email");
+  const [loginMethod, setLoginMethod] = useState<"email" | "sms">("email");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,7 +21,7 @@ export default function LoginPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [whatsappSent, setWhatsappSent] = useState(false);
+  const [smsSent, setSmsSent] = useState(false);
 
   const handleEmailLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +45,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleWhatsAppLogin = (e: React.FormEvent) => {
+  const handleSmsLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
     
@@ -56,7 +56,7 @@ export default function LoginPage() {
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length === 0) {
-      setWhatsappSent(true);
+      setSmsSent(true);
     }
   };
 
@@ -82,15 +82,15 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={loginMethod} onValueChange={(v) => setLoginMethod(v as "email" | "whatsapp")}>
+            <Tabs value={loginMethod} onValueChange={(v) => setLoginMethod(v as "email" | "sms")}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="email" className="gap-2">
                   <Mail className="w-4 h-4" />
                   Email
                 </TabsTrigger>
-                <TabsTrigger value="whatsapp" className="gap-2">
+                <TabsTrigger value="sms" className="gap-2">
                   <Smartphone className="w-4 h-4" />
-                  WhatsApp
+                  SMS
                 </TabsTrigger>
               </TabsList>
 
@@ -140,11 +140,11 @@ export default function LoginPage() {
                 </form>
               </TabsContent>
 
-              <TabsContent value="whatsapp">
-                {!whatsappSent ? (
-                  <form onSubmit={handleWhatsAppLogin} className="space-y-4">
+              <TabsContent value="sms">
+                {!smsSent ? (
+                  <form onSubmit={handleSmsLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="phone">WhatsApp Number</Label>
+                      <Label htmlFor="phone">Phone Number</Label>
                       <div className="relative">
                         <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -160,12 +160,12 @@ export default function LoginPage() {
                     </div>
 
                     <Button type="submit" className="w-full gap-2">
-                      Send Login Link
+                      Send Login Code
                       <ArrowRight className="w-4 h-4" />
                     </Button>
 
                     <p className="text-xs text-muted-foreground text-center">
-                      We&apos;ll send a one-time login link to your WhatsApp
+                      We&apos;ll send a one-time login code via SMS to your phone
                     </p>
                   </form>
                 ) : (
@@ -173,14 +173,14 @@ export default function LoginPage() {
                     <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Smartphone className="w-8 h-8 text-emerald-500" />
                     </div>
-                    <h3 className="font-semibold text-foreground mb-2">Check your WhatsApp</h3>
+                    <h3 className="font-semibold text-foreground mb-2">Check your SMS</h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      We sent a login link to<br />
+                      We sent a login code to<br />
                       <span className="font-medium text-foreground">{formData.phone}</span>
                     </p>
                     <Button 
                       variant="outline" 
-                      onClick={() => setWhatsappSent(false)}
+                      onClick={() => setSmsSent(false)}
                       className="w-full"
                     >
                       Use a different number

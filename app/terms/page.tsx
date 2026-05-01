@@ -70,7 +70,7 @@ export default function TermsPage() {
                 Runner Wellness provides:
               </p>
               <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                <li>Daily wellness check-in tracking via web and WhatsApp</li>
+                <li>Daily wellness check-in tracking via web and SMS</li>
                 <li>Visualization of wellness trends over time</li>
                 <li>AI-powered training recommendations and insights</li>
                 <li>Coach-athlete data sharing features</li>
