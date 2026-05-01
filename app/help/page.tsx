@@ -35,7 +35,7 @@ const faqs = [
     questions: [
       {
         q: "How do I start my daily check-in?",
-        a: "You can start a check-in by clicking the 'Start Check-in' button on your dashboard, or by texting 'checkin' to our toll-free SMS number. The check-in takes about 30 seconds and asks about your sleep, energy, soreness, and readiness.",
+        a: "You can start a check-in by clicking the 'Start Check-in' button on your dashboard, or by texting 'checkin' to +1 844 503 0386. The check-in takes about 30 seconds and asks about your sleep, energy, soreness, and readiness.",
       },
       {
         q: "What time should I do my morning check-in?",

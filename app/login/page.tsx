@@ -165,7 +165,7 @@ export default function LoginPage() {
                     </Button>
 
                     <p className="text-xs text-muted-foreground text-center">
-                      We&apos;ll send a one-time login code via SMS to your phone
+                      We&apos;ll send a one-time login code from +1 844 503 0386
                     </p>
                   </form>
                 ) : (

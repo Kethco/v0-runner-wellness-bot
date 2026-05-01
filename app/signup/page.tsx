@@ -14,7 +14,7 @@ const FEATURES = [
   "AI-powered training recommendations",
   "7-day trends and injury prevention alerts",
   "Connect with your coach for team insights",
-  "SMS integration for easy check-ins via toll-free number",
+  "SMS check-ins via +1 844 503 0386",
 ];
 
 export default function SignUpPage() {
@@ -292,7 +292,7 @@ export default function SignUpPage() {
                   </Button>
                 </Link>
                 <p className="text-xs text-muted-foreground text-center">
-                  Pro tip: Start with your first morning check-in to begin tracking your wellness!
+                  Pro tip: Text &quot;checkin&quot; to +1 844 503 0386 to start your first check-in!
                 </p>
               </CardContent>
             </Card>
