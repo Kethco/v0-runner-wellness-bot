@@ -11,7 +11,7 @@ import { TrendsChart } from "@/components/dashboard/trends-chart";
 export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar userName="Jordan" userInitials="JR" />
+      <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
         {/* Hero Section */}
@@ -60,7 +60,7 @@ export default function Dashboard() {
           {/* Right Column - Sidebar */}
           <div className="lg:col-span-4 space-y-6">
             {/* Check-in Card & Streak */}
-            <CheckInCard streak={12} hasCheckedInToday={false} />
+            <CheckInCard />
 
             {/* Wellness Metrics */}
             <WellnessMetrics />

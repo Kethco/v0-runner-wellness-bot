@@ -3,7 +3,17 @@
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    // Return null for 401 (not authenticated) - this is expected before login
+    if (res.status === 401) {
+      return null;
+    }
+    throw new Error(`API error: ${res.status}`);
+  }
+  return res.json();
+};
 
 // Check-ins
 export function useCheckins(days: number = 7) {

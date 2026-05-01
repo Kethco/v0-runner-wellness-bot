@@ -15,7 +15,7 @@ export function CheckInCard() {
   const { data: todayData } = useTodayCheckin();
   
   const streak = streakData?.current_streak ?? 0;
-  const hasCheckedInToday = todayData?.length > 0 && 
+  const hasCheckedInToday = Array.isArray(todayData) && todayData.length > 0 && 
     todayData.some((c: { is_afternoon_update: boolean }) => !c.is_afternoon_update);
 
   return (
