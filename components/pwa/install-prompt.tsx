@@ -6,13 +6,40 @@ import { Button } from "@/components/ui/button";
 
 type DeviceType = "ios" | "android" | "desktop" | "unknown";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 export function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [deviceType, setDeviceType] = useState<DeviceType>("unknown");
   const [mounted, setMounted] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    
+    // Listen for native install prompt (Android Chrome)
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+    
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    
+    // Listen for successful install
+    const handleAppInstalled = () => {
+      setShowPrompt(false);
+      setDeferredPrompt(null);
+    };
+    
+    window.addEventListener("appinstalled", handleAppInstalled);
+    
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
   }, []);
 
   useEffect(() => {
@@ -77,6 +104,20 @@ export function InstallPrompt() {
     setShowPrompt(false);
   };
 
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      // Use native install prompt on Android
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        setShowPrompt(false);
+      }
+      setDeferredPrompt(null);
+    } else {
+      handleDismiss();
+    }
+  };
+
   if (!mounted || !showPrompt) return null;
 
   return (
@@ -112,13 +153,15 @@ export function InstallPrompt() {
             <p className="text-sm text-muted-foreground">
               Install this app for quick access and offline use.
             </p>
-            <Button onClick={handleDismiss} className="w-full gap-2">
+            <Button onClick={handleInstallClick} className="w-full gap-2">
               <Download className="w-4 h-4" />
-              Add to Home Screen
+              {deferredPrompt ? "Install App" : "Add to Home Screen"}
             </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              Or tap the browser menu and select &quot;Add to Home Screen&quot;
-            </p>
+            {!deferredPrompt && (
+              <p className="text-xs text-muted-foreground text-center">
+                Tap the browser menu and select &quot;Add to Home Screen&quot;
+              </p>
+            )}
           </div>
         )}
         
