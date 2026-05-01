@@ -20,10 +20,15 @@ export function InstallPrompt() {
     // Check if already running as installed PWA (iOS)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isIOSStandalone = (navigator as any).standalone === true;
-    if (isIOSStandalone) return;
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
     
-    // Check if already running as installed PWA (Android/Desktop)
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
+    console.log("[v0] PWA Detection:", { isIOSStandalone, isStandalone });
+    
+    // Hide if running as installed PWA
+    if (isIOSStandalone || isStandalone) {
+      console.log("[v0] Running as PWA, hiding install prompt");
+      return;
+    }
     
     // Detect device type
     const ua = navigator.userAgent;
