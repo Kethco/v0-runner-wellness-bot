@@ -31,16 +31,27 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
+  // Only handle same-origin requests - skip external domains entirely
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+  
+  // Skip API requests and auth-related paths
+  const url = new URL(event.request.url);
+  if (url.pathname.startsWith('/api/') || 
+      url.pathname.startsWith('/auth/') ||
+      url.pathname.includes('supabase') ||
+      url.pathname.includes('vercel')) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
         // Clone the response
         const responseClone = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          // Only cache same-origin requests
-          if (event.request.url.startsWith(self.location.origin)) {
-            cache.put(event.request, responseClone);
-          }
+          cache.put(event.request, responseClone);
         });
         return response;
       })

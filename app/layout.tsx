@@ -58,17 +58,19 @@ export default function RootLayout({
           {children}
           <InstallPrompt />
         </AuthProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js');
-                });
-              }
-            `,
-          }}
-        />
+        {process.env.NODE_ENV === 'production' && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if ('serviceWorker' in navigator && !window.location.hostname.includes('v0.dev')) {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js');
+                  });
+                }
+              `,
+            }}
+          />
+        )}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
