@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { Activity, Settings, Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,13 +22,15 @@ interface NavbarProps {
 }
 
 const navLinks = [
-  { label: "Dashboard", href: "#", active: true },
-  { label: "Runs", href: "#" },
-  { label: "Training", href: "#" },
-  { label: "Insights", href: "#" },
+  { label: "Dashboard", href: "/" },
+  { label: "History", href: "/history" },
+  { label: "Trends", href: "/trends" },
+  { label: "Goals", href: "/goals" },
 ];
 
 export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps) {
+  const pathname = usePathname();
+  
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-card/80 backdrop-blur-xl border-b border-border">
       {/* Logo */}
@@ -43,19 +46,22 @@ export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps
 
       {/* Navigation Links */}
       <div className="hidden md:flex items-center gap-1">
-        {navLinks.map((link) => (
-          <a
-            key={link.label}
-            href={link.href}
-            className={`px-4 py-2 text-sm font-medium tracking-wide uppercase transition-colors rounded-lg ${
-              link.active
-                ? "text-foreground bg-secondary"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-            }`}
-          >
-            {link.label}
-          </a>
-        ))}
+        {navLinks.map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <a
+              key={link.label}
+              href={link.href}
+              className={`px-4 py-2 text-sm font-medium tracking-wide uppercase transition-colors rounded-lg ${
+                isActive
+                  ? "text-foreground bg-secondary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              }`}
+            >
+              {link.label}
+            </a>
+          );
+        })}
       </div>
 
       {/* User Actions */}
@@ -78,19 +84,22 @@ export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className={`px-4 py-3 text-sm font-medium tracking-wide uppercase transition-colors rounded-lg ${
-                    link.active
-                      ? "text-foreground bg-secondary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className={`px-4 py-3 text-sm font-medium tracking-wide uppercase transition-colors rounded-lg ${
+                      isActive
+                        ? "text-foreground bg-secondary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                    }`}
+                  >
+                    {link.label}
+                  </a>
+                );
+              })}
             </div>
           </SheetContent>
         </Sheet>
@@ -114,8 +123,12 @@ export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps
               <p className="text-xs text-muted-foreground">Pro Athlete</p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a href="/profile">Profile</a>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a href="/coach">Coach Dashboard</a>
+            </DropdownMenuItem>
             <DropdownMenuItem>Help</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">Sign out</DropdownMenuItem>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Play, ChevronRight, Award } from "lucide-react";
+import { Play, ChevronRight, Award, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { CheckInModal } from "./checkin-modal";
+import { AfternoonUpdateModal } from "./afternoon-update-modal";
 
 interface CheckInCardProps {
   streak?: number;
@@ -12,6 +13,7 @@ interface CheckInCardProps {
 
 export function CheckInCard({ streak = 12, hasCheckedInToday = false }: CheckInCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAfternoonModalOpen, setIsAfternoonModalOpen] = useState(false);
 
   return (
     <>
@@ -53,6 +55,28 @@ export function CheckInCard({ streak = 12, hasCheckedInToday = false }: CheckInC
           </div>
         </Card>
 
+        {/* Afternoon Update Card */}
+        {hasCheckedInToday && (
+          <Card
+            className="p-4 border-border bg-secondary cursor-pointer group hover:bg-secondary/80 transition-all"
+            onClick={() => setIsAfternoonModalOpen(true)}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest mb-0.5 text-muted-foreground">
+                  Afternoon Update
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Quick energy and soreness check
+                </p>
+              </div>
+              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <RefreshCw className="w-4 h-4 text-primary" />
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Streak Card */}
         <Card className="bg-card border-border p-4 text-center">
           <Award className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
@@ -64,6 +88,7 @@ export function CheckInCard({ streak = 12, hasCheckedInToday = false }: CheckInC
       </div>
 
       <CheckInModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <AfternoonUpdateModal open={isAfternoonModalOpen} onOpenChange={setIsAfternoonModalOpen} />
     </>
   );
 }
