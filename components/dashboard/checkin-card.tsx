@@ -5,15 +5,18 @@ import { Play, ChevronRight, Award, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { CheckInModal } from "./checkin-modal";
 import { AfternoonUpdateModal } from "./afternoon-update-modal";
+import { useStreak, useTodayCheckin } from "@/hooks/use-api";
 
-interface CheckInCardProps {
-  streak?: number;
-  hasCheckedInToday?: boolean;
-}
-
-export function CheckInCard({ streak = 12, hasCheckedInToday = false }: CheckInCardProps) {
+export function CheckInCard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAfternoonModalOpen, setIsAfternoonModalOpen] = useState(false);
+  
+  const { data: streakData } = useStreak();
+  const { data: todayData } = useTodayCheckin();
+  
+  const streak = streakData?.current_streak ?? 0;
+  const hasCheckedInToday = todayData?.length > 0 && 
+    todayData.some((c: { is_afternoon_update: boolean }) => !c.is_afternoon_update);
 
   return (
     <>

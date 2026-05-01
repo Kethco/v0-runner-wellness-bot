@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { createClient } from "@/lib/supabase/client";
 
 const FEATURES = [
   "Track sleep, energy, soreness & readiness daily",
@@ -27,6 +28,7 @@ export default function SignUpPage() {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -55,10 +57,38 @@ export default function SignUpPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      setStep("verify");
+      setIsLoading(true);
+      const supabase = createClient();
+      
+      // Extract first and last name
+      const nameParts = formData.name.trim().split(" ");
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(" ");
+      
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
+            `${window.location.origin}/auth/callback`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            phone: formData.phone,
+          },
+        },
+      });
+      
+      if (error) {
+        setErrors({ email: error.message });
+        setIsLoading(false);
+      } else {
+        setStep("verify");
+        setIsLoading(false);
+      }
     }
   };
 
@@ -211,9 +241,9 @@ export default function SignUpPage() {
                     {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
                   </div>
 
-                  <Button type="submit" className="w-full gap-2">
-                    Create Account
-                    <ArrowRight className="w-4 h-4" />
+                  <Button type="submit" className="w-full gap-2" disabled={isLoading}>
+                    {isLoading ? "Creating Account..." : "Create Account"}
+                    {!isLoading && <ArrowRight className="w-4 h-4" />}
                   </Button>
                 </form>
 

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [smsSent, setSmsSent] = useState(false);
 
-  const handleEmailLogin = (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
     
@@ -38,10 +39,20 @@ export default function LoginPage() {
     
     if (Object.keys(newErrors).length === 0) {
       setIsLoading(true);
-      // Simulate login
-      setTimeout(() => {
+      const supabase = createClient();
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+      
+      if (error) {
+        setErrors({ email: error.message });
+        setIsLoading(false);
+      } else {
         router.push("/");
-      }, 1000);
+        router.refresh();
+      }
     }
   };
 

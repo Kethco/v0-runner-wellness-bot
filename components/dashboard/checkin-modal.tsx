@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Moon, Smile, Zap, Activity, Target, ChevronLeft, Check } from "lucide-react";
+import { Moon, Smile, Zap, Activity, Target, ChevronLeft, Check, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { useCreateCheckin, type CheckinData } from "@/hooks/use-api";
+import { mutate } from "swr";
 
 interface CheckInModalProps {
   open: boolean;
@@ -80,6 +82,8 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { trigger: createCheckin } = useCreateCheckin();
 
   const step = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
@@ -98,18 +102,45 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
     }, 300);
   };
 
-  const handleComplete = () => {
-    setIsComplete(true);
-    console.log("[v0] Check-in submitted:", { ...answers, notes });
+  const handleComplete = async () => {
+    setIsSubmitting(true);
     
-    setTimeout(() => {
-      onOpenChange(false);
-      // Reset state
-      setCurrentStep(0);
-      setAnswers({});
-      setNotes("");
-      setIsComplete(false);
-    }, 2000);
+    // Map answers to API format
+    const sleepMap: Record<string, number> = { "Poor": 1, "OK": 2, "Good": 4, "Great": 5 };
+    const feelingMap: Record<string, string> = { "Low": "tired", "Fine": "okay", "Good": "good", "Great": "great" };
+    const sorenessMap: Record<string, number> = { "None": 1, "Mild": 2, "Moderate": 3, "High": 5 };
+    const readinessMap: Record<string, number> = { "Yes": 5, "Maybe": 3, "No": 1 };
+    
+    const checkinData: CheckinData = {
+      sleep_rating: sleepMap[answers.sleep] || 3,
+      feeling: (feelingMap[answers.feeling] as CheckinData["feeling"]) || "okay",
+      energy: parseInt(answers.energy) || 3,
+      soreness: sorenessMap[answers.soreness] || 1,
+      readiness: readinessMap[answers.readiness] || 3,
+      notes: notes || undefined,
+      is_afternoon_update: false,
+    };
+    
+    try {
+      await createCheckin(checkinData);
+      // Revalidate related data
+      mutate("/api/checkins?days=7");
+      mutate("/api/streak");
+      mutate("/api/trends?days=7");
+      setIsComplete(true);
+      
+      setTimeout(() => {
+        onOpenChange(false);
+        setCurrentStep(0);
+        setAnswers({});
+        setNotes("");
+        setIsComplete(false);
+        setIsSubmitting(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to submit check-in:", error);
+      setIsSubmitting(false);
+    }
   };
 
   const handleBack = () => {

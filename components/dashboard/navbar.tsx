@@ -15,11 +15,8 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-
-interface NavbarProps {
-  userName?: string;
-  userInitials?: string;
-}
+import { useAuth } from "@/contexts/auth-context";
+import { useProfile } from "@/hooks/use-api";
 
 const navLinks = [
   { label: "Dashboard", href: "/" },
@@ -28,8 +25,15 @@ const navLinks = [
   { label: "Goals", href: "/goals" },
 ];
 
-export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps) {
+export function Navbar() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
+  const { data: profile } = useProfile();
+  
+  const userName = profile?.first_name || user?.email?.split("@")[0] || "Runner";
+  const userInitials = profile?.first_name 
+    ? `${profile.first_name[0]}${profile.last_name?.[0] || ""}`.toUpperCase()
+    : userName.slice(0, 2).toUpperCase();
   
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-card/80 backdrop-blur-xl border-b border-border">
@@ -152,8 +156,11 @@ export function Navbar({ userName = "Jordan", userInitials = "JR" }: NavbarProps
               <a href="/help">Help</a>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="text-destructive">
-              <a href="/login">Sign out</a>
+            <DropdownMenuItem 
+              className="text-destructive cursor-pointer"
+              onClick={() => signOut()}
+            >
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
