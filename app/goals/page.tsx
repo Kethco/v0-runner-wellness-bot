@@ -53,8 +53,10 @@ function getWeeksUntil(dateStr: string): number {
   return Math.floor(getDaysUntil(dateStr) / 7);
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+function formatDateStatic(dateStr: string): string {
+  // Parse as local date to avoid timezone shifts
+  const date = new Date(dateStr + "T12:00:00");
+  return date.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -65,11 +67,21 @@ function formatDate(dateStr: string): string {
 export default function GoalsPage() {
   const [goals, setGoals] = useState<Goal[]>(mockGoals);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [newGoal, setNewGoal] = useState({
     distance: "",
     date: "",
     targetTime: "",
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const formatDate = (dateStr: string): string => {
+    if (!mounted) return dateStr;
+    return formatDateStatic(dateStr);
+  };
 
   const activeGoal = goals.find((g) => g.status === "active");
   const upcomingGoals = goals.filter((g) => g.status === "upcoming");
@@ -210,11 +222,11 @@ export default function GoalsPage() {
                 <div className="flex flex-col justify-center">
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div className="p-4 bg-secondary rounded-lg">
-                      <div className="text-3xl font-bold text-primary">{getDaysUntil(activeGoal.date)}</div>
+                      <div className="text-3xl font-bold text-primary" suppressHydrationWarning>{getDaysUntil(activeGoal.date)}</div>
                       <div className="text-xs text-muted-foreground uppercase tracking-wide">Days</div>
                     </div>
                     <div className="p-4 bg-secondary rounded-lg">
-                      <div className="text-3xl font-bold text-foreground">{getWeeksUntil(activeGoal.date)}</div>
+                      <div className="text-3xl font-bold text-foreground" suppressHydrationWarning>{getWeeksUntil(activeGoal.date)}</div>
                       <div className="text-xs text-muted-foreground uppercase tracking-wide">Weeks</div>
                     </div>
                   </div>
@@ -292,7 +304,7 @@ export default function GoalsPage() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <div className="text-lg font-bold text-foreground">{getDaysUntil(goal.date)}</div>
+                          <div className="text-lg font-bold text-foreground" suppressHydrationWarning>{getDaysUntil(goal.date)}</div>
                           <div className="text-xs text-muted-foreground">days</div>
                         </div>
                         <Button 
