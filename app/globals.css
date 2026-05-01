@@ -140,6 +140,28 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Mobile-friendly typography - increase base sizes on small screens */
+  @media (max-width: 640px) {
+    html {
+      font-size: 17px; /* Slightly larger base for mobile readability */
+    }
+    
+    /* Minimum readable sizes for small text */
+    .text-xs {
+      font-size: 0.8125rem !important; /* 13px instead of 12px */
+      line-height: 1.4;
+    }
+    
+    .text-sm {
+      font-size: 0.9375rem !important; /* 15px instead of 14px */
+      line-height: 1.5;
+    }
+    
+    .text-muted-foreground {
+      opacity: 0.85; /* Slightly more visible on mobile */
+    }
+  }
 }
 
 /* Custom scrollbar */

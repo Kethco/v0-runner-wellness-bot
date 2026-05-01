@@ -23,7 +23,7 @@ export function WeeklyChart() {
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">
+            <p className="text-sm md:text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">
               This Week
             </p>
             <CardTitle className="text-4xl font-black tracking-tight">
@@ -34,13 +34,13 @@ export function WeeklyChart() {
           <div className="text-right">
             <div className="inline-flex items-center gap-2 bg-secondary border border-border rounded-full px-3 py-1.5 mb-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+              <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 Week 17
               </span>
             </div>
             <div className="flex items-center gap-1 justify-end">
               <span className="text-2xl font-black text-primary">{progress}%</span>
-              <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
+              <span className="text-sm md:text-xs text-muted-foreground font-medium uppercase tracking-wide">
                 Goal
               </span>
             </div>
@@ -50,7 +50,7 @@ export function WeeklyChart() {
       <CardContent>
         {/* Progress bar */}
         <div className="mb-6">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+          <div className="flex items-center justify-between text-sm md:text-xs text-muted-foreground mb-2">
             <span>{totalMiles.toFixed(1)} mi</span>
             <span>{goalMiles} mi goal</span>
           </div>
@@ -81,7 +81,7 @@ export function WeeklyChart() {
                   <div className="w-full h-1 bg-border rounded" />
                 )}
               </div>
-              <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
+              <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
                 {d.day}
               </span>
             </div>
@@ -95,7 +95,7 @@ export function WeeklyChart() {
             .map((d, i) => (
               <div key={i} className="text-center">
                 <p className="text-sm font-black">{d.miles}mi</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">
                   {d.day}
                 </p>
               </div>

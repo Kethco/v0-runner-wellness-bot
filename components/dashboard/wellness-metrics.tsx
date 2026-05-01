@@ -55,7 +55,7 @@ export function WellnessMetrics() {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Today&apos;s Wellness
         </p>
         <div className="space-y-2">
@@ -74,7 +74,7 @@ export function WellnessMetrics() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-bold tracking-wide uppercase text-muted-foreground">
+                    <span className="text-sm md:text-xs font-bold tracking-wide uppercase text-muted-foreground">
                       {m.label}
                     </span>
                     <span className="text-sm font-black">{m.value}</span>
@@ -96,7 +96,7 @@ export function WellnessMetrics() {
       </div>
 
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Performance
         </p>
         <div className="grid grid-cols-2 gap-2">
@@ -113,7 +113,7 @@ export function WellnessMetrics() {
                 >
                   <Icon className="w-4 h-4" style={{ color: s.color }} />
                 </div>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
                   {s.label}
                 </p>
                 <p className="text-xl font-black">
