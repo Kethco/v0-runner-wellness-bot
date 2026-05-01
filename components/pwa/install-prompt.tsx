@@ -1,87 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Share, Plus, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { X, Share, Download } from "lucide-react";
 
-type DeviceType = "ios" | "android" | "desktop" | "unknown";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
+type DeviceType = "ios" | "android" | "other";
 
 export function InstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false);
-  const [deviceType, setDeviceType] = useState<DeviceType>("unknown");
-  const [mounted, setMounted] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deviceType, setDeviceType] = useState<DeviceType>("other");
 
   useEffect(() => {
-    setMounted(true);
-    
-    // Listen for native install prompt (Android Chrome)
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-    
-    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-    
-    // Listen for successful install
-    const handleAppInstalled = () => {
-      setShowPrompt(false);
-      setDeferredPrompt(null);
-    };
-    
-    window.addEventListener("appinstalled", handleAppInstalled);
-    
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-      window.removeEventListener("appinstalled", handleAppInstalled);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    
-    // Don't show in v0 preview or if already installed
+    // Only run on client
     if (typeof window === "undefined") return;
+    
+    // Skip in v0 preview
     if (window.location.hostname.includes("v0.dev")) return;
     if (window.location.hostname.includes("vusercontent")) return;
     
-    // Check for secure context (required for localStorage on some mobile browsers)
-    if (!window.isSecureContext) return;
-    
-    // Check if already running as installed PWA
-    // iOS Safari uses navigator.standalone
+    // Check if already running as installed PWA (iOS)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isIOSStandalone = (navigator as any).standalone === true;
+    if (isIOSStandalone) return;
     
-    // Other browsers use display-mode: standalone
-    let isStandalone = false;
-    try {
-      isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-    } catch {
-      // matchMedia may fail in some contexts
-    }
+    // Check if already running as installed PWA (Android/Desktop)
+    if (window.matchMedia("(display-mode: standalone)").matches) return;
     
-    // If running as installed app, don't show prompt
-    if (isIOSStandalone || isStandalone) return;
-    
-    // Check if dismissed recently (with try-catch for localStorage)
-    try {
-      const dismissed = localStorage.getItem("pwa-install-dismissed");
-      if (dismissed) {
-        const dismissedTime = parseInt(dismissed);
-        if (Date.now() - dismissedTime < 7 * 24 * 60 * 60 * 1000) return;
-      }
-    } catch {
-      // localStorage may not be available
-      return;
-    }
-
-    // Detect device
+    // Detect device type
     const ua = navigator.userAgent;
     if (/iPad|iPhone|iPod/.test(ua)) {
       setDeviceType("ios");
@@ -89,89 +33,43 @@ export function InstallPrompt() {
     } else if (/android/i.test(ua)) {
       setDeviceType("android");
       setShowPrompt(true);
-    } else {
-      setDeviceType("desktop");
-      setShowPrompt(true);
     }
-  }, [mounted]);
+    // Don't show on desktop
+  }, []);
 
-  const handleDismiss = () => {
-    try {
-      localStorage.setItem("pwa-install-dismissed", Date.now().toString());
-    } catch {
-      // localStorage may not be available
-    }
-    setShowPrompt(false);
-  };
-
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      // Use native install prompt on Android
-      await deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        setShowPrompt(false);
-      }
-      setDeferredPrompt(null);
-    } else {
-      handleDismiss();
-    }
-  };
-
-  if (!mounted || !showPrompt) return null;
+  if (!showPrompt) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-card border-t border-border shadow-lg animate-in slide-in-from-bottom duration-300">
-      <button 
-        onClick={handleDismiss}
-        className="absolute top-3 right-3 p-1 text-muted-foreground hover:text-foreground"
-      >
-        <X className="w-5 h-5" />
-      </button>
-      
-      <div className="max-w-md mx-auto">
-        <h3 className="font-semibold text-foreground mb-2">Install Runner Wellness</h3>
-        
-        {deviceType === "ios" && (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Add this app to your home screen for quick access:
-            </p>
-            <ol className="text-sm text-muted-foreground space-y-1 ml-4">
-              <li className="flex items-center gap-2">
-                1. Tap <Share className="w-4 h-4 inline text-primary" /> Share
-              </li>
-              <li className="flex items-center gap-2">
-                2. Scroll and tap <Plus className="w-4 h-4 inline text-primary" /> Add to Home Screen
-              </li>
-            </ol>
-          </div>
-        )}
-        
-        {deviceType === "android" && (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Install this app for quick access and offline use.
-            </p>
-            <Button onClick={handleInstallClick} className="w-full gap-2">
-              <Download className="w-4 h-4" />
-              {deferredPrompt ? "Install App" : "Add to Home Screen"}
-            </Button>
-            {!deferredPrompt && (
-              <p className="text-xs text-muted-foreground text-center">
-                Tap the browser menu and select &quot;Add to Home Screen&quot;
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-t border-border safe-area-inset-bottom">
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3 flex-1">
+          {deviceType === "ios" ? (
+            <>
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                <Share className="w-4 h-4 text-primary" />
+              </div>
+              <p className="text-sm">
+                Tap <Share className="w-4 h-4 inline mx-1 text-primary" /> then <span className="font-medium">&quot;Add to Home Screen&quot;</span>
               </p>
-            )}
-          </div>
-        )}
-        
-        {deviceType === "desktop" && (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Install this app for quick access. Look for the install icon in your browser&apos;s address bar.
-            </p>
-          </div>
-        )}
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                <Download className="w-4 h-4 text-primary" />
+              </div>
+              <p className="text-sm">
+                <span className="font-medium">Install App</span> from browser menu
+              </p>
+            </>
+          )}
+        </div>
+        <button 
+          onClick={() => setShowPrompt(false)}
+          className="p-2 text-muted-foreground hover:text-foreground"
+          aria-label="Dismiss"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

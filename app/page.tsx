@@ -29,7 +29,7 @@ export default function Dashboard() {
   
   const userName = user?.user_metadata?.first_name || "Runner";
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
