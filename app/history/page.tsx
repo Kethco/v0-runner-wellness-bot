@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Navbar } from "@/components/dashboard/navbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,8 +95,16 @@ export default function HistoryPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
+    // Use ISO date format during SSR, locale format after mount
+    if (!mounted) return dateStr;
+    const date = new Date(dateStr + "T12:00:00");
     return date.toLocaleDateString("en-US", { 
       weekday: "short", 
       month: "short", 
