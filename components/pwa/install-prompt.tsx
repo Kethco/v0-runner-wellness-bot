@@ -22,13 +22,8 @@ export function InstallPrompt() {
     const isIOSStandalone = (navigator as any).standalone === true;
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
     
-    console.log("[v0] PWA Detection:", { isIOSStandalone, isStandalone });
-    
     // Hide if running as installed PWA
-    if (isIOSStandalone || isStandalone) {
-      console.log("[v0] Running as PWA, hiding install prompt");
-      return;
-    }
+    if (isIOSStandalone || isStandalone) return;
     
     // Detect device type
     const ua = navigator.userAgent;
