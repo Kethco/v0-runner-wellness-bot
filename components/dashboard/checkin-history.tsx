@@ -56,20 +56,13 @@ export function CheckInHistory() {
   useEffect(() => {
     async function fetchHistory() {
       try {
-        console.log("[v0] CheckInHistory - fetching...");
         const response = await fetch("/api/checkins?limit=5");
-        console.log("[v0] CheckInHistory - response status:", response.status);
-        
         if (response.ok) {
           const data = await response.json();
-          console.log("[v0] CheckInHistory - received:", data.checkins?.length, "checkins");
           setHistory(data.checkins || []);
-        } else {
-          const errorData = await response.json();
-          console.log("[v0] CheckInHistory - error:", errorData);
         }
       } catch (error) {
-        console.error("[v0] Failed to fetch check-in history:", error);
+        console.error("Failed to fetch check-in history:", error);
       } finally {
         setIsLoading(false);
       }
