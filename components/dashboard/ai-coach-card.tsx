@@ -1,28 +1,67 @@
 "use client";
 
-import { Bot, Sparkles, RefreshCw } from "lucide-react";
+import { Bot, Sparkles, RefreshCw, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/auth-context";
 
-const tips = [
-  "Based on your high energy and low soreness, today is a great day for a tempo run! Consider 4-5 miles at marathon pace.",
-  "Your sleep quality has improved this week. Keep up the consistency - aim for 7-8 hours to optimize recovery.",
-  "You've been pushing hard this week. Consider an easy recovery run or rest day to prevent overtraining.",
-  "Your readiness scores have been excellent. This is a good week to increase your weekly mileage by 10%.",
-];
+interface AICoachResponse {
+  advice: string;
+  todayCheckin: {
+    sleep: number;
+    energy: number;
+    soreness: number;
+    readiness: number;
+  } | null;
+  weeklyStats: {
+    avgSleep: string;
+    avgEnergy: string;
+    avgSoreness: string;
+    avgReadiness: string;
+    weeklyMiles: number;
+  };
+}
 
 export function AICoachCard() {
-  const [tipIndex, setTipIndex] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { user } = useAuth();
+  const [advice, setAdvice] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasCheckedIn, setHasCheckedIn] = useState<boolean | null>(null);
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setTipIndex((prev) => (prev + 1) % tips.length);
-      setIsRefreshing(false);
-    }, 500);
+  const fetchAdvice = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch("/api/ai-coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to get advice");
+      }
+      
+      const data: AICoachResponse = await response.json();
+      setAdvice(data.advice);
+      setHasCheckedIn(data.todayCheckin !== null);
+    } catch (err) {
+      setError("Unable to load coaching advice");
+      console.error("AI Coach error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchAdvice();
+    }
+  }, [user]);
 
   return (
     <Card className="bg-card border-border p-5 relative overflow-hidden">
@@ -40,7 +79,7 @@ export function AICoachCard() {
               <Sparkles className="w-3.5 h-3.5 text-primary" />
             </p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              Personalized for you
+              {hasCheckedIn === false ? "Check in for personalized advice" : "Personalized for you"}
             </p>
           </div>
         </div>
@@ -48,20 +87,36 @@ export function AICoachCard() {
           variant="ghost"
           size="icon"
           className="w-8 h-8 text-muted-foreground hover:text-foreground"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
+          onClick={fetchAdvice}
+          disabled={isLoading}
         >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
         </Button>
       </div>
 
-      <p className="text-sm text-foreground/90 leading-relaxed">
-        {tips[tipIndex]}
-      </p>
+      {isLoading && !advice ? (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <RefreshCw className="w-4 h-4 animate-spin" />
+          <span>Analyzing your wellness data...</span>
+        </div>
+      ) : error ? (
+        <div className="flex items-center gap-2 text-sm text-destructive">
+          <AlertCircle className="w-4 h-4" />
+          <span>{error}</span>
+        </div>
+      ) : advice ? (
+        <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
+          {advice}
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Complete your daily check-in to get personalized AI coaching advice based on your wellness data.
+        </p>
+      )}
 
       <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
         <p className="text-[10px] text-muted-foreground">
-          Type <span className="font-mono text-primary">/ai</span> anytime for a fresh recommendation
+          Text <span className="font-mono text-primary">ai</span> to +1 844 503 0386 anytime
         </p>
       </div>
     </Card>

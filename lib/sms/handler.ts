@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { CHECKIN_STEPS, AFTERNOON_STEPS, COMMANDS, CheckinSession } from "./types";
+import { generateShortCoachAdvice } from "@/lib/ai/coach";
 
 // Parse run command: "run 5.2" or "run 3.1 8:30" or "run 5 45min easy"
 function parseRunCommand(text: string): { miles: number; pace?: string; duration?: number; feeling?: string } | null {
@@ -64,6 +65,11 @@ export async function handleSMSMessage(phone: string, message: string): Promise<
 
     case "miles":
       return await getWeeklyMiles(supabase, profile.id);
+
+    case "ai":
+    case "coach":
+    case "advice":
+      return await getAIAdvice(supabase, profile.id, profile.first_name);
 
     case "help":
     case "?":
@@ -178,7 +184,61 @@ async function handleCheckinStep(
       ? `\n\nStreak: ${streak.current_streak} day${streak.current_streak > 1 ? "s" : ""}!`
       : "";
 
-    return `Check-in complete! Thanks for logging your wellness today.${streakMsg}\n\nText 'trends' to see your progress.`;
+    // Generate AI coaching advice based on check-in
+    let aiAdvice = "";
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name")
+        .eq("id", userId)
+        .single();
+        
+      // Get weekly data for AI
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const { data: recentCheckins } = await supabase
+        .from("checkins")
+        .select("*")
+        .eq("user_id", userId)
+        .gte("date", weekAgo.toISOString().split("T")[0]);
+      
+      const { data: recentRuns } = await supabase
+        .from("runs")
+        .select("miles")
+        .eq("user_id", userId)
+        .gte("date", weekAgo.toISOString().split("T")[0]);
+
+      const avg = (arr: (number | null | undefined)[]) => {
+        const valid = arr.filter((n): n is number => n != null);
+        return valid.length ? (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(1) : "3";
+      };
+
+      const advice = await generateShortCoachAdvice({
+        todayCheckin: {
+          sleep_quality: sessionData.data.sleepRating || 3,
+          energy_level: sessionData.data.energy || 3,
+          soreness_level: sessionData.data.soreness || 3,
+          readiness_score: sessionData.data.readiness || 3,
+          overall_feeling: sessionData.data.feeling,
+        },
+        weeklyAverages: {
+          sleep: avg(recentCheckins?.map(c => c.sleep_rating)),
+          energy: avg(recentCheckins?.map(c => c.energy)),
+          soreness: avg(recentCheckins?.map(c => c.soreness)),
+          readiness: avg(recentCheckins?.map(c => c.readiness)),
+        },
+        weeklyMiles: recentRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0,
+        totalRuns: recentRuns?.length || 0,
+        firstName: profile?.first_name || undefined,
+      });
+      
+      aiAdvice = `\n\nAI Coach: ${advice}`;
+    } catch (e) {
+      // AI advice is optional, don't fail the check-in
+      console.error("AI advice generation failed:", e);
+    }
+
+    return `Check-in complete! Thanks for logging your wellness today.${streakMsg}${aiAdvice}`;
   }
 
   // Update session with next step
@@ -353,6 +413,70 @@ async function logRun(
   response += `!\n\nWeekly total: ${weeklyTotal.toFixed(1)} miles`;
   
   return response;
+}
+
+async function getAIAdvice(
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string,
+  firstName: string | null
+): Promise<string> {
+  try {
+    // Get today's check-in
+    const today = new Date().toISOString().split("T")[0];
+    const { data: todayCheckin } = await supabase
+      .from("checkins")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("date", today)
+      .single();
+
+    // Get last 7 days of check-ins
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const { data: recentCheckins } = await supabase
+      .from("checkins")
+      .select("*")
+      .eq("user_id", userId)
+      .gte("date", weekAgo.toISOString().split("T")[0]);
+
+    // Get recent runs
+    const { data: recentRuns } = await supabase
+      .from("runs")
+      .select("miles")
+      .eq("user_id", userId)
+      .gte("date", weekAgo.toISOString().split("T")[0]);
+
+    const avg = (arr: (number | null | undefined)[]) => {
+      const valid = arr.filter((n): n is number => n != null);
+      return valid.length ? (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(1) : "N/A";
+    };
+
+    const weeklyMiles = recentRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0;
+
+    const advice = await generateShortCoachAdvice({
+      todayCheckin: todayCheckin ? {
+        sleep_quality: todayCheckin.sleep_rating || todayCheckin.sleep_quality,
+        energy_level: todayCheckin.energy || todayCheckin.energy_level,
+        soreness_level: todayCheckin.soreness || todayCheckin.soreness_level,
+        readiness_score: todayCheckin.readiness || todayCheckin.readiness_score,
+        overall_feeling: todayCheckin.feeling,
+      } : undefined,
+      weeklyAverages: {
+        sleep: avg(recentCheckins?.map(c => c.sleep_rating || c.sleep_quality)),
+        energy: avg(recentCheckins?.map(c => c.energy || c.energy_level)),
+        soreness: avg(recentCheckins?.map(c => c.soreness || c.soreness_level)),
+        readiness: avg(recentCheckins?.map(c => c.readiness || c.readiness_score)),
+      },
+      weeklyMiles,
+      totalRuns: recentRuns?.length || 0,
+      firstName: firstName || undefined,
+    });
+
+    return `AI Coach:\n\n${advice}`;
+  } catch (error) {
+    console.error("AI Coach error:", error);
+    return "Unable to generate coaching advice right now. Try again later or text 'checkin' to log your wellness first.";
+  }
 }
 
 async function getWeeklyMiles(
