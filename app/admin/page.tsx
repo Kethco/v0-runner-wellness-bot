@@ -2,305 +2,540 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Activity, Users, TrendingUp, MessageSquare, 
-  Shield, LogOut, Calendar, DollarSign,
-  ChevronRight, Search, MoreVertical
-} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import {
+  Users,
+  Activity,
+  DollarSign,
+  TrendingUp,
+  RefreshCw,
+  Search,
+  ArrowUpRight,
+  CheckCircle2,
+  UserPlus,
+  Zap,
+  CalendarDays,
+  Target,
+  Shield,
+  LogOut,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import { createClient } from "@/lib/supabase/client";
 
 interface AdminStats {
-  totalUsers: number;
-  activeToday: number;
-  totalCheckins: number;
-  proSubscribers: number;
+  overview: {
+    totalUsers: number;
+    newUsersWeek: number;
+    newUsersMonth: number;
+    activeToday: number;
+    activeWeek: number;
+    engagementRate: number;
+    weeklyEngagementRate: number;
+  };
+  activity: {
+    totalCheckins: number;
+    checkinsWeek: number;
+    totalRuns: number;
+    runsWeek: number;
+    dailyCheckins: { date: string; count: number }[];
+  };
+  teams: {
+    totalTeams: number;
+    totalCoaches: number;
+    athletesInTeams: number;
+  };
+  users: {
+    byType: { athlete: number; coach: number };
+    byPlan: Record<string, number>;
+    recent: Array<{
+      id: string;
+      email: string;
+      first_name: string;
+      last_name: string;
+      user_type: string;
+      plan: string;
+      created_at: string;
+    }>;
+  };
+  revenue: {
+    mrr: number;
+    activeSubscriptions: number;
+    subscriptionsByPlan: Record<string, number>;
+    balance: number;
+  };
 }
 
-interface UserData {
-  id: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  created_at: string;
-  is_coach: boolean;
-  current_streak: number;
-}
+const PLAN_COLORS: Record<string, string> = {
+  free_trial: "#94a3b8",
+  pro_monthly: "#3b82f6",
+  pro_annual: "#8b5cf6",
+  coach_starter: "#22c55e",
+  coach_pro: "#14b8a6",
+  coach_elite: "#f59e0b",
+};
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [stats, setStats] = useState<AdminStats>({
-    totalUsers: 0,
-    activeToday: 0,
-    totalCheckins: 0,
-    proSubscribers: 0,
-  });
-  const [users, setUsers] = useState<UserData[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  useEffect(() => {
-    checkAdminAndLoadData();
-  }, []);
-
-  const checkAdminAndLoadData = async () => {
-    const supabase = createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      router.push("/admin/login");
-      return;
+  const fetchStats = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/admin/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+        setLastUpdated(new Date());
+      }
+    } catch (e) {
+      console.error("Failed to fetch stats:", e);
     }
-
-    // Check admin status
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.is_admin) {
-      router.push("/admin/login");
-      return;
-    }
-
-    setIsAdmin(true);
-
-    // Load stats using service role through API
-    const statsRes = await fetch("/api/admin/stats");
-    if (statsRes.ok) {
-      const statsData = await statsRes.json();
-      setStats(statsData);
-    }
-
-    // Load users
-    const usersRes = await fetch("/api/admin/users");
-    if (usersRes.ok) {
-      const usersData = await usersRes.json();
-      setUsers(usersData);
-    }
-
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.is_admin) {
+        router.push("/");
+        return;
+      }
+
+      setIsAdmin(true);
+      fetchStats();
+    };
+
+    checkAdmin();
+  }, [router]);
 
   const handleSignOut = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/admin/login");
+    router.push("/login");
   };
 
-  const filteredUsers = users.filter(user => {
-    const searchLower = searchQuery.toLowerCase();
+  if (!isAdmin) {
     return (
-      user.email?.toLowerCase().includes(searchLower) ||
-      user.first_name?.toLowerCase().includes(searchLower) ||
-      user.last_name?.toLowerCase().includes(searchLower)
-    );
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Activity className="w-8 h-8 text-primary animate-pulse mx-auto mb-2" />
-          <p className="text-muted-foreground">Loading admin dashboard...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <RefreshCw className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return null;
-  }
+  const planData = stats
+    ? Object.entries(stats.users.byPlan).map(([name, value]) => ({
+        name: name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+        value,
+        color: PLAN_COLORS[name] || "#64748b",
+      }))
+    : [];
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Admin Navbar */}
-      <nav className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Shield className="w-4 h-4 text-primary-foreground" />
               </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-base font-bold tracking-tight">ADMIN</span>
-                <span className="text-base font-bold tracking-tight text-primary">PANEL</span>
+              <div>
+                <h1 className="text-lg font-bold">Admin Dashboard</h1>
+                <p className="text-xs text-muted-foreground">
+                  {lastUpdated && `Updated ${lastUpdated.toLocaleTimeString()}`}
+                </p>
               </div>
             </div>
-
-            <div className="flex items-center gap-4">
-              <a href="/" className="text-sm text-muted-foreground hover:text-foreground">
-                View App
-              </a>
+            <div className="flex items-center gap-2">
+              <Button onClick={fetchStats} disabled={isLoading} variant="outline" size="sm" className="gap-2">
+                <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <a href="/">View App</a>
+              </Button>
               <Button variant="ghost" size="sm" onClick={handleSignOut} className="gap-2">
                 <LogOut className="w-4 h-4" />
-                Sign Out
               </Button>
             </div>
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Dashboard Overview</h1>
-          <p className="text-muted-foreground">Monitor your Runner Wellness platform</p>
-        </div>
+      <main className="container mx-auto px-4 py-6">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="revenue">Revenue</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+          </TabsList>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
-              <Users className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.totalUsers}</div>
-              <p className="text-xs text-muted-foreground">Registered accounts</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Today</CardTitle>
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.activeToday}</div>
-              <p className="text-xs text-muted-foreground">Users checked in today</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Check-ins</CardTitle>
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.totalCheckins}</div>
-              <p className="text-xs text-muted-foreground">All time</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pro Subscribers</CardTitle>
-              <DollarSign className="w-4 h-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.proSubscribers}</div>
-              <p className="text-xs text-muted-foreground">Paying customers</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Users Table */}
-        <Card className="bg-card border-border">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-foreground">Users</CardTitle>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-secondary border-border"
-                />
-              </div>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <MetricCard
+                title="Total Users"
+                value={stats?.overview.totalUsers || 0}
+                icon={Users}
+                change={stats?.overview.newUsersWeek || 0}
+                changeLabel="new this week"
+                positive
+              />
+              <MetricCard
+                title="Active Today"
+                value={stats?.overview.activeToday || 0}
+                icon={Activity}
+                change={stats?.overview.engagementRate || 0}
+                changeLabel="% engagement"
+                isPercentage
+              />
+              <MetricCard
+                title="MRR"
+                value={stats?.revenue.mrr || 0}
+                icon={DollarSign}
+                isCurrency
+              />
+              <MetricCard
+                title="Active Subs"
+                value={stats?.revenue.activeSubscriptions || 0}
+                icon={CheckCircle2}
+              />
             </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead className="text-muted-foreground">User</TableHead>
-                  <TableHead className="text-muted-foreground">Email</TableHead>
-                  <TableHead className="text-muted-foreground">Type</TableHead>
-                  <TableHead className="text-muted-foreground">Streak</TableHead>
-                  <TableHead className="text-muted-foreground">Joined</TableHead>
-                  <TableHead className="text-muted-foreground w-10"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                      No users found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="border-border">
-                      <TableCell>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Daily Check-ins (7 days)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats?.activity.dailyCheckins || []}>
+                        <XAxis
+                          dataKey="date"
+                          tickFormatter={(d) => new Date(d).toLocaleDateString("en-US", { weekday: "short" })}
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip
+                          formatter={(value: number) => [value, "Check-ins"]}
+                          labelFormatter={(d) => new Date(d).toLocaleDateString()}
+                        />
+                        <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Users by Plan</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px] flex items-center justify-center">
+                    {planData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={planData}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={70}
+                            label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                            labelLine={false}
+                          >
+                            {planData.map((entry, index) => (
+                              <Cell key={index} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => [value, "Users"]} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p className="text-muted-foreground">No data</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <QuickStat icon={Target} label="Total Check-ins" value={stats?.activity.totalCheckins || 0} />
+              <QuickStat icon={Zap} label="Runs Logged" value={stats?.activity.totalRuns || 0} />
+              <QuickStat icon={Users} label="Teams Created" value={stats?.teams.totalTeams || 0} />
+              <QuickStat icon={UserPlus} label="Athletes in Teams" value={stats?.teams.athletesInTeams || 0} />
+            </div>
+          </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users" className="space-y-6">
+            <div className="grid md:grid-cols-3 gap-4">
+              <MetricCard title="Athletes" value={stats?.users.byType.athlete || 0} icon={Users} />
+              <MetricCard title="Coaches" value={stats?.users.byType.coach || 0} icon={Users} />
+              <MetricCard
+                title="Active This Week"
+                value={stats?.overview.activeWeek || 0}
+                icon={Activity}
+                change={stats?.overview.weeklyEngagementRate || 0}
+                changeLabel="% of total"
+                isPercentage
+              />
+            </div>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">Recent Signups</CardTitle>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {stats?.users.recent
+                    .filter(
+                      (u) =>
+                        !searchQuery ||
+                        u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        u.first_name?.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                      >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                            <span className="text-xs font-medium text-foreground">
-                              {user.first_name?.[0] || user.email?.[0]?.toUpperCase() || "?"}
-                            </span>
+                          <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium">
+                            {user.first_name?.[0] || user.email?.[0]?.toUpperCase()}
                           </div>
-                          <span className="font-medium text-foreground">
-                            {user.first_name ? `${user.first_name} ${user.last_name || ""}` : "No name"}
+                          <div>
+                            <p className="font-medium text-sm">
+                              {user.first_name} {user.last_name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={user.user_type === "coach" ? "default" : "secondary"}>
+                            {user.user_type}
+                          </Badge>
+                          <Badge variant="outline">{user.plan?.replace(/_/g, " ") || "free trial"}</Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(user.created_at).toLocaleDateString()}
                           </span>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={user.is_coach ? "default" : "secondary"}>
-                          {user.is_coach ? "Coach" : "Athlete"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-foreground">{user.current_streak || 0} days</span>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-card border-border">
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem>View Check-ins</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
-                              Suspend User
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                      </div>
+                    ))}
+                  {(!stats?.users.recent || stats.users.recent.length === 0) && (
+                    <p className="text-center text-muted-foreground py-8">No users yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Revenue Tab */}
+          <TabsContent value="revenue" className="space-y-6">
+            <div className="grid md:grid-cols-3 gap-4">
+              <MetricCard title="Monthly Recurring Revenue" value={stats?.revenue.mrr || 0} icon={DollarSign} isCurrency />
+              <MetricCard title="Active Subscriptions" value={stats?.revenue.activeSubscriptions || 0} icon={CheckCircle2} />
+              <MetricCard title="Stripe Balance" value={stats?.revenue.balance || 0} icon={DollarSign} isCurrency />
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Subscriptions by Plan</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {Object.entries(stats?.revenue.subscriptionsByPlan || {}).length > 0 ? (
+                  <div className="space-y-3">
+                    {Object.entries(stats?.revenue.subscriptionsByPlan || {}).map(([plan, count]) => (
+                      <div key={plan} className="flex items-center justify-between">
+                        <span className="text-sm">{plan}</span>
+                        <Badge>{count} subscribers</Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-sm">No active subscriptions yet</p>
                 )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-primary/5 border-primary/20">
+              <CardContent className="py-4">
+                <div className="flex gap-3">
+                  <TrendingUp className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-sm">Revenue Insights</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {stats?.revenue.activeSubscriptions === 0
+                        ? "No paying customers yet. Focus on user acquisition and conversion from free trials."
+                        : `You have ${stats?.revenue.activeSubscriptions} paying customers generating $${stats?.revenue.mrr.toFixed(2)}/month in recurring revenue.`}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Activity Tab */}
+          <TabsContent value="activity" className="space-y-6">
+            <div className="grid md:grid-cols-4 gap-4">
+              <MetricCard title="Check-ins Today" value={stats?.overview.activeToday || 0} icon={CalendarDays} />
+              <MetricCard title="Check-ins This Week" value={stats?.activity.checkinsWeek || 0} icon={Activity} />
+              <MetricCard title="Runs This Week" value={stats?.activity.runsWeek || 0} icon={Zap} />
+              <MetricCard title="Total Runs" value={stats?.activity.totalRuns || 0} icon={Target} />
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Check-in Activity (Last 7 Days)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats?.activity.dailyCheckins || []}>
+                      <XAxis
+                        dataKey="date"
+                        tickFormatter={(d) =>
+                          new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })
+                        }
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        formatter={(value: number) => [value, "Check-ins"]}
+                        labelFormatter={(d) => new Date(d).toLocaleDateString()}
+                      />
+                      <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Team Statistics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-4 bg-secondary/50 rounded-lg">
+                    <p className="text-2xl font-bold">{stats?.teams.totalTeams || 0}</p>
+                    <p className="text-sm text-muted-foreground">Teams</p>
+                  </div>
+                  <div className="p-4 bg-secondary/50 rounded-lg">
+                    <p className="text-2xl font-bold">{stats?.teams.totalCoaches || 0}</p>
+                    <p className="text-sm text-muted-foreground">Coaches</p>
+                  </div>
+                  <div className="p-4 bg-secondary/50 rounded-lg">
+                    <p className="text-2xl font-bold">{stats?.teams.athletesInTeams || 0}</p>
+                    <p className="text-sm text-muted-foreground">Athletes in Teams</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </main>
+    </div>
+  );
+}
+
+function MetricCard({
+  title,
+  value,
+  icon: Icon,
+  change,
+  changeLabel,
+  positive,
+  isCurrency,
+  isPercentage,
+}: {
+  title: string;
+  value: number;
+  icon: React.ElementType;
+  change?: number;
+  changeLabel?: string;
+  positive?: boolean;
+  isCurrency?: boolean;
+  isPercentage?: boolean;
+}) {
+  return (
+    <Card>
+      <CardContent className="pt-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-muted-foreground">{title}</span>
+          <Icon className="w-4 h-4 text-muted-foreground" />
+        </div>
+        <p className="text-2xl font-bold">
+          {isCurrency ? `$${value.toFixed(2)}` : value.toLocaleString()}
+        </p>
+        {change !== undefined && (
+          <div className="flex items-center gap-1 mt-1">
+            {!isPercentage && positive && <ArrowUpRight className="w-3 h-3 text-green-500" />}
+            <span className={`text-xs ${isPercentage ? "text-muted-foreground" : "text-green-500"}`}>
+              {isPercentage ? `${change}%` : `+${change}`} {changeLabel}
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function QuickStat({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
+      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+        <Icon className="w-5 h-5 text-primary" />
+      </div>
+      <div>
+        <p className="text-lg font-bold">{value.toLocaleString()}</p>
+        <p className="text-xs text-muted-foreground">{label}</p>
+      </div>
     </div>
   );
 }
