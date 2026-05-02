@@ -81,6 +81,7 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
   const [notes, setNotes] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [aiAdvice, setAiAdvice] = useState<string | null>(null);
 
   const step = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
@@ -99,21 +100,57 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
     }, 300);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     setIsSubmitting(true);
-    // For now, just show completion without API call
-    // API integration will be added back once auth is working
-    console.log("[v0] Check-in submitted:", { ...answers, notes });
-    setIsComplete(true);
     
-    setTimeout(() => {
-      onOpenChange(false);
-      setCurrentStep(0);
-      setAnswers({});
-      setNotes("");
-      setIsComplete(false);
+    try {
+      // Map answers to API format
+      const sleepMap: Record<string, number> = { "Poor": 1, "OK": 2, "Good": 3, "Great": 4 };
+      const readinessMap: Record<string, number> = { "No": 1, "Maybe": 3, "Yes": 5 };
+      const sorenessMap: Record<string, number> = { "None": 1, "Mild": 2, "Moderate": 3, "High": 4 };
+      
+      const checkinData = {
+        sleepRating: sleepMap[answers.sleep] || 3,
+        feeling: answers.feeling?.toLowerCase(),
+        energy: parseInt(answers.energy) || 3,
+        soreness: sorenessMap[answers.soreness] || 1,
+        readiness: readinessMap[answers.readiness] || 3,
+        notes: notes || null,
+      };
+
+      const response = await fetch("/api/checkins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(checkinData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("[v0] Check-in failed:", error);
+      } else {
+        const data = await response.json();
+        if (data.aiAdvice) {
+          setAiAdvice(data.aiAdvice);
+        }
+      }
+      
+      setIsComplete(true);
+      
+      setTimeout(() => {
+        onOpenChange(false);
+        setCurrentStep(0);
+        setAnswers({});
+        setNotes("");
+        setIsComplete(false);
+        setIsSubmitting(false);
+        setAiAdvice(null);
+        // Refresh the page to show updated data
+        window.location.reload();
+      }, aiAdvice ? 5000 : 2000); // Show longer if AI advice is present
+    } catch (error) {
+      console.error("[v0] Check-in error:", error);
       setIsSubmitting(false);
-    }, 2000);
+    }
   };
 
   const handleBack = () => {
@@ -134,14 +171,20 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md bg-card border-border">
-          <div className="flex flex-col items-center justify-center py-12">
+          <div className="flex flex-col items-center justify-center py-8">
             <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
               <Check className="w-8 h-8 text-primary" />
             </div>
             <h3 className="text-xl font-bold mb-2">Check-in Complete!</h3>
-            <p className="text-muted-foreground text-sm text-center">
+            <p className="text-muted-foreground text-sm text-center mb-4">
               Great job staying consistent. Keep it up!
             </p>
+            {aiAdvice && (
+              <div className="w-full bg-primary/10 border border-primary/20 rounded-lg p-4 mt-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">AI Coach Says</p>
+                <p className="text-sm text-foreground">{aiAdvice}</p>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

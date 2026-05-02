@@ -13,6 +13,7 @@ import { TrendsChart } from "@/components/dashboard/trends-chart";
 import { TrialBanner } from "@/components/dashboard/trial-banner";
 import { SMSGuideCard } from "@/components/dashboard/sms-guide-card";
 import { useAuth } from "@/contexts/auth-context";
+import useSWR from "swr";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -21,9 +22,19 @@ function getGreeting(): string {
   return "Good evening";
 }
 
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [greeting, setGreeting] = useState("Hello");
+  
+  // Fetch weekly miles and streak
+  const { data: runsData } = useSWR("/api/runs?period=week", fetcher);
+  const { data: checkinsData } = useSWR("/api/checkins?limit=1", fetcher);
+  
+  const weeklyMiles = runsData?.weeklyTotal || 0;
+  const hasCheckedInToday = checkinsData?.checkins?.[0]?.date === new Date().toISOString().split("T")[0];
+  const currentStreak = user?.user_metadata?.current_streak || 0;
   
   useEffect(() => {
     setGreeting(getGreeting());
@@ -45,7 +56,7 @@ export default function Dashboard() {
               {greeting}, {userName}
             </p>
             <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-none">
-              27.3
+              {weeklyMiles.toFixed(1)}
             </h1>
             <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mt-1">
               Miles this week
@@ -87,7 +98,7 @@ export default function Dashboard() {
             <SMSGuideCard />
 
             {/* Check-in Card & Streak */}
-            <CheckInCard streak={12} hasCheckedInToday={false} />
+            <CheckInCard streak={currentStreak} hasCheckedInToday={hasCheckedInToday} />
 
             {/* Wellness Metrics */}
             <WellnessMetrics />

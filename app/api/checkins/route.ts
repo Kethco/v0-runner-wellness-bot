@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { generateShortCoachAdvice } from "@/lib/ai/coach";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -68,5 +69,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ checkin }, { status: 201 });
+  // Generate AI coaching advice based on check-in
+  let aiAdvice = null;
+  try {
+    // Get recent data for AI
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    const { data: recentCheckins } = await supabase
+      .from("checkins")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("date", weekAgo.toISOString().split("T")[0]);
+    
+    const { data: recentRuns } = await supabase
+      .from("runs")
+      .select("miles")
+      .eq("user_id", user.id)
+      .gte("date", weekAgo.toISOString().split("T")[0]);
+    
+    const avg = (arr: (number | null | undefined)[]) => {
+      const valid = arr.filter((n): n is number => n != null);
+      return valid.length ? (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(1) : "3";
+    };
+
+    aiAdvice = await generateShortCoachAdvice({
+      todayCheckin: {
+        sleep_quality: body.sleepRating || 3,
+        energy_level: body.energy || 3,
+        soreness_level: body.soreness || 1,
+        readiness_score: body.readiness || 3,
+        overall_feeling: body.feeling,
+      },
+      weeklyAverages: {
+        sleep: avg(recentCheckins?.map(c => c.sleep_rating)),
+        energy: avg(recentCheckins?.map(c => c.energy)),
+        soreness: avg(recentCheckins?.map(c => c.soreness)),
+        readiness: avg(recentCheckins?.map(c => c.readiness)),
+      },
+      weeklyMiles: recentRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0,
+      totalRuns: recentRuns?.length || 0,
+    });
+  } catch (aiError) {
+    console.error("[v0] AI advice generation failed:", aiError);
+  }
+
+  return NextResponse.json({ checkin, aiAdvice }, { status: 201 });
 }

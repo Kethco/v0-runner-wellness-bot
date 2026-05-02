@@ -24,14 +24,29 @@ export async function handleSMSMessage(phone: string, message: string): Promise<
   const normalizedPhone = normalizePhone(phone);
   const text = message.trim().toLowerCase();
 
-  // Find user by phone
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, first_name")
-    .eq("phone", normalizedPhone)
-    .single();
+  // Find user by phone - try multiple formats
+  const phoneVariants = [
+    normalizedPhone,
+    normalizedPhone.replace("+", ""),
+    normalizedPhone.replace("+1", ""),
+    phone.replace(/\D/g, ""),
+  ];
+  
+  let profile = null;
+  for (const phoneVariant of phoneVariants) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("id, first_name")
+      .eq("phone", phoneVariant)
+      .single();
+    if (data) {
+      profile = data;
+      break;
+    }
+  }
 
   if (!profile) {
+    console.log("[SMS] No profile found for phone variants:", phoneVariants);
     return "Welcome to Runner Wellness! To get started, please sign up at our website and link your phone number. Text HELP for more info.";
   }
 
@@ -97,7 +112,22 @@ export async function handleSMSMessage(phone: string, message: string): Promise<
 }
 
 function normalizePhone(phone: string): string {
-  return phone.replace(/\D/g, "").replace(/^1/, "+1");
+  // Remove all non-digit characters
+  let digits = phone.replace(/\D/g, "");
+  
+  // Handle US numbers: ensure they start with +1
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  } else if (digits.length === 11 && digits.startsWith("1")) {
+    return `+${digits}`;
+  }
+  
+  // If already has + sign, keep it
+  if (phone.startsWith("+")) {
+    return phone.replace(/[^\d+]/g, "");
+  }
+  
+  return `+${digits}`;
 }
 
 async function startCheckin(
