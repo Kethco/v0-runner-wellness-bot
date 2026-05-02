@@ -71,8 +71,8 @@ export function Navbar() {
         {/* Mobile Menu */}
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden text-muted-foreground hover:text-foreground">
-              <Menu className="w-5 h-5" />
+            <Button variant="ghost" size="icon" className="md:hidden text-foreground hover:text-foreground">
+              <Menu className="w-6 h-6 stroke-[2.5]" />
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-64 bg-card border-border">
@@ -120,8 +120,8 @@ export function Navbar() {
           </SheetContent>
         </Sheet>
 
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-          <Bell className="w-5 h-5" />
+        <Button variant="ghost" size="icon" className="text-foreground hover:text-foreground">
+          <Bell className="w-5 h-5 md:w-5 md:h-5 stroke-[2.5] md:stroke-2" />
         </Button>
         <a href="/settings">
           <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hidden sm:flex">

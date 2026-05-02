@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, Mail, Lock, User, Phone, ArrowRight, Check } from "lucide-react";
+import { Activity, Mail, Lock, User, Phone, ArrowRight, Check, Users, PersonStanding } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,8 +18,44 @@ const FEATURES = [
   "SMS check-ins via +1 844 503 0386",
 ];
 
+type UserType = "athlete" | "coach";
+type PlanType = "free" | "pro" | "coach";
+
+const PLANS = {
+  athlete: [
+    { 
+      id: "free" as PlanType, 
+      name: "Free", 
+      price: "$0", 
+      period: "forever",
+      features: ["Daily check-ins", "7-day trends", "1 active goal", "SMS support"],
+      popular: false
+    },
+    { 
+      id: "pro" as PlanType, 
+      name: "Pro", 
+      price: "$9.99", 
+      period: "/month",
+      features: ["Everything in Free", "AI coaching tips", "Unlimited goals", "30-day analytics", "Race predictions"],
+      popular: true
+    },
+  ],
+  coach: [
+    { 
+      id: "coach" as PlanType, 
+      name: "Coach", 
+      price: "$29.99", 
+      period: "/month",
+      features: ["Team dashboard (25 athletes)", "At-risk alerts", "Team reports", "Priority support"],
+      popular: true
+    },
+  ],
+};
+
 export default function SignUpPage() {
-  const [step, setStep] = useState<"form" | "verify" | "success">("form");
+  const [step, setStep] = useState<"type" | "plan" | "form" | "verify" | "success">("type");
+  const [userType, setUserType] = useState<UserType>("athlete");
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>("free");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -78,6 +114,8 @@ export default function SignUpPage() {
             first_name: firstName,
             last_name: lastName,
             phone: formData.phone,
+            user_type: userType,
+            plan: selectedPlan,
           },
         },
       });
@@ -152,12 +190,141 @@ export default function SignUpPage() {
             </div>
           </div>
 
+          {/* Step 1: Choose user type */}
+          {step === "type" && (
+            <Card className="border-border bg-card">
+              <CardHeader className="space-y-1 text-center">
+                <CardTitle className="text-2xl font-bold">How will you use Runner Wellness?</CardTitle>
+                <CardDescription>
+                  Choose your account type to get started
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <button
+                  onClick={() => { setUserType("athlete"); setStep("plan"); }}
+                  className={`w-full p-6 rounded-lg border-2 transition-all text-left hover:border-primary ${
+                    userType === "athlete" ? "border-primary bg-primary/10" : "border-border bg-secondary"
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <PersonStanding className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold mb-1">Solo Runner</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Track your own wellness, get AI coaching tips, and improve your training
+                      </p>
+                    </div>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => { setUserType("coach"); setSelectedPlan("coach"); setStep("plan"); }}
+                  className={`w-full p-6 rounded-lg border-2 transition-all text-left hover:border-primary ${
+                    userType === "coach" ? "border-primary bg-primary/10" : "border-border bg-secondary"
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold mb-1">Coach</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Manage your team, monitor athlete wellness, and get alerts for at-risk runners
+                      </p>
+                    </div>
+                  </div>
+                </button>
+
+                <p className="text-center text-sm text-muted-foreground pt-4">
+                  Already have an account?{" "}
+                  <Link href="/login" className="text-primary hover:underline font-medium">
+                    Sign in
+                  </Link>
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 2: Choose plan */}
+          {step === "plan" && (
+            <Card className="border-border bg-card">
+              <CardHeader className="space-y-1">
+                <button 
+                  onClick={() => setStep("type")}
+                  className="text-sm text-muted-foreground hover:text-foreground mb-2 text-left"
+                >
+                  &larr; Back
+                </button>
+                <CardTitle className="text-2xl font-bold">
+                  {userType === "coach" ? "Coach Plan" : "Choose your plan"}
+                </CardTitle>
+                <CardDescription>
+                  {userType === "coach" 
+                    ? "Everything you need to manage your team" 
+                    : "Start free or unlock more features with Pro"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {PLANS[userType].map((plan) => (
+                  <button
+                    key={plan.id}
+                    onClick={() => setSelectedPlan(plan.id)}
+                    className={`w-full p-5 rounded-lg border-2 transition-all text-left relative ${
+                      selectedPlan === plan.id ? "border-primary bg-primary/10" : "border-border bg-secondary"
+                    }`}
+                  >
+                    {plan.popular && (
+                      <span className="absolute -top-3 left-4 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded">
+                        POPULAR
+                      </span>
+                    )}
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-bold">{plan.name}</h3>
+                      <div className="text-right">
+                        <span className="text-2xl font-black">{plan.price}</span>
+                        <span className="text-sm text-muted-foreground">{plan.period}</span>
+                      </div>
+                    </div>
+                    <ul className="space-y-2">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </button>
+                ))}
+
+                <Button 
+                  onClick={() => setStep("form")} 
+                  className="w-full gap-2 mt-4"
+                >
+                  Continue with {PLANS[userType].find(p => p.id === selectedPlan)?.name}
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 3: Account details */}
           {step === "form" && (
             <Card className="border-border bg-card">
               <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
+                <button 
+                  onClick={() => setStep("plan")}
+                  className="text-sm text-muted-foreground hover:text-foreground mb-2 text-left"
+                >
+                  &larr; Back
+                </button>
+                <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
                 <CardDescription>
-                  Enter your details to start your free trial
+                  {selectedPlan === "free" 
+                    ? "Enter your details to get started" 
+                    : `Enter your details for your ${selectedPlan === "pro" ? "Pro" : "Coach"} account`}
                 </CardDescription>
               </CardHeader>
               <CardContent>

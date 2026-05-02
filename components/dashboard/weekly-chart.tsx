@@ -1,15 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const weekData = [
-  { day: "MON", miles: 3.1, active: false },
-  { day: "TUE", miles: 0, active: false },
-  { day: "WED", miles: 5.4, active: false },
-  { day: "THU", miles: 4.2, active: false },
-  { day: "FRI", miles: 0, active: false },
-  { day: "SAT", miles: 8.6, active: false },
-  { day: "SUN", miles: 6.0, active: true },
+  { day: "MON", miles: 3.1, active: false, pace: "8:42", duration: "27:00", feeling: "Good" },
+  { day: "TUE", miles: 0, active: false, pace: "-", duration: "-", feeling: "Rest day" },
+  { day: "WED", miles: 5.4, active: false, pace: "8:15", duration: "44:30", feeling: "Strong" },
+  { day: "THU", miles: 4.2, active: false, pace: "8:30", duration: "35:42", feeling: "Okay" },
+  { day: "FRI", miles: 0, active: false, pace: "-", duration: "-", feeling: "Rest day" },
+  { day: "SAT", miles: 8.6, active: false, pace: "8:55", duration: "1:16:45", feeling: "Long run" },
+  { day: "SUN", miles: 6.0, active: true, pace: "9:10", duration: "55:00", feeling: "Recovery" },
 ];
 
 const maxMiles = Math.max(...weekData.map((d) => d.miles));
@@ -18,6 +19,8 @@ const goalMiles = 30;
 const progress = Math.round((totalMiles / goalMiles) * 100);
 
 export function WeeklyChart() {
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  
   return (
     <Card className="bg-card border-border">
       <CardHeader className="pb-2">
@@ -65,28 +68,60 @@ export function WeeklyChart() {
         {/* Bar chart */}
         <div className="flex items-end gap-2 h-28 mb-4">
           {weekData.map((d, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-2">
+            <div 
+              key={i} 
+              className="flex-1 flex flex-col items-center gap-2 cursor-pointer"
+              onClick={() => setSelectedDay(selectedDay === i ? null : i)}
+            >
               <div className="w-full relative h-20 flex items-end">
                 {d.miles > 0 ? (
                   <div
-                    className="w-full rounded-t-md transition-all duration-300 hover:opacity-80 cursor-pointer"
+                    className={`w-full rounded-t-md transition-all duration-300 hover:scale-105 ${selectedDay === i ? 'ring-2 ring-primary ring-offset-2 ring-offset-card' : ''}`}
                     style={{
                       height: `${(d.miles / maxMiles) * 100}%`,
-                      backgroundColor: d.active
+                      backgroundColor: d.active || selectedDay === i
                         ? "var(--primary)"
                         : `color-mix(in oklch, var(--primary) ${20 + (d.miles / maxMiles) * 40}%, transparent)`,
                     }}
                   />
                 ) : (
-                  <div className="w-full h-1 bg-border rounded" />
+                  <div className={`w-full h-1 bg-border rounded ${selectedDay === i ? 'bg-muted-foreground' : ''}`} />
                 )}
               </div>
-              <span className="text-xs font-bold tracking-widest text-muted-foreground uppercase">
+              <span className={`text-xs font-bold tracking-widest uppercase ${selectedDay === i ? 'text-primary' : 'text-muted-foreground'}`}>
                 {d.day}
               </span>
             </div>
           ))}
         </div>
+
+        {/* Selected day details */}
+        {selectedDay !== null && (
+          <div className="bg-secondary rounded-lg p-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-bold text-foreground">{weekData[selectedDay].day}</span>
+              <span className="text-xs text-muted-foreground">{weekData[selectedDay].feeling}</span>
+            </div>
+            {weekData[selectedDay].miles > 0 ? (
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Distance</p>
+                  <p className="text-lg font-bold text-foreground">{weekData[selectedDay].miles} mi</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Pace</p>
+                  <p className="text-lg font-bold text-foreground">{weekData[selectedDay].pace}/mi</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Duration</p>
+                  <p className="text-lg font-bold text-foreground">{weekData[selectedDay].duration}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No run recorded - rest and recovery day</p>
+            )}
+          </div>
+        )}
 
         {/* Milestones */}
         <div className="flex gap-4 flex-wrap">
