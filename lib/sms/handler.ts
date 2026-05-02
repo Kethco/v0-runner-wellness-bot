@@ -1,6 +1,22 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { CHECKIN_STEPS, AFTERNOON_STEPS, COMMANDS, CheckinSession } from "./types";
 
+// Parse run command: "run 5.2" or "run 3.1 8:30" or "run 5 45min easy"
+function parseRunCommand(text: string): { miles: number; pace?: string; duration?: number; feeling?: string } | null {
+  const match = text.match(/^run\s+([\d.]+)(?:\s+(\d+:\d+))?(?:\s+(\d+)min)?(?:\s+(easy|moderate|hard|race))?$/i);
+  if (!match) return null;
+  
+  const miles = parseFloat(match[1]);
+  if (isNaN(miles) || miles <= 0 || miles > 100) return null;
+  
+  return {
+    miles,
+    pace: match[2] || undefined,
+    duration: match[3] ? parseInt(match[3]) : undefined,
+    feeling: match[4]?.toLowerCase() || undefined,
+  };
+}
+
 export async function handleSMSMessage(phone: string, message: string): Promise<string> {
   const supabase = createServiceClient();
   const normalizedPhone = normalizePhone(phone);
@@ -46,12 +62,24 @@ export async function handleSMSMessage(phone: string, message: string): Promise<
     case "streak":
       return await getStreak(supabase, profile.id);
 
+    case "miles":
+      return await getWeeklyMiles(supabase, profile.id);
+
     case "help":
     case "?":
       return getHelpMessage();
 
     default:
-      return `Hi${profile.first_name ? ` ${profile.first_name}` : ""}! I didn't understand that.\n\nText one of these commands:\n• checkin - Start daily check-in\n• update - Afternoon update\n• trends - View 7-day trends\n• streak - Check your streak\n• help - All commands`;
+      // Check if it's a run command
+      if (text.startsWith("run ")) {
+        const runData = parseRunCommand(text);
+        if (runData) {
+          return await logRun(supabase, profile.id, runData, profile.first_name);
+        }
+        return "To log a run, text: run [miles]\n\nExamples:\n• run 5.2\n• run 3.1 8:30\n• run 5 45min easy";
+      }
+      
+      return `Hi${profile.first_name ? ` ${profile.first_name}` : ""}! I didn't understand that.\n\nText one of these commands:\n• checkin - Start daily check-in\n• run 5.2 - Log a run\n• trends - View 7-day trends\n• streak - Check your streak\n• help - All commands`;
   }
 }
 
@@ -287,6 +315,76 @@ async function getStreak(
   const daysToMilestone = nextMilestone - current_streak;
 
   return `Current streak: ${current_streak} day${current_streak > 1 ? "s" : ""}!\nBest streak: ${longest_streak} days\n\n${daysToMilestone} more day${daysToMilestone > 1 ? "s" : ""} to reach ${nextMilestone}!`;
+}
+
+async function logRun(
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string,
+  runData: { miles: number; pace?: string; duration?: number; feeling?: string },
+  firstName: string | null
+): Promise<string> {
+  const today = new Date().toISOString().split("T")[0];
+  
+  await supabase.from("runs").insert({
+    user_id: userId,
+    date: today,
+    miles: runData.miles,
+    pace: runData.pace,
+    duration_minutes: runData.duration,
+    feeling: runData.feeling,
+    source: "sms",
+  });
+
+  // Get weekly total
+  const startOfWeek = new Date();
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  
+  const { data: weekRuns } = await supabase
+    .from("runs")
+    .select("miles")
+    .eq("user_id", userId)
+    .gte("date", startOfWeek.toISOString().split("T")[0]);
+  
+  const weeklyTotal = weekRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || runData.miles;
+  
+  let response = `Logged ${runData.miles} miles`;
+  if (runData.pace) response += ` at ${runData.pace}/mi`;
+  if (runData.feeling) response += ` (${runData.feeling})`;
+  response += `!\n\nWeekly total: ${weeklyTotal.toFixed(1)} miles`;
+  
+  return response;
+}
+
+async function getWeeklyMiles(
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string
+): Promise<string> {
+  const startOfWeek = new Date();
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  
+  const { data: runs } = await supabase
+    .from("runs")
+    .select("date, miles, pace, feeling")
+    .eq("user_id", userId)
+    .gte("date", startOfWeek.toISOString().split("T")[0])
+    .order("date", { ascending: true });
+  
+  if (!runs || runs.length === 0) {
+    return "No runs logged this week yet.\n\nText 'run 5.2' to log your first run!";
+  }
+  
+  const total = runs.reduce((sum, r) => sum + Number(r.miles), 0);
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  
+  let response = `This Week: ${total.toFixed(1)} miles\n\n`;
+  runs.forEach(r => {
+    const day = days[new Date(r.date).getDay()];
+    response += `${day}: ${r.miles}mi`;
+    if (r.pace) response += ` (${r.pace})`;
+    response += "\n";
+  });
+  
+  return response;
 }
 
 function getHelpMessage(): string {

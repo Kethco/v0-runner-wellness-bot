@@ -7,10 +7,11 @@ import { MessageSquare, Copy, Check, ChevronDown, ChevronUp } from "lucide-react
 
 const SMS_COMMANDS = [
   { command: "checkin", description: "Morning wellness check-in" },
+  { command: "run 5.2", description: "Log a run (miles)" },
   { command: "update", description: "Afternoon energy/soreness update" },
   { command: "trends", description: "View your 7-day averages" },
+  { command: "miles", description: "See your weekly mileage" },
   { command: "streak", description: "See your streak progress" },
-  { command: "goal", description: "Check your active goals" },
   { command: "help", description: "List all commands" },
 ];
 
