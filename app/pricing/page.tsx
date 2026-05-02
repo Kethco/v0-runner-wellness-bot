@@ -15,9 +15,9 @@ export default function PricingPage() {
 
   const trialProduct = PRODUCTS.find((p) => p.id === "free_trial")!;
   const proProduct = isYearly 
-    ? PRODUCTS.find((p) => p.id === "pro-yearly")!
-    : PRODUCTS.find((p) => p.id === "pro-monthly")!;
-  const coachProduct = PRODUCTS.find((p) => p.id === "coach-monthly")!;
+    ? PRODUCTS.find((p) => p.id === "pro_annual")!
+    : PRODUCTS.find((p) => p.id === "pro_monthly")!;
+  const coachProduct = PRODUCTS.find((p) => p.id === "coach")!;
 
   const formatPrice = (product: Product) => {
     if (product.priceInCents === 0) return "Free";

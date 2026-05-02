@@ -15,9 +15,13 @@ export async function startCheckoutSession(productId: string) {
 
   const isSubscription = product.interval !== undefined
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+    'http://localhost:3000';
+
   const session = await stripe.checkout.sessions.create({
-    ui_mode: 'embedded',
-    redirect_on_completion: 'never',
+    ui_mode: 'embedded_page',
+    return_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     line_items: [
       {
         price_data: {

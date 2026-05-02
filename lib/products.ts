@@ -24,7 +24,7 @@ export const PRODUCTS: Product[] = [
     ],
   },
   {
-    id: 'pro-monthly',
+    id: 'pro_monthly',
     name: 'Pro',
     description: 'Advanced insights for serious runners',
     priceInCents: 999, // $9.99/month
@@ -41,7 +41,7 @@ export const PRODUCTS: Product[] = [
     ],
   },
   {
-    id: 'pro-yearly',
+    id: 'pro_annual',
     name: 'Pro (Annual)',
     description: 'Best value - save 2 months!',
     priceInCents: 9999, // $99.99/year (save $20)
@@ -57,7 +57,7 @@ export const PRODUCTS: Product[] = [
     ],
   },
   {
-    id: 'coach-monthly',
+    id: 'coach',
     name: 'Coach',
     description: 'For coaches managing multiple athletes',
     priceInCents: 2999, // $29.99/month

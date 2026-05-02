@@ -136,7 +136,15 @@ export default function SignUpPage() {
         setErrors({ email: error.message });
         setIsLoading(false);
       } else {
-        setStep("verify");
+        // For paid plans, redirect to checkout page
+        if (selectedPlan !== "free_trial") {
+          // Store plan in localStorage for checkout page
+          localStorage.setItem("pending_plan", selectedPlan);
+          localStorage.setItem("pending_email", formData.email);
+          window.location.href = `/checkout?plan=${selectedPlan}`;
+        } else {
+          setStep("verify");
+        }
         setIsLoading(false);
       }
     }
