@@ -68,10 +68,11 @@ export const COMMANDS = {
   checkin: "Start a morning wellness check-in",
   update: "Quick afternoon energy/soreness update",
   run: "Log a run (e.g., 'run 5.2' or 'run 3.1 8:30')",
+  join: "Join a team (e.g., 'join ABC123')",
   trends: "View your 7-day wellness trends",
   streak: "Check your current streak",
   miles: "View your weekly miles",
   goal: "Set or view your race goals",
-  help: "Show all available commands",
   ai: "Get AI coaching advice",
+  help: "Show all available commands",
 };

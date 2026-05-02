@@ -82,7 +82,13 @@ export async function handleSMSMessage(phone: string, message: string): Promise<
         if (runData) {
           return await logRun(supabase, profile.id, runData, profile.first_name);
         }
-        return "To log a run, text: run [miles]\n\nExamples:\n• run 5.2\n• run 3.1 8:30\n• run 5 45min easy";
+        return "To log a run, text: run [miles]\n\nExamples:\n- run 5.2\n- run 3.1 8:30\n- run 5 45min easy";
+      }
+      
+      // Check if it's a join team command
+      if (text.startsWith("join ")) {
+        const code = text.replace("join ", "").trim().toUpperCase();
+        return await joinTeam(supabase, profile.id, code, profile.first_name);
       }
       
       return `Hi${profile.first_name ? ` ${profile.first_name}` : ""}! I didn't understand that.\n\nText one of these commands:\n• checkin - Start daily check-in\n• run 5.2 - Log a run\n• trends - View 7-day trends\n• streak - Check your streak\n• help - All commands`;
@@ -413,6 +419,55 @@ async function logRun(
   response += `!\n\nWeekly total: ${weeklyTotal.toFixed(1)} miles`;
   
   return response;
+}
+
+async function joinTeam(
+  supabase: ReturnType<typeof createServiceClient>,
+  userId: string,
+  inviteCode: string,
+  firstName: string | null
+): Promise<string> {
+  if (!inviteCode || inviteCode.length < 4) {
+    return "To join a team, text: join [CODE]\n\nExample: join ABC123";
+  }
+
+  // Find team by invite code
+  const { data: team, error: teamError } = await supabase
+    .from("teams")
+    .select("id, name")
+    .eq("invite_code", inviteCode)
+    .single();
+
+  if (teamError || !team) {
+    return `Team not found with code "${inviteCode}". Check the code and try again.`;
+  }
+
+  // Check if already a member
+  const { data: existing } = await supabase
+    .from("team_members")
+    .select("id")
+    .eq("team_id", team.id)
+    .eq("user_id", userId)
+    .single();
+
+  if (existing) {
+    return `You're already a member of ${team.name}!`;
+  }
+
+  // Add user to team
+  const { error: joinError } = await supabase
+    .from("team_members")
+    .insert({
+      team_id: team.id,
+      user_id: userId,
+      role: "athlete",
+    });
+
+  if (joinError) {
+    return "Something went wrong. Please try again.";
+  }
+
+  return `Welcome to ${team.name}${firstName ? `, ${firstName}` : ""}! Your coach can now see your wellness data and help optimize your training.`;
 }
 
 async function getAIAdvice(

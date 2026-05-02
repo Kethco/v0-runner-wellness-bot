@@ -46,7 +46,9 @@ import {
   Search,
   Filter,
   Send,
+  Settings,
 } from "lucide-react";
+import Link from "next/link";
 
 // Mock athlete data
 interface Athlete {
@@ -182,13 +184,20 @@ export default function CoachDashboard() {
               Monitor your team&apos;s wellness and readiness
             </p>
           </div>
-          <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <UserPlus className="w-4 h-4" />
-                Invite Athlete
+          <div className="flex gap-2">
+            <Link href="/coach/team">
+              <Button variant="outline" className="gap-2">
+                <Settings className="w-4 h-4" />
+                Manage Teams
               </Button>
-            </DialogTrigger>
+            </Link>
+            <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  Invite Athlete
+                </Button>
+              </DialogTrigger>
             <DialogContent className="bg-card border-border">
               <DialogHeader>
                 <DialogTitle>Invite an Athlete</DialogTitle>
@@ -216,7 +225,8 @@ export default function CoachDashboard() {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
         {/* Stats Overview */}
