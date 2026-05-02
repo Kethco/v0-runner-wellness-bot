@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { sendWelcomeSMS } from '@/lib/sms/sender'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
@@ -8,8 +9,17 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) {
+    const { error, data } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error && data.user) {
+      // Send welcome SMS to new users
+      const phone = data.user.user_metadata?.phone
+      const firstName = data.user.user_metadata?.first_name || 'Runner'
+      
+      if (phone) {
+        // Fire and forget - don't block the redirect
+        sendWelcomeSMS(phone, firstName).catch(console.error)
+      }
+      
       return NextResponse.redirect(`${origin}${next}`)
     }
   }

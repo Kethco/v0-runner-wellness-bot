@@ -11,6 +11,7 @@ import { CheckInHistory } from "@/components/dashboard/checkin-history";
 import { GoalCard } from "@/components/dashboard/goal-card";
 import { TrendsChart } from "@/components/dashboard/trends-chart";
 import { TrialBanner } from "@/components/dashboard/trial-banner";
+import { SMSGuideCard } from "@/components/dashboard/sms-guide-card";
 import { useAuth } from "@/contexts/auth-context";
 
 function getGreeting(): string {
@@ -82,6 +83,9 @@ export default function Dashboard() {
 
           {/* Right Column - Sidebar */}
           <div className="lg:col-span-4 space-y-6">
+            {/* SMS Guide */}
+            <SMSGuideCard />
+
             {/* Check-in Card & Streak */}
             <CheckInCard streak={12} hasCheckedInToday={false} />
 
