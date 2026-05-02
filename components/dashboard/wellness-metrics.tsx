@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Thermometer, Battery, Zap, Heart, TrendingUp } from "lucide-react";
+import { Moon, Thermometer, Battery, Zap, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 const metrics = [
@@ -35,13 +35,6 @@ const metrics = [
 ];
 
 const statCards = [
-  {
-    icon: Heart,
-    label: "Avg Heart Rate",
-    value: "148",
-    unit: "bpm",
-    color: "oklch(0.70 0.22 350)", // Pink
-  },
   {
     icon: TrendingUp,
     label: "Monthly Miles",
@@ -99,7 +92,7 @@ export function WellnessMetrics() {
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Performance
         </p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           {statCards.map((s, i) => {
             const Icon = s.icon;
             return (
