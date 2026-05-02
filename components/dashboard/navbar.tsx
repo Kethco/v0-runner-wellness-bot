@@ -32,6 +32,9 @@ export function Navbar() {
   const userInitials = user?.user_metadata?.first_name 
     ? `${user.user_metadata.first_name[0]}${user.user_metadata.last_name?.[0] || ""}`.toUpperCase()
     : userName.slice(0, 2).toUpperCase();
+  const userType = user?.user_metadata?.user_type || "athlete";
+  const userPlan = user?.user_metadata?.plan || "free_trial";
+  const isCoach = userType === "coach";
   
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-card/80 backdrop-blur-xl border-b border-border">
@@ -138,17 +141,24 @@ export function Navbar() {
           <DropdownMenuContent align="end" className="w-48">
             <div className="px-2 py-1.5">
               <p className="text-sm font-medium">{userName}</p>
-              <p className="text-xs text-muted-foreground">Pro Athlete</p>
+              <p className="text-xs text-muted-foreground">
+                {isCoach ? "Coach" : userPlan === "free_trial" ? "Free Trial" : userPlan.includes("pro") ? "Pro Athlete" : "Athlete"}
+              </p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <a href="/profile">Profile</a>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <a href="/coach">Coach Dashboard</a>
-            </DropdownMenuItem>
+            {isCoach && (
+              <DropdownMenuItem asChild>
+                <a href="/coach">Coach Dashboard</a>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem asChild>
               <a href="/settings">Settings</a>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <a href="/pricing">Upgrade Plan</a>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <a href="/help">Help</a>
