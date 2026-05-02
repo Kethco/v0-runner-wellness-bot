@@ -50,11 +50,15 @@ interface TelnyxWebhookPayload {
 }
 
 export async function POST(request: NextRequest) {
+  console.log("[SMS] Webhook received");
+  
   try {
     const payload: TelnyxWebhookPayload = await request.json();
+    console.log("[SMS] Event type:", payload.data?.event_type);
     
     // Only process inbound messages
     if (payload.data.event_type !== "message.received") {
+      console.log("[SMS] Not an inbound message, ignoring");
       return NextResponse.json({ received: true });
     }
 
