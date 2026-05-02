@@ -3,9 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateShortCoachAdvice } from "@/lib/ai/coach";
 
 export async function GET(request: NextRequest) {
+  console.log("[v0] GET /api/checkins - starting");
   const supabase = await createClient();
   
   const { data: { user }, error: authError } = await supabase.auth.getUser();
+  console.log("[v0] GET /api/checkins - user:", user?.id, "authError:", authError?.message);
   
   if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,6 +23,8 @@ export async function GET(request: NextRequest) {
     .eq("user_id", user.id)
     .order("date", { ascending: false })
     .range(offset, offset + limit - 1);
+
+  console.log("[v0] GET /api/checkins - found:", checkins?.length, "checkins, error:", error?.message);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
