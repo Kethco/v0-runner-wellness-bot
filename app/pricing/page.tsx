@@ -17,7 +17,11 @@ export default function PricingPage() {
   const proProduct = isYearly 
     ? PRODUCTS.find((p) => p.id === "pro_annual")!
     : PRODUCTS.find((p) => p.id === "pro_monthly")!;
-  const coachProduct = PRODUCTS.find((p) => p.id === "coach")!;
+  
+  // Coach tiers
+  const coachStarter = PRODUCTS.find((p) => p.id === "coach_starter")!;
+  const coachPro = PRODUCTS.find((p) => p.id === "coach_pro")!;
+  const coachElite = PRODUCTS.find((p) => p.id === "coach_elite")!;
 
   const formatPrice = (product: Product) => {
     if (product.priceInCents === 0) return "Free";
@@ -61,8 +65,9 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-6">
+        {/* Solo Runner Plans */}
+        <h2 className="text-2xl font-bold mb-6">Solo Runner Plans</h2>
+        <div className="grid md:grid-cols-2 gap-6 mb-16">
           {/* Free Trial */}
           <Card className="border-border bg-card relative">
             <div className="absolute -top-3 left-4">
@@ -97,7 +102,7 @@ export default function PricingPage() {
 
           {/* Pro Plan */}
           <Card className="border-primary bg-card relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+            <div className="absolute -top-3 left-4">
               <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
                 <Zap className="w-3 h-3" /> Most Popular
               </span>
@@ -133,22 +138,28 @@ export default function PricingPage() {
               </Button>
             </CardFooter>
           </Card>
+        </div>
 
-          {/* Coach Plan */}
+        {/* Coach Plans */}
+        <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+          <Users className="w-6 h-6 text-primary" />
+          Coach Plans
+        </h2>
+        <p className="text-muted-foreground mb-6">Manage your team and monitor athlete wellness</p>
+        
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Coach Starter */}
           <Card className="border-border bg-card relative">
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                <CardTitle className="text-xl">{coachProduct.name}</CardTitle>
-              </div>
-              <CardDescription>{coachProduct.description}</CardDescription>
+              <CardTitle className="text-xl">{coachStarter.name}</CardTitle>
+              <CardDescription>{coachStarter.description}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="mb-6">
-                <span className="text-4xl font-black">{formatPrice(coachProduct)}</span>
+                <span className="text-4xl font-black">{formatPrice(coachStarter)}</span>
               </div>
               <ul className="space-y-3">
-                {coachProduct.features.map((feature, i) => (
+                {coachStarter.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>{feature}</span>
@@ -158,8 +169,76 @@ export default function PricingPage() {
             </CardContent>
             <CardFooter>
               <Button variant="outline" className="w-full gap-2" asChild>
-                <Link href={`/checkout?plan=${coachProduct.id}`}>
-                  Subscribe Now
+                <Link href={`/checkout?plan=${coachStarter.id}`}>
+                  Subscribe
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Coach Pro */}
+          <Card className="border-primary bg-card relative">
+            <div className="absolute -top-3 left-4">
+              <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                MOST POPULAR
+              </span>
+            </div>
+            <CardHeader className="pt-8">
+              <CardTitle className="text-xl">{coachPro.name}</CardTitle>
+              <CardDescription>{coachPro.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6">
+                <span className="text-4xl font-black">{formatPrice(coachPro)}</span>
+              </div>
+              <ul className="space-y-3">
+                {coachPro.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+            <CardFooter>
+              <Button className="w-full gap-2" asChild>
+                <Link href={`/checkout?plan=${coachPro.id}`}>
+                  Subscribe
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+
+          {/* Coach Elite */}
+          <Card className="border-border bg-card relative">
+            <div className="absolute -top-3 left-4">
+              <span className="bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                LARGE TEAMS
+              </span>
+            </div>
+            <CardHeader className="pt-8">
+              <CardTitle className="text-xl">{coachElite.name}</CardTitle>
+              <CardDescription>{coachElite.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6">
+                <span className="text-4xl font-black">{formatPrice(coachElite)}</span>
+              </div>
+              <ul className="space-y-3">
+                {coachElite.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" className="w-full gap-2" asChild>
+                <Link href={`/checkout?plan=${coachElite.id}`}>
+                  Subscribe
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>

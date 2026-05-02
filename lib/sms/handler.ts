@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { CHECKIN_STEPS, AFTERNOON_STEPS, COMMANDS, CheckinSession } from "./types";
 import { generateShortCoachAdvice } from "@/lib/ai/coach";
+import { getProduct } from "@/lib/products";
 
 // Parse run command: "run 5.2" or "run 3.1 8:30" or "run 5 45min easy"
 function parseRunCommand(text: string): { miles: number; pace?: string; duration?: number; feeling?: string } | null {
@@ -434,12 +435,39 @@ async function joinTeam(
   // Find team by invite code
   const { data: team, error: teamError } = await supabase
     .from("teams")
-    .select("id, name")
+    .select("id, name, coach_id")
     .eq("invite_code", inviteCode)
     .single();
 
   if (teamError || !team) {
     return `Team not found with code "${inviteCode}". Check the code and try again.`;
+  }
+
+  // Get coach's plan to check athlete limit
+  const { data: coachProfile } = await supabase
+    .from("profiles")
+    .select("plan")
+    .eq("id", team.coach_id)
+    .single();
+
+  const maxAthletes = getProduct(coachProfile?.plan)?.maxAthletes || 15;
+
+  // Count current athletes across ALL coach's teams
+  const { data: coachTeams } = await supabase
+    .from("teams")
+    .select("id")
+    .eq("coach_id", team.coach_id);
+
+  const teamIds = coachTeams?.map(t => t.id) || [];
+  
+  const { count: currentAthletes } = await supabase
+    .from("team_members")
+    .select("id", { count: "exact", head: true })
+    .in("team_id", teamIds)
+    .eq("role", "athlete");
+
+  if ((currentAthletes || 0) >= maxAthletes) {
+    return `Sorry, this team has reached its athlete limit (${maxAthletes}). Please ask your coach to upgrade their plan.`;
   }
 
   // Check if already a member

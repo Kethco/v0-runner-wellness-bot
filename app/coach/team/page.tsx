@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Users, Plus, Copy, Check, Send, UserPlus, Trash2 } from "lucide-react";
+import { ArrowLeft, Users, Plus, Copy, Check, Send, UserPlus, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
+import { getProduct } from "@/lib/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +43,7 @@ interface Team {
 }
 
 export default function TeamManagementPage() {
+  const { user } = useAuth();
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -52,6 +55,14 @@ export default function TeamManagementPage() {
   const [inviteContacts, setInviteContacts] = useState("");
   const [isSendingInvites, setIsSendingInvites] = useState(false);
   const [inviteResult, setInviteResult] = useState<string | null>(null);
+
+  // Get coach's plan and limits
+  const coachPlan = user?.user_metadata?.plan || "coach_starter";
+  const planInfo = getProduct(coachPlan);
+  const maxAthletes = planInfo?.maxAthletes || 15;
+  const totalAthletes = teams.reduce((sum, t) => sum + (t.team_members?.length || 0), 0);
+  const isAtLimit = totalAthletes >= maxAthletes;
+  const nearLimit = totalAthletes >= maxAthletes * 0.8;
 
   useEffect(() => {
     fetchTeams();
@@ -160,6 +171,51 @@ export default function TeamManagementPage() {
             <p className="text-muted-foreground">Create teams and invite your athletes</p>
           </div>
         </div>
+
+        {/* Athlete Usage Card */}
+        <Card className={`mb-6 ${isAtLimit ? "border-destructive" : nearLimit ? "border-yellow-500" : ""}`}>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  isAtLimit ? "bg-destructive/20" : nearLimit ? "bg-yellow-500/20" : "bg-primary/20"
+                }`}>
+                  <Users className={`w-5 h-5 ${isAtLimit ? "text-destructive" : nearLimit ? "text-yellow-500" : "text-primary"}`} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">
+                    {totalAthletes} / {maxAthletes} Athletes
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {planInfo?.name || "Coach Starter"} Plan
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {isAtLimit && (
+                  <span className="flex items-center gap-1 text-sm text-destructive">
+                    <AlertTriangle className="w-4 h-4" />
+                    Limit reached
+                  </span>
+                )}
+                {(nearLimit || isAtLimit) && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/pricing">Upgrade Plan</Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+            {/* Progress bar */}
+            <div className="mt-3 h-2 bg-secondary rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all ${
+                  isAtLimit ? "bg-destructive" : nearLimit ? "bg-yellow-500" : "bg-primary"
+                }`}
+                style={{ width: `${Math.min(100, (totalAthletes / maxAthletes) * 100)}%` }}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Create New Team */}
         <Card className="mb-8">
@@ -289,9 +345,15 @@ export default function TeamManagementPage() {
                             {inviteResult && (
                               <p className="text-sm text-primary">{inviteResult}</p>
                             )}
+                            {isAtLimit && (
+                              <p className="text-sm text-destructive flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4" />
+                                You&apos;ve reached your athlete limit. Upgrade to invite more.
+                              </p>
+                            )}
                             <Button 
                               onClick={sendInvites} 
-                              disabled={!inviteContacts.trim() || isSendingInvites}
+                              disabled={!inviteContacts.trim() || isSendingInvites || isAtLimit}
                               className="w-full gap-2"
                             >
                               <Send className="w-4 h-4" />

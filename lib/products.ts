@@ -7,6 +7,7 @@ export interface Product {
   trialDays?: number
   features: string[]
   popular?: boolean
+  maxAthletes?: number // For coach plans
 }
 
 export const PRODUCTS: Product[] = [
@@ -57,18 +58,49 @@ export const PRODUCTS: Product[] = [
     ],
   },
   {
-    id: 'coach',
-    name: 'Coach',
-    description: 'For coaches managing multiple athletes',
+    id: 'coach_starter',
+    name: 'Coach Starter',
+    description: 'Perfect for small teams and JV squads',
     priceInCents: 2999, // $29.99/month
     interval: 'month',
+    maxAthletes: 15,
     features: [
-      'Everything in Pro',
-      'Team dashboard (up to 25 athletes)',
+      'Team dashboard',
+      'Up to 15 athletes',
       'At-risk athlete alerts',
       'Team wellness reports',
-      'Athlete invitation system',
+      'SMS invitations',
+    ],
+  },
+  {
+    id: 'coach_pro',
+    name: 'Coach Pro',
+    description: 'Ideal for varsity teams',
+    priceInCents: 4999, // $49.99/month
+    interval: 'month',
+    maxAthletes: 30,
+    popular: true,
+    features: [
+      'Everything in Starter',
+      'Up to 30 athletes',
+      'AI training recommendations',
+      'Weekly team reports',
       'Priority support',
+    ],
+  },
+  {
+    id: 'coach_elite',
+    name: 'Coach Elite',
+    description: 'For large programs and clubs',
+    priceInCents: 7999, // $79.99/month
+    interval: 'month',
+    maxAthletes: 50,
+    features: [
+      'Everything in Pro',
+      'Up to 50 athletes',
+      'Multiple team support',
+      'Advanced analytics',
+      'Dedicated support',
     ],
   },
 ]

@@ -1,5 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { getProduct } from "@/lib/products";
+
+// Helper to get max athletes for a coach's plan
+function getMaxAthletesForPlan(plan: string | undefined): number {
+  if (!plan) return 15; // Default to starter
+  const product = getProduct(plan);
+  return product?.maxAthletes || 15;
+}
 
 // POST - Join a team with invite code
 export async function POST(request: NextRequest) {
@@ -25,6 +33,35 @@ export async function POST(request: NextRequest) {
 
   if (teamError || !team) {
     return NextResponse.json({ error: "Team not found. Check your invite code." }, { status: 404 });
+  }
+
+  // Get coach's plan to check athlete limit
+  const { data: coachProfile } = await supabase
+    .from("profiles")
+    .select("plan")
+    .eq("id", team.coach_id)
+    .single();
+
+  const maxAthletes = getMaxAthletesForPlan(coachProfile?.plan);
+
+  // Count current athletes across ALL coach's teams
+  const { data: coachTeams } = await supabase
+    .from("teams")
+    .select("id")
+    .eq("coach_id", team.coach_id);
+
+  const teamIds = coachTeams?.map(t => t.id) || [];
+  
+  const { count: currentAthletes } = await supabase
+    .from("team_members")
+    .select("id", { count: "exact", head: true })
+    .in("team_id", teamIds)
+    .eq("role", "athlete");
+
+  if ((currentAthletes || 0) >= maxAthletes) {
+    return NextResponse.json({ 
+      error: `This coach has reached their athlete limit (${maxAthletes}). Please ask your coach to upgrade their plan.` 
+    }, { status: 403 });
   }
 
   // Check if already a member

@@ -19,7 +19,7 @@ const FEATURES = [
 ];
 
 type UserType = "athlete" | "coach";
-type PlanType = "free_trial" | "pro_monthly" | "pro_annual" | "coach";
+type PlanType = "free_trial" | "pro_monthly" | "pro_annual" | "coach_starter" | "coach_pro" | "coach_elite";
 
 const PLANS = {
   athlete: [
@@ -53,13 +53,31 @@ const PLANS = {
   ],
   coach: [
     { 
-      id: "coach" as PlanType, 
-      name: "Coach", 
+      id: "coach_starter" as PlanType, 
+      name: "Coach Starter", 
       price: "$29.99", 
       period: "/month",
-      features: ["Team dashboard (25 athletes)", "At-risk alerts", "Team reports", "Priority support"],
-      popular: true,
+      features: ["Up to 15 athletes", "Team dashboard", "At-risk alerts", "SMS invitations"],
+      popular: false,
       badge: null
+    },
+    { 
+      id: "coach_pro" as PlanType, 
+      name: "Coach Pro", 
+      price: "$49.99", 
+      period: "/month",
+      features: ["Up to 30 athletes", "Everything in Starter", "AI recommendations", "Weekly reports"],
+      popular: true,
+      badge: "MOST POPULAR"
+    },
+    { 
+      id: "coach_elite" as PlanType, 
+      name: "Coach Elite", 
+      price: "$79.99", 
+      period: "/month",
+      features: ["Up to 50 athletes", "Everything in Pro", "Multiple teams", "Dedicated support"],
+      popular: false,
+      badge: "LARGE TEAMS"
     },
   ],
 };
@@ -240,7 +258,7 @@ export default function SignUpPage() {
                 </button>
                 
                 <button
-                  onClick={() => { setUserType("coach"); setSelectedPlan("coach"); setStep("plan"); }}
+                  onClick={() => { setUserType("coach"); setSelectedPlan("coach_pro"); setStep("plan"); }}
                   className={`w-full p-6 rounded-lg border-2 transition-all text-left hover:border-primary ${
                     userType === "coach" ? "border-primary bg-primary/10" : "border-border bg-secondary"
                   }`}
