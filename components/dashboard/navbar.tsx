@@ -1,8 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Settings, Bell, Menu } from "lucide-react";
-import Image from "next/image";
+import { Activity, Settings, Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -41,13 +40,9 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-8 py-4 bg-card/80 backdrop-blur-xl border-b border-border">
       {/* Logo */}
       <a href="/" className="flex items-center gap-2">
-        <Image 
-          src="/logo.jpg" 
-          alt="Runner Wellness" 
-          width={36} 
-          height={36} 
-          className="rounded-lg"
-        />
+        <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
+          <Activity className="w-5 h-5 text-primary-foreground" />
+        </div>
         <div className="hidden sm:flex items-baseline gap-1">
           <span className="text-lg font-bold tracking-tight text-foreground">RUNNER</span>
           <span className="text-lg font-bold tracking-tight text-primary">WELLNESS</span>
@@ -85,13 +80,9 @@ export function Navbar() {
           </SheetTrigger>
           <SheetContent side="left" className="w-64 bg-card border-border">
             <div className="flex items-center gap-2 mb-6 pt-2">
-              <Image 
-                src="/logo.jpg" 
-                alt="Runner Wellness" 
-                width={32} 
-                height={32} 
-                className="rounded-lg"
-              />
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Activity className="w-4 h-4 text-primary-foreground" />
+              </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-base font-bold tracking-tight">RUNNER</span>
                 <span className="text-base font-bold tracking-tight text-primary">WELLNESS</span>
