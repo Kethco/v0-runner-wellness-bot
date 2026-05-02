@@ -37,16 +37,36 @@ export async function sendSMS(to: string, message: string): Promise<boolean> {
   }
 }
 
-export async function sendWelcomeSMS(phone: string, firstName: string): Promise<boolean> {
-  const message = `Welcome to Runner Wellness, ${firstName}! 🏃
+export async function sendWelcomeSMS(phone: string, firstName: string, userType: string = "athlete"): Promise<boolean> {
+  if (userType === "coach") {
+    return sendCoachWelcomeSMS(phone, firstName);
+  }
+  
+  const message = `Welcome to Runner Wellness, ${firstName}!
 
 Track your wellness daily via text:
-• "checkin" - Morning wellness check
-• "trends" - See your 7-day stats  
-• "streak" - View your streak
-• "help" - All commands
+- "checkin" - Morning wellness check
+- "trends" - See your 7-day stats  
+- "streak" - View your streak
+- "help" - All commands
 
 Reply "checkin" now to start!`;
+
+  return sendSMS(phone, message);
+}
+
+export async function sendCoachWelcomeSMS(phone: string, firstName: string): Promise<boolean> {
+  const message = `Welcome to Runner Wellness, Coach ${firstName}!
+
+Your Coach Dashboard includes:
+- Team overview with all athlete wellness scores
+- At-risk alerts when athletes show warning signs
+- Weekly team wellness reports
+- Individual athlete trend analysis
+
+Invite your athletes from the dashboard to start monitoring their wellness.
+
+Log in at runnerwellnessapp.com/coach to get started.`;
 
   return sendSMS(phone, message);
 }

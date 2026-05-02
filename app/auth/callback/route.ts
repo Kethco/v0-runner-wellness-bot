@@ -14,10 +14,11 @@ export async function GET(request: NextRequest) {
       // Send welcome SMS to new users
       const phone = data.user.user_metadata?.phone
       const firstName = data.user.user_metadata?.first_name || 'Runner'
+      const userType = data.user.user_metadata?.user_type || 'athlete'
       
       if (phone) {
         // Fire and forget - don't block the redirect
-        sendWelcomeSMS(phone, firstName).catch(console.error)
+        sendWelcomeSMS(phone, firstName, userType).catch(console.error)
       }
       
       return NextResponse.redirect(`${origin}${next}`)
