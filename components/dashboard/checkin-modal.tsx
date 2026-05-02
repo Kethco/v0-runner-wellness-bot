@@ -118,22 +118,26 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
         notes: notes || null,
       };
 
+      console.log("[v0] Submitting check-in:", checkinData);
+
       const response = await fetch("/api/checkins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(checkinData),
       });
 
+      const data = await response.json();
+      console.log("[v0] Check-in response:", response.status, data);
+
       if (!response.ok) {
-        const error = await response.json();
-        console.error("[v0] Check-in failed:", error);
-      } else {
-        const data = await response.json();
-        if (data.aiAdvice) {
-          setAiAdvice(data.aiAdvice);
-        }
+        console.error("[v0] Check-in failed:", data);
+        alert(`Check-in failed: ${data.error || "Unknown error"}`);
+        setIsSubmitting(false);
+        return;
       }
       
+      const receivedAdvice = data.aiAdvice || null;
+      setAiAdvice(receivedAdvice);
       setIsComplete(true);
       
       setTimeout(() => {
@@ -146,9 +150,10 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
         setAiAdvice(null);
         // Refresh the page to show updated data
         window.location.reload();
-      }, aiAdvice ? 5000 : 2000); // Show longer if AI advice is present
+      }, receivedAdvice ? 5000 : 2000); // Show longer if AI advice is present
     } catch (error) {
       console.error("[v0] Check-in error:", error);
+      alert("Failed to submit check-in. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -246,11 +251,19 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
                 variant="outline"
                 className="flex-1"
                 onClick={handleComplete}
+                disabled={isSubmitting}
               >
-                Skip
+                {isSubmitting ? "Saving..." : "Skip"}
               </Button>
-              <Button className="flex-1" onClick={handleComplete}>
-                Complete
+              <Button className="flex-1" onClick={handleComplete} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Complete"
+                )}
               </Button>
             </div>
           </div>

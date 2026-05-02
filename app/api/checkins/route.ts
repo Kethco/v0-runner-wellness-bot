@@ -30,14 +30,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log("[v0] POST /api/checkins - starting");
   const supabase = await createClient();
   
   const { data: { user }, error: authError } = await supabase.auth.getUser();
+  console.log("[v0] POST /api/checkins - user:", user?.id, "authError:", authError?.message);
+  
   if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
+  console.log("[v0] POST /api/checkins - body:", body);
   
   const checkinData = {
     user_id: user.id,
@@ -53,11 +57,15 @@ export async function POST(request: NextRequest) {
     is_afternoon_update: body.isAfternoonUpdate || false,
   };
 
+  console.log("[v0] POST /api/checkins - inserting:", checkinData);
+
   const { data: checkin, error } = await supabase
     .from("checkins")
     .insert(checkinData)
     .select()
     .single();
+
+  console.log("[v0] POST /api/checkins - result:", checkin, "error:", error?.message);
 
   if (error) {
     // Handle duplicate check-in for the day
