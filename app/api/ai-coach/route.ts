@@ -45,18 +45,18 @@ export async function POST(req: NextRequest) {
       .eq('user_id', user.id)
       .eq('status', 'active')
 
-    // Calculate averages
+    // Calculate averages - using correct column names: sleep_rating, energy, soreness, readiness
     const avgSleep = recentCheckins?.length 
-      ? (recentCheckins.reduce((sum, c) => sum + (c.sleep_quality || 0), 0) / recentCheckins.length).toFixed(1)
+      ? (recentCheckins.reduce((sum, c) => sum + (c.sleep_rating || 0), 0) / recentCheckins.length).toFixed(1)
       : 'N/A'
     const avgEnergy = recentCheckins?.length
-      ? (recentCheckins.reduce((sum, c) => sum + (c.energy_level || 0), 0) / recentCheckins.length).toFixed(1)
+      ? (recentCheckins.reduce((sum, c) => sum + (c.energy || 0), 0) / recentCheckins.length).toFixed(1)
       : 'N/A'
     const avgSoreness = recentCheckins?.length
-      ? (recentCheckins.reduce((sum, c) => sum + (c.soreness_level || 0), 0) / recentCheckins.length).toFixed(1)
+      ? (recentCheckins.reduce((sum, c) => sum + (c.soreness || 0), 0) / recentCheckins.length).toFixed(1)
       : 'N/A'
     const avgReadiness = recentCheckins?.length
-      ? (recentCheckins.reduce((sum, c) => sum + (c.readiness_score || 0), 0) / recentCheckins.length).toFixed(1)
+      ? (recentCheckins.reduce((sum, c) => sum + (c.readiness || 0), 0) / recentCheckins.length).toFixed(1)
       : 'N/A'
     
     const weeklyMiles = recentRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0
@@ -65,11 +65,11 @@ export async function POST(req: NextRequest) {
 
 TODAY'S CHECK-IN:
 ${todayCheckin ? `
-- Sleep Quality: ${todayCheckin.sleep_quality}/5
-- Energy Level: ${todayCheckin.energy_level}/5
-- Soreness Level: ${todayCheckin.soreness_level}/5 (higher = more sore)
-- Readiness Score: ${todayCheckin.readiness_score}/5
-- Feeling: ${todayCheckin.overall_feeling || 'Not specified'}
+- Sleep Quality: ${todayCheckin.sleep_rating}/5
+- Energy Level: ${todayCheckin.energy}/5
+- Soreness Level: ${todayCheckin.soreness}/5 (higher = more sore)
+- Readiness Score: ${todayCheckin.readiness}/5
+- Feeling: ${todayCheckin.feeling || 'Not specified'}
 - Notes: ${todayCheckin.notes || 'None'}
 ` : 'No check-in today yet.'}
 
@@ -108,10 +108,10 @@ Keep response under 150 words. Be encouraging but honest. If soreness is high (4
     return NextResponse.json({ 
       advice: text,
       todayCheckin: todayCheckin ? {
-        sleep: todayCheckin.sleep_quality,
-        energy: todayCheckin.energy_level,
-        soreness: todayCheckin.soreness_level,
-        readiness: todayCheckin.readiness_score,
+        sleep: todayCheckin.sleep_rating,
+        energy: todayCheckin.energy,
+        soreness: todayCheckin.soreness,
+        readiness: todayCheckin.readiness,
       } : null,
       weeklyStats: {
         avgSleep,

@@ -81,12 +81,20 @@ Week: ${weeklyMiles.toFixed(1)} miles, Avg readiness ${weeklyAverages.readiness}
 
 Respond in 2-3 sentences max. Be specific about what they should do today. If soreness is high or energy is low, suggest recovery.`
 
-  const { text } = await generateText({
-    model: 'openai/gpt-4o-mini',
-    prompt,
-    maxOutputTokens: 100,
-    temperature: 0.7,
-  })
+  try {
+    console.log("[v0] generateShortCoachAdvice - calling AI with prompt length:", prompt.length);
+    
+    const { text } = await generateText({
+      model: 'openai/gpt-4o-mini',
+      prompt,
+      maxOutputTokens: 100,
+      temperature: 0.7,
+    })
 
-  return text
+    console.log("[v0] generateShortCoachAdvice - AI response:", text?.substring(0, 50));
+    return text
+  } catch (error) {
+    console.error("[v0] generateShortCoachAdvice - AI error:", error);
+    throw error;
+  }
 }

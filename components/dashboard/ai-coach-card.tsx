@@ -31,8 +31,12 @@ export function AICoachCard() {
   const [hasCheckedIn, setHasCheckedIn] = useState<boolean | null>(null);
 
   const fetchAdvice = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log("[v0] AI Coach - no user, skipping fetch");
+      return;
+    }
     
+    console.log("[v0] AI Coach - fetching advice for user:", user.id);
     setIsLoading(true);
     setError(null);
     
@@ -42,16 +46,21 @@ export function AICoachCard() {
         headers: { "Content-Type": "application/json" },
       });
       
+      console.log("[v0] AI Coach - response status:", response.status);
+      
       if (!response.ok) {
-        throw new Error("Failed to get advice");
+        const errorData = await response.json();
+        console.log("[v0] AI Coach - error response:", errorData);
+        throw new Error(errorData.error || "Failed to get advice");
       }
       
       const data: AICoachResponse = await response.json();
+      console.log("[v0] AI Coach - received data:", { hasAdvice: !!data.advice, adviceLength: data.advice?.length });
       setAdvice(data.advice);
       setHasCheckedIn(data.todayCheckin !== null);
     } catch (err) {
       setError("Unable to load coaching advice");
-      console.error("AI Coach error:", err);
+      console.error("[v0] AI Coach error:", err);
     } finally {
       setIsLoading(false);
     }

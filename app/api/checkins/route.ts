@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
       return valid.length ? (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(1) : "3";
     };
 
+    console.log("[v0] Generating AI advice...");
     aiAdvice = await generateShortCoachAdvice({
       todayCheckin: {
         sleep_quality: body.sleepRating || 3,
@@ -119,9 +120,11 @@ export async function POST(request: NextRequest) {
       weeklyMiles: recentRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0,
       totalRuns: recentRuns?.length || 0,
     });
+    console.log("[v0] AI advice generated:", aiAdvice?.substring(0, 50));
   } catch (aiError) {
     console.error("[v0] AI advice generation failed:", aiError);
   }
 
+  console.log("[v0] Returning response with aiAdvice:", !!aiAdvice);
   return NextResponse.json({ checkin, aiAdvice }, { status: 201 });
 }
