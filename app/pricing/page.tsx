@@ -13,7 +13,7 @@ import { PRODUCTS, type Product } from "@/lib/products";
 export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false);
 
-  const freeProduct = PRODUCTS.find((p) => p.id === "free")!;
+  const trialProduct = PRODUCTS.find((p) => p.id === "free_trial")!;
   const proProduct = isYearly 
     ? PRODUCTS.find((p) => p.id === "pro-yearly")!
     : PRODUCTS.find((p) => p.id === "pro-monthly")!;
@@ -63,18 +63,24 @@ export default function PricingPage() {
 
         {/* Pricing Cards */}
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Free Plan */}
+          {/* Free Trial */}
           <Card className="border-border bg-card relative">
-            <CardHeader>
-              <CardTitle className="text-xl">{freeProduct.name}</CardTitle>
-              <CardDescription>{freeProduct.description}</CardDescription>
+            <div className="absolute -top-3 left-4">
+              <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                7-DAY TRIAL
+              </span>
+            </div>
+            <CardHeader className="pt-8">
+              <CardTitle className="text-xl">{trialProduct.name}</CardTitle>
+              <CardDescription>{trialProduct.description}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="mb-6">
                 <span className="text-4xl font-black">Free</span>
+                <span className="text-sm text-muted-foreground ml-2">for 7 days</span>
               </div>
               <ul className="space-y-3">
-                {freeProduct.features.map((feature, i) => (
+                {trialProduct.features.map((feature, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                     <span>{feature}</span>
@@ -84,7 +90,7 @@ export default function PricingPage() {
             </CardContent>
             <CardFooter>
               <Button variant="outline" className="w-full" asChild>
-                <Link href="/signup">Get Started</Link>
+                <Link href="/signup">Start Free Trial</Link>
               </Button>
             </CardFooter>
           </Card>
@@ -164,7 +170,7 @@ export default function PricingPage() {
         {/* FAQ or Trust Section */}
         <div className="mt-16 text-center">
           <p className="text-muted-foreground">
-            All plans include a 14-day free trial. Cancel anytime.
+            Start with a 7-day free trial. Upgrade anytime. Cancel anytime.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             Questions? <Link href="/help" className="text-primary hover:underline">Contact support</Link>

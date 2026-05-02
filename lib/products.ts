@@ -4,16 +4,18 @@ export interface Product {
   description: string
   priceInCents: number
   interval?: 'month' | 'year'
+  trialDays?: number
   features: string[]
   popular?: boolean
 }
 
 export const PRODUCTS: Product[] = [
   {
-    id: 'free',
-    name: 'Free',
-    description: 'Get started with basic wellness tracking',
+    id: 'free_trial',
+    name: 'Free Trial',
+    description: '7-day free trial to experience Runner Wellness',
     priceInCents: 0,
+    trialDays: 7,
     features: [
       'Daily check-ins via SMS',
       '7-day wellness trends',

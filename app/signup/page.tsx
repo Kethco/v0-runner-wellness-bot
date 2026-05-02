@@ -19,25 +19,36 @@ const FEATURES = [
 ];
 
 type UserType = "athlete" | "coach";
-type PlanType = "free" | "pro" | "coach";
+type PlanType = "free_trial" | "pro_monthly" | "pro_annual" | "coach";
 
 const PLANS = {
   athlete: [
     { 
-      id: "free" as PlanType, 
-      name: "Free", 
+      id: "free_trial" as PlanType, 
+      name: "Free Trial", 
       price: "$0", 
-      period: "forever",
+      period: "for 7 days",
       features: ["Daily check-ins", "7-day trends", "1 active goal", "SMS support"],
-      popular: false
+      popular: false,
+      badge: "7-DAY TRIAL"
     },
     { 
-      id: "pro" as PlanType, 
-      name: "Pro", 
+      id: "pro_monthly" as PlanType, 
+      name: "Pro Monthly", 
       price: "$9.99", 
       period: "/month",
       features: ["Everything in Free", "AI coaching tips", "Unlimited goals", "30-day analytics", "Race predictions"],
-      popular: true
+      popular: true,
+      badge: null
+    },
+    { 
+      id: "pro_annual" as PlanType, 
+      name: "Pro Annual", 
+      price: "$99.99", 
+      period: "/year",
+      features: ["Everything in Pro Monthly", "Save $20/year (2 months free)", "Priority support", "Early access to features"],
+      popular: false,
+      badge: "BEST VALUE"
     },
   ],
   coach: [
@@ -47,7 +58,8 @@ const PLANS = {
       price: "$29.99", 
       period: "/month",
       features: ["Team dashboard (25 athletes)", "At-risk alerts", "Team reports", "Priority support"],
-      popular: true
+      popular: true,
+      badge: null
     },
   ],
 };
@@ -55,7 +67,7 @@ const PLANS = {
 export default function SignUpPage() {
   const [step, setStep] = useState<"type" | "plan" | "form" | "verify" | "success">("type");
   const [userType, setUserType] = useState<UserType>("athlete");
-  const [selectedPlan, setSelectedPlan] = useState<PlanType>("free");
+  const [selectedPlan, setSelectedPlan] = useState<PlanType>("free_trial");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -276,9 +288,13 @@ export default function SignUpPage() {
                       selectedPlan === plan.id ? "border-primary bg-primary/10" : "border-border bg-secondary"
                     }`}
                   >
-                    {plan.popular && (
-                      <span className="absolute -top-3 left-4 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded">
-                        POPULAR
+                    {(plan.popular || plan.badge) && (
+                      <span className={`absolute -top-3 left-4 text-xs font-bold px-2 py-1 rounded ${
+                        plan.badge === "BEST VALUE" ? "bg-green-600 text-white" : 
+                        plan.badge === "7-DAY TRIAL" ? "bg-blue-600 text-white" : 
+                        "bg-primary text-primary-foreground"
+                      }`}>
+                        {plan.badge || "POPULAR"}
                       </span>
                     )}
                     <div className="flex items-center justify-between mb-3">
@@ -303,7 +319,7 @@ export default function SignUpPage() {
                   onClick={() => setStep("form")} 
                   className="w-full gap-2 mt-4"
                 >
-                  Continue with {PLANS[userType].find(p => p.id === selectedPlan)?.name}
+                  {selectedPlan === "free_trial" ? "Start 7-Day Free Trial" : `Continue with ${PLANS[userType].find(p => p.id === selectedPlan)?.name}`}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </CardContent>
@@ -322,9 +338,9 @@ export default function SignUpPage() {
                 </button>
                 <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
                 <CardDescription>
-                  {selectedPlan === "free" 
-                    ? "Enter your details to get started" 
-                    : `Enter your details for your ${selectedPlan === "pro" ? "Pro" : "Coach"} account`}
+                  {selectedPlan === "free_trial" 
+                    ? "Start your 7-day free trial - no credit card required" 
+                    : `Enter your details for your ${selectedPlan.includes("pro") ? "Pro" : "Coach"} account`}
                 </CardDescription>
               </CardHeader>
               <CardContent>

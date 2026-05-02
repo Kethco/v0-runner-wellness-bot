@@ -10,6 +10,7 @@ import { AICoachCard } from "@/components/dashboard/ai-coach-card";
 import { CheckInHistory } from "@/components/dashboard/checkin-history";
 import { GoalCard } from "@/components/dashboard/goal-card";
 import { TrendsChart } from "@/components/dashboard/trends-chart";
+import { TrialBanner } from "@/components/dashboard/trial-banner";
 import { useAuth } from "@/contexts/auth-context";
 
 function getGreeting(): string {
@@ -33,6 +34,9 @@ export default function Dashboard() {
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
+        {/* Trial Banner */}
+        <TrialBanner />
+
         {/* Hero Section */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
           <div>
