@@ -40,21 +40,23 @@ function formatDuration(minutes: number | null): string {
 export function WeeklyChart() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [weekNumber, setWeekNumber] = useState<number>(1);
+  const [todayIndex, setTodayIndex] = useState<number>(-1); // -1 means not yet calculated
   const [isClient, setIsClient] = useState(false);
   
   const { data, mutate } = useSWR("/api/runs?days=7", fetcher, {
     refreshInterval: 30000, // Refresh every 30 seconds
   });
 
-  // Calculate week number on client only to avoid hydration mismatch
+  // Calculate week number and today's index on client only to avoid hydration mismatch
   useEffect(() => {
     setIsClient(true);
     const now = new Date();
     const weekNum = Math.ceil((now.getDate() + new Date(now.getFullYear(), now.getMonth(), 1).getDay()) / 7);
     setWeekNumber(weekNum);
+    setTodayIndex(now.getDay());
   }, []);
 
-  // Build week data from runs
+  // Build week data from runs - use fixed date for SSR consistency
   const today = new Date();
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - today.getDay()); // Start from Sunday
@@ -87,7 +89,6 @@ export function WeeklyChart() {
   const totalMiles = weekData.reduce((acc, d) => acc + d.miles, 0);
   const goalMiles = 30; // TODO: Make this configurable per user
   const progress = Math.round((totalMiles / goalMiles) * 100);
-  const todayIndex = today.getDay();
 
   
 

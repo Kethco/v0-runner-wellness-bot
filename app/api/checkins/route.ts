@@ -112,6 +112,16 @@ export async function POST(request: NextRequest) {
       weeklyMiles: recentRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0,
       totalRuns: recentRuns?.length || 0,
     });
+
+    // Save AI advice to database so it persists
+    if (aiAdvice) {
+      await supabase.from("ai_advice").insert({
+        user_id: user.id,
+        advice: aiAdvice,
+        checkin_id: checkin.id,
+        source: "app",
+      });
+    }
   } catch (aiError) {
     console.error("AI advice generation failed:", aiError);
   }

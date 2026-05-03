@@ -3,66 +3,35 @@
 import { Bot, Sparkles, RefreshCw, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/auth-context";
+import useSWR from "swr";
 
-interface AICoachResponse {
-  advice: string;
+const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+interface AIAdviceResponse {
+  advice: string | null;
+  source: string | null;
+  hasCheckedInToday: boolean;
   todayCheckin: {
-    sleep: number;
+    sleep_rating: number;
     energy: number;
     soreness: number;
     readiness: number;
   } | null;
-  weeklyStats: {
-    avgSleep: string;
-    avgEnergy: string;
-    avgSoreness: string;
-    avgReadiness: string;
-    weeklyMiles: number;
-  };
 }
 
 export function AICoachCard() {
-  const { user } = useAuth();
-  const [advice, setAdvice] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasCheckedIn, setHasCheckedIn] = useState<boolean | null>(null);
-
-  const fetchAdvice = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const response = await fetch("/api/ai-coach", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to get advice");
-      }
-      
-      const data: AICoachResponse = await response.json();
-      setAdvice(data.advice);
-      setHasCheckedIn(data.todayCheckin !== null);
-    } catch (err) {
-      setError("Unable to load coaching advice");
-      console.error("AI Coach error:", err);
-    } finally {
-      setIsLoading(false);
+  // Fetch latest AI advice with auto-refresh every 30 seconds
+  const { data, error, isLoading, mutate } = useSWR<AIAdviceResponse>(
+    "/api/ai-advice",
+    fetcher,
+    { 
+      refreshInterval: 30000,
+      revalidateOnFocus: true,
     }
-  };
+  );
 
-  useEffect(() => {
-    if (user) {
-      fetchAdvice();
-    }
-  }, [user]);
+  const advice = data?.advice;
+  const hasCheckedIn = data?.hasCheckedInToday;
 
   return (
     <Card className="bg-card border-border p-5 relative overflow-hidden">
@@ -88,7 +57,7 @@ export function AICoachCard() {
           variant="ghost"
           size="icon"
           className="w-8 h-8 text-muted-foreground hover:text-foreground"
-          onClick={fetchAdvice}
+          onClick={() => mutate()}
           disabled={isLoading}
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
@@ -103,11 +72,22 @@ export function AICoachCard() {
       ) : error ? (
         <div className="flex items-center gap-2 text-sm text-destructive">
           <AlertCircle className="w-4 h-4" />
-          <span>{error}</span>
+          <span>Unable to load coaching advice</span>
         </div>
       ) : advice ? (
-        <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
-          {advice}
+        <div>
+          <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
+            {advice}
+          </p>
+          {data?.source === "sms" && (
+            <p className="text-[10px] text-muted-foreground mt-2">
+              Generated from your SMS check-in
+            </p>
+          )}
+        </div>
+      ) : hasCheckedIn ? (
+        <p className="text-sm text-muted-foreground">
+          Generating your personalized advice...
         </p>
       ) : (
         <p className="text-sm text-muted-foreground">

@@ -270,6 +270,13 @@ async function handleCheckinStep(
       });
       
       aiAdvice = `\n\nAI Coach: ${advice}`;
+      
+      // Save AI advice to database so app can display it
+      await supabase.from("ai_advice").insert({
+        user_id: userId,
+        advice: advice,
+        source: "sms",
+      });
     } catch (e) {
       // AI advice is optional, don't fail the check-in
       console.error("AI advice generation failed:", e);
