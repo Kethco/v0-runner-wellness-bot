@@ -5,7 +5,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import useSWR from "swr";
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const error = new Error("Failed to fetch");
+    throw error;
+  }
+  return res.json();
+};
 
 interface AIAdviceResponse {
   advice: string | null;
@@ -64,15 +71,14 @@ export function AICoachCard() {
         </Button>
       </div>
 
-      {isLoading && !advice ? (
+      {error ? (
+        <p className="text-sm text-muted-foreground">
+          Complete your daily check-in to get personalized AI coaching advice based on your wellness data.
+        </p>
+      ) : isLoading && !advice ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <RefreshCw className="w-4 h-4 animate-spin" />
           <span>Analyzing your wellness data...</span>
-        </div>
-      ) : error ? (
-        <div className="flex items-center gap-2 text-sm text-destructive">
-          <AlertCircle className="w-4 h-4" />
-          <span>Unable to load coaching advice</span>
         </div>
       ) : advice ? (
         <div>
