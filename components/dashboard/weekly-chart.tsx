@@ -39,9 +39,20 @@ function formatDuration(minutes: number | null): string {
 
 export function WeeklyChart() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [weekNumber, setWeekNumber] = useState<number>(1);
+  const [isClient, setIsClient] = useState(false);
+  
   const { data, mutate } = useSWR("/api/runs?days=7", fetcher, {
     refreshInterval: 30000, // Refresh every 30 seconds
   });
+
+  // Calculate week number on client only to avoid hydration mismatch
+  useEffect(() => {
+    setIsClient(true);
+    const now = new Date();
+    const weekNum = Math.ceil((now.getDate() + new Date(now.getFullYear(), now.getMonth(), 1).getDay()) / 7);
+    setWeekNumber(weekNum);
+  }, []);
 
   // Build week data from runs
   const today = new Date();
@@ -78,9 +89,7 @@ export function WeeklyChart() {
   const progress = Math.round((totalMiles / goalMiles) * 100);
   const todayIndex = today.getDay();
 
-  // Get current week number
-  const weekNumber = Math.ceil((today.getDate() + new Date(today.getFullYear(), today.getMonth(), 1).getDay()) / 7);
-  const monthName = today.toLocaleString("default", { month: "short" }).toUpperCase();
+  
 
   return (
     <Card className="bg-card border-border">
@@ -102,7 +111,7 @@ export function WeeklyChart() {
             <div className="inline-flex items-center gap-2 bg-secondary border border-border rounded-full px-3 py-1.5 mb-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Week {weekNumber}
+                {isClient ? `Week ${weekNumber}` : "Week"}
               </span>
             </div>
             <div className="flex items-center gap-1 justify-end">
