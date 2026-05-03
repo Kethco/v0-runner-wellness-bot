@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from "react";
+import { useState, useEffect, Suspense, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import useSWR from "swr";
 import { Navbar } from "@/components/dashboard/navbar";
@@ -75,11 +75,16 @@ function formatDateStatic(dateStr: string): string {
 function OpenDialogOnMount({ onOpen }: { onOpen: () => void }) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const hasOpened = useRef(false);
   
   useEffect(() => {
-    if (searchParams.get("add") === "true") {
+    if (searchParams.get("add") === "true" && !hasOpened.current) {
+      hasOpened.current = true;
       onOpen();
-      router.replace("/goals", { scroll: false });
+      // Use setTimeout to delay URL change until after dialog state is set
+      setTimeout(() => {
+        router.replace("/goals", { scroll: false });
+      }, 100);
     }
   }, [searchParams, router, onOpen]);
   
