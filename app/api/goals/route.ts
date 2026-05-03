@@ -13,7 +13,7 @@ export async function GET() {
     .from("goals")
     .select("*")
     .eq("user_id", user.id)
-    .order("race_date", { ascending: true });
+    .order("target_date", { ascending: true });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -36,10 +36,9 @@ export async function POST(request: NextRequest) {
     user_id: user.id,
     distance: body.distance,
     race_name: body.raceName || body.race_name,
-    race_date: body.raceDate || body.race_date,
+    target_date: body.raceDate || body.race_date || body.target_date,
     target_time: body.targetTime || body.target_time,
     status: body.status || "upcoming",
-    notes: body.notes,
   };
 
   const { data: goal, error } = await supabase
@@ -74,8 +73,9 @@ export async function PUT(request: NextRequest) {
   const dbUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (updates.raceName !== undefined) dbUpdates.race_name = updates.raceName;
   if (updates.race_name !== undefined) dbUpdates.race_name = updates.race_name;
-  if (updates.raceDate !== undefined) dbUpdates.race_date = updates.raceDate;
-  if (updates.race_date !== undefined) dbUpdates.race_date = updates.race_date;
+  if (updates.raceDate !== undefined) dbUpdates.target_date = updates.raceDate;
+  if (updates.race_date !== undefined) dbUpdates.target_date = updates.race_date;
+  if (updates.target_date !== undefined) dbUpdates.target_date = updates.target_date;
   if (updates.targetTime !== undefined) dbUpdates.target_time = updates.targetTime;
   if (updates.target_time !== undefined) dbUpdates.target_time = updates.target_time;
   if (updates.actualTime !== undefined) dbUpdates.actual_time = updates.actualTime;
