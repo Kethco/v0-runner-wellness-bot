@@ -176,34 +176,8 @@ function GoalsPageContent() {
     }
   };
 
-  if (error) {
-    const isUnauthorized = error.message === "Unauthorized";
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="border-border bg-card">
-            <CardContent className="py-16 text-center">
-              <Target className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                {isUnauthorized ? "Please Log In" : "Unable to Load Goals"}
-              </h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                {isUnauthorized 
-                  ? "Log in to view and manage your race goals."
-                  : "There was an error loading your goals. Please refresh the page or try again later."}
-              </p>
-              {isUnauthorized && (
-                <Button onClick={() => window.location.href = "/auth"}>
-                  Log In
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    );
-  }
+  // Check if user is unauthorized
+  const isUnauthorized = error?.message === "Unauthorized";
 
   return (
     <div className="min-h-screen bg-background">
@@ -290,7 +264,33 @@ function GoalsPageContent() {
           </Dialog>
         </div>
 
-        {isLoading ? (
+        {isUnauthorized ? (
+          <Card className="border-border bg-card">
+            <CardContent className="py-16 text-center">
+              <Target className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">Please Log In</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Log in to view and manage your race goals.
+              </p>
+              <Button onClick={() => window.location.href = "/auth"}>
+                Log In
+              </Button>
+            </CardContent>
+          </Card>
+        ) : error ? (
+          <Card className="border-border bg-card">
+            <CardContent className="py-16 text-center">
+              <Target className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">Unable to Load Goals</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                There was an error loading your goals. Please refresh the page or try again later.
+              </p>
+              <Button variant="outline" onClick={() => mutate()}>
+                Retry
+              </Button>
+            </CardContent>
+          </Card>
+        ) : isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
