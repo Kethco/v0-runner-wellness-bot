@@ -28,6 +28,7 @@ interface LogRunModalProps {
 export function LogRunModal({ onRunLogged }: LogRunModalProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     miles: "",
     pace: "",
@@ -41,6 +42,7 @@ export function LogRunModal({ onRunLogged }: LogRunModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch("/api/runs", {
@@ -69,9 +71,16 @@ export function LogRunModal({ onRunLogged }: LogRunModalProps) {
           date: new Date().toISOString().split("T")[0],
         });
         onRunLogged?.();
+      } else {
+        const errorData = await response.json();
+        if (errorData.error === "Unauthorized") {
+          setError("Please log in to save your run");
+        } else {
+          setError(errorData.error || "Failed to save run. Please try again.");
+        }
       }
-    } catch (error) {
-      console.error("Error logging run:", error);
+    } catch (err) {
+      setError("Failed to save run. Please check your connection.");
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +102,11 @@ export function LogRunModal({ onRunLogged }: LogRunModalProps) {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+              {error}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="miles">Distance (miles) *</Label>
