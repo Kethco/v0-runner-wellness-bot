@@ -7,10 +7,7 @@ import useSWR from "swr";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
-  if (!res.ok) {
-    const error = new Error("Failed to fetch");
-    throw error;
-  }
+  if (!res.ok) return null;
   return res.json();
 };
 
@@ -71,11 +68,7 @@ export function AICoachCard() {
         </Button>
       </div>
 
-      {error ? (
-        <p className="text-sm text-muted-foreground">
-          Complete your daily check-in to get personalized AI coaching advice based on your wellness data.
-        </p>
-      ) : isLoading && !advice ? (
+      {isLoading && !advice ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <RefreshCw className="w-4 h-4 animate-spin" />
           <span>Analyzing your wellness data...</span>

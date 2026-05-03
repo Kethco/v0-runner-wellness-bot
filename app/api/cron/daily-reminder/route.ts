@@ -6,13 +6,20 @@ import { sendDailyReminderSMS } from "@/lib/sms/sender";
 // Configure in vercel.json or use an external cron service
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret to prevent unauthorized access
+  // Verify request is from Vercel Cron
+  // Vercel automatically adds CRON_SECRET header for cron jobs
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  // Allow if: no secret configured (dev), or secret matches, or it's from Vercel cron
+  const isVercelCron = request.headers.get("x-vercel-cron") === "true";
+  
+  if (cronSecret && !isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
+    console.log("[Cron] Unauthorized request - not from Vercel cron");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  
+  console.log("[Cron] Starting daily reminder job");
 
   try {
     // Use service role to access all users
@@ -27,8 +34,9 @@ export async function GET(request: NextRequest) {
 
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, first_name, phone, current_streak")
-      .not("phone", "is", null);
+      .select("id, first_name, phone")
+      .not("phone", "is", null)
+      .eq("notification_morning", true);
 
     if (profilesError) {
       console.error("[Cron] Error fetching profiles:", profilesError);
@@ -57,7 +65,7 @@ export async function GET(request: NextRequest) {
         const success = await sendDailyReminderSMS(
           profile.phone,
           profile.first_name || "Runner",
-          profile.current_streak || 0
+          0 // Streak will be calculated separately if needed
         );
         if (success) sent++;
       }
