@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import useSWR from "swr";
 import { Navbar } from "@/components/dashboard/navbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -71,8 +71,22 @@ function formatDateStatic(dateStr: string): string {
   });
 }
 
-function GoalsPageContent() {
+// Separate component to handle URL params (wrapped in Suspense)
+function OpenDialogOnMount({ onOpen }: { onOpen: () => void }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (searchParams.get("add") === "true") {
+      onOpen();
+      router.replace("/goals", { scroll: false });
+    }
+  }, [searchParams, router, onOpen]);
+  
+  return null;
+}
+
+function GoalsPageContent() {
   const { data, error, mutate, isLoading } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -83,14 +97,14 @@ function GoalsPageContent() {
     raceDate: "",
     targetTime: "",
   });
+  
+  const handleOpenDialog = useCallback(() => {
+    setIsDialogOpen(true);
+  }, []);
 
   useEffect(() => {
     setMounted(true);
-    // Check if we should open dialog from URL param
-    if (searchParams.get("add") === "true") {
-      setIsDialogOpen(true);
-    }
-  }, [searchParams]);
+  }, []);
 
   const goals = data?.goals || [];
 
@@ -213,6 +227,9 @@ function GoalsPageContent() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Suspense fallback={null}>
+        <OpenDialogOnMount onOpen={handleOpenDialog} />
+      </Suspense>
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -544,18 +561,5 @@ function GoalsPageContent() {
 }
 
 export default function GoalsPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        </main>
-      </div>
-    }>
-      <GoalsPageContent />
-    </Suspense>
-  );
+  return <GoalsPageContent />;
 }
