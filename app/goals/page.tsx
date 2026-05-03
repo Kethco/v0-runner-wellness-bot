@@ -208,7 +208,7 @@ function GoalsPageContent() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="distance">Race Distance</Label>
+                  <Label htmlFor="distance">Race Distance <span className="text-destructive">*</span></Label>
                   <Select value={newGoal.distance} onValueChange={(v) => setNewGoal({ ...newGoal, distance: v })}>
                     <SelectTrigger className="bg-secondary border-border">
                       <SelectValue placeholder="Select distance" />
@@ -231,7 +231,7 @@ function GoalsPageContent() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date">Race Date</Label>
+                  <Label htmlFor="date">Race Date <span className="text-destructive">*</span></Label>
                   <Input
                     id="date"
                     type="date"
@@ -255,7 +255,10 @@ function GoalsPageContent() {
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddGoal} disabled={isSaving}>
+                <Button 
+                  onClick={handleAddGoal} 
+                  disabled={isSaving || !newGoal.distance || !newGoal.raceDate}
+                >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Set Goal
                 </Button>
