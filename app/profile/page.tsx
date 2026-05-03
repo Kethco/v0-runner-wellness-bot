@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { Navbar } from "@/components/dashboard/navbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,9 +29,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   User,
-  Mail,
-  Phone,
-  Shield,
   Bell,
   CreditCard,
   Calendar,
@@ -39,51 +37,87 @@ import {
   Lock,
   Trash2,
   ExternalLink,
-  Check,
+  Shield,
+  Loader2,
 } from "lucide-react";
+import { useAuth } from "@/contexts/auth-context";
 
-// Mock user data matching backend UserProfile
-const mockUser = {
-  name: "Alex Runner",
-  email: "alex@example.com",
-  phone: "+1234567890",
-  role: "runner" as const,
-  user_mode: "athlete" as const,
-  coachPhone: "+0987654321",
-  joinedAt: Date.now() - 90 * 24 * 60 * 60 * 1000, // 90 days ago
-  gender: "M" as const,
-  birthYear: 1990,
-  plan: "solo_pro" as const,
-  trialStartAt: undefined,
-};
-
-const PLAN_DETAILS = {
-  trial: { name: "Free Trial", price: "$0", features: ["7-day trial", "Basic check-ins", "Limited trends"] },
-  solo_pro: { name: "Solo Pro", price: "$4.99/mo", features: ["Unlimited check-ins", "Full trends", "AI coaching", "Race predictions"] },
-  coach_starter: { name: "Coach Starter", price: "$19.99/mo", features: ["Up to 5 athletes", "Team dashboard", "All Solo Pro features"] },
-  coach_team: { name: "Coach Team", price: "$49.99/mo", features: ["Up to 25 athletes", "Priority support", "Custom branding"] },
-  coach_club: { name: "Coach Club", price: "$99.99/mo", features: ["Unlimited athletes", "API access", "White-label option"] },
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return res.json();
 };
 
 export default function ProfilePage() {
-  const [user, setUser] = useState(mockUser);
+  const { user } = useAuth();
+  const { data: profileData } = useSWR(user ? "/api/profile" : null, fetcher);
+  const { data: statsData } = useSWR(user ? "/api/checkins?limit=1" : null, fetcher);
+  
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [editedProfile, setEditedProfile] = useState({
+    name: "",
+    gender: "",
+    birthYear: "",
+  });
   const [notifications, setNotifications] = useState({
     morningReminder: true,
     weeklyReport: true,
     aiTips: true,
     injuryAlerts: true,
   });
-  const [privacyMode, setPrivacyMode] = useState<"solo" | "coach">("coach");
+  const [privacyMode, setPrivacyMode] = useState<"solo" | "coach">("solo");
 
-  const planInfo = PLAN_DETAILS[user.plan] || PLAN_DETAILS.trial;
-  const memberSince = new Date(user.joinedAt).toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  // Initialize edited profile when data loads
+  useEffect(() => {
+    if (profileData?.profile) {
+      setEditedProfile({
+        name: profileData.profile.name || user?.user_metadata?.name || "",
+        gender: profileData.profile.gender || "",
+        birthYear: profileData.profile.birth_year?.toString() || "",
+      });
+    } else if (user) {
+      setEditedProfile({
+        name: user.user_metadata?.name || user.email?.split("@")[0] || "",
+        gender: "",
+        birthYear: "",
+      });
+    }
+  }, [profileData, user]);
 
-  const calculateAge = (birthYear: number) => {
-    return new Date().getFullYear() - birthYear;
+  const displayName = editedProfile.name || user?.email?.split("@")[0] || "Runner";
+  const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+  
+  const memberSince = user?.created_at 
+    ? new Date(user.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    : "Recently";
+
+  const calculateAge = (birthYear: string) => {
+    const year = parseInt(birthYear);
+    if (isNaN(year)) return null;
+    return new Date().getFullYear() - year;
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editedProfile.name,
+          gender: editedProfile.gender || null,
+          birth_year: editedProfile.birthYear ? parseInt(editedProfile.birthYear) : null,
+        }),
+      });
+      if (response.ok) {
+        setIsEditing(false);
+      }
+    } catch (err) {
+      console.error("Failed to save profile:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -95,7 +129,7 @@ export default function ProfilePage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Profile & Settings</h1>
           <p className="text-muted-foreground mt-1">
-            Manage your account, preferences, and subscription
+            Manage your account and preferences
           </p>
         </div>
 
@@ -120,9 +154,9 @@ export default function ProfilePage() {
             <CardContent>
               <div className="flex items-start gap-6">
                 <Avatar className="w-20 h-20">
-                  <AvatarImage src="" />
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
                   <AvatarFallback className="bg-primary/20 text-primary text-xl">
-                    {user.name.split(" ").map(n => n[0]).join("")}
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
                 
@@ -132,9 +166,9 @@ export default function ProfilePage() {
                       <Label htmlFor="name">Full Name</Label>
                       <Input
                         id="name"
-                        value={user.name}
+                        value={editedProfile.name}
                         disabled={!isEditing}
-                        onChange={(e) => setUser({ ...user, name: e.target.value })}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
                         className="bg-secondary border-border disabled:opacity-70"
                       />
                     </div>
@@ -143,17 +177,16 @@ export default function ProfilePage() {
                       <Input
                         id="email"
                         type="email"
-                        value={user.email || ""}
-                        disabled={!isEditing}
-                        onChange={(e) => setUser({ ...user, email: e.target.value })}
+                        value={user?.email || ""}
+                        disabled
                         className="bg-secondary border-border disabled:opacity-70"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="gender">Gender</Label>
                       <Select 
-                        value={user.gender} 
-                        onValueChange={(v) => setUser({ ...user, gender: v as "M" | "F" })}
+                        value={editedProfile.gender} 
+                        onValueChange={(v) => setEditedProfile({ ...editedProfile, gender: v })}
                         disabled={!isEditing}
                       >
                         <SelectTrigger className="bg-secondary border-border">
@@ -162,6 +195,7 @@ export default function ProfilePage() {
                         <SelectContent>
                           <SelectItem value="M">Male</SelectItem>
                           <SelectItem value="F">Female</SelectItem>
+                          <SelectItem value="O">Other</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -170,16 +204,18 @@ export default function ProfilePage() {
                       <Input
                         id="birthYear"
                         type="number"
-                        value={user.birthYear}
+                        value={editedProfile.birthYear}
                         disabled={!isEditing}
-                        onChange={(e) => setUser({ ...user, birthYear: parseInt(e.target.value) })}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, birthYear: e.target.value })}
                         className="bg-secondary border-border disabled:opacity-70"
+                        placeholder="e.g. 1990"
                       />
                     </div>
                   </div>
                   
                   {isEditing && (
-                    <Button className="mt-4" onClick={() => setIsEditing(false)}>
+                    <Button className="mt-4" onClick={handleSaveProfile} disabled={isSaving}>
+                      {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                       Save Changes
                     </Button>
                   )}
@@ -187,60 +223,19 @@ export default function ProfilePage() {
                   <div className="flex flex-wrap gap-3 pt-2">
                     <Badge variant="secondary" className="gap-1">
                       <Activity className="w-3 h-3" />
-                      {user.role === "coach" ? "Coach" : "Runner"}
+                      Runner
                     </Badge>
                     <Badge variant="secondary" className="gap-1">
                       <Calendar className="w-3 h-3" />
                       Member since {memberSince}
                     </Badge>
-                    {user.birthYear && (
+                    {editedProfile.birthYear && calculateAge(editedProfile.birthYear) && (
                       <Badge variant="secondary">
-                        Age {calculateAge(user.birthYear)}
+                        Age {calculateAge(editedProfile.birthYear)}
                       </Badge>
                     )}
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Subscription Card */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CreditCard className="w-5 h-5" />
-                Subscription
-              </CardTitle>
-              <CardDescription>Your current plan and billing</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg mb-4">
-                <div>
-                  <h3 className="font-semibold text-foreground">{planInfo.name}</h3>
-                  <p className="text-sm text-muted-foreground">{planInfo.price}</p>
-                </div>
-                <Badge variant="default">Active</Badge>
-              </div>
-              
-              <div className="space-y-2 mb-4">
-                <p className="text-sm text-muted-foreground font-medium">Plan includes:</p>
-                <ul className="space-y-1">
-                  {planInfo.features.map((feature, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Check className="w-4 h-4 text-emerald-500" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="flex gap-3">
-                <Button variant="outline" size="sm">
-                  Change Plan
-                </Button>
-                <Button variant="outline" size="sm">
-                  Billing History
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -290,18 +285,6 @@ export default function ProfilePage() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {privacyMode === "coach" && user.coachPhone && (
-                  <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                    <div>
-                      <h4 className="font-medium text-foreground">Linked Coach</h4>
-                      <p className="text-sm text-muted-foreground">{user.coachPhone}</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Unlink
-                    </Button>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -320,7 +303,7 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium text-foreground">Morning Check-in Reminder</h4>
-                    <p className="text-sm text-muted-foreground">Daily reminder at 7 AM</p>
+                    <p className="text-sm text-muted-foreground">Daily reminder via SMS</p>
                   </div>
                   <Switch
                     checked={notifications.morningReminder}
@@ -378,7 +361,7 @@ export default function ProfilePage() {
                 <div>
                   <h4 className="font-medium text-foreground">Delete Account</h4>
                   <p className="text-sm text-muted-foreground">
-                    Permanently delete your account and all data (GDPR Art. 17)
+                    Permanently delete your account and all data
                   </p>
                 </div>
                 <Dialog>
@@ -391,7 +374,7 @@ export default function ProfilePage() {
                     <DialogHeader>
                       <DialogTitle>Are you sure?</DialogTitle>
                       <DialogDescription>
-                        This action cannot be undone. All your check-ins, trends, and account data will be permanently deleted.
+                        This action cannot be undone. All your check-ins, runs, and account data will be permanently deleted.
                       </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
