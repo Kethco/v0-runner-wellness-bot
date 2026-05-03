@@ -1,20 +1,92 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { Target, Calendar, Timer, Plus } from "lucide-react";
+import { useState } from "react";
+import { Target, Calendar, Timer, Plus, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface GoalCardProps {
   race?: string;
   date?: string;
   targetTime?: string;
+  onGoalAdded?: () => void;
 }
 
-export function GoalCard({ race, date, targetTime }: GoalCardProps) {
-  const router = useRouter();
+const DISTANCES = ["5K", "10K", "Half Marathon", "Marathon", "Ultra"];
+
+export function GoalCard({ race, date, targetTime, onGoalAdded }: GoalCardProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [newGoal, setNewGoal] = useState({
+    distance: "",
+    raceName: "",
+    raceDate: "",
+    targetTime: "",
+  });
+
   // Calculate days until race if date is provided
   const daysUntil = date ? Math.ceil((new Date(date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+
+  const handleAddGoal = async () => {
+    if (!newGoal.distance || !newGoal.raceDate) {
+      setError("Please fill in Race Distance and Race Date");
+      return;
+    }
+
+    setError(null);
+    setIsSaving(true);
+
+    try {
+      const response = await fetch("/api/goals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          distance: newGoal.distance,
+          raceName: newGoal.raceName || null,
+          raceDate: newGoal.raceDate,
+          targetTime: newGoal.targetTime || null,
+          status: "active",
+        }),
+      });
+
+      if (response.ok) {
+        setNewGoal({ distance: "", raceName: "", raceDate: "", targetTime: "" });
+        setIsDialogOpen(false);
+        onGoalAdded?.();
+        window.location.reload(); // Refresh to show the new goal
+      } else {
+        const errorData = await response.json();
+        if (errorData.error === "Unauthorized") {
+          setError("Please log in to save your goal");
+        } else {
+          setError("Failed to save goal. Please try again.");
+        }
+      }
+    } catch (err) {
+      setError("Failed to save goal. Please check your connection.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Show empty state if no goal is set
   if (!race || !date) {
@@ -28,15 +100,86 @@ export function GoalCard({ race, date, targetTime }: GoalCardProps) {
           <p className="text-xs text-muted-foreground mb-3">
             Set a goal to track your training progress
           </p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-1"
-            onClick={() => router.push("/goals")}
-          >
-            <Plus className="w-3 h-3" />
-            Add Goal
-          </Button>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1">
+                <Plus className="w-3 h-3" />
+                Add Goal
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-card border-border">
+              <DialogHeader>
+                <DialogTitle>Set a New Goal Race</DialogTitle>
+                <DialogDescription>
+                  What race are you training for? Set your target and countdown.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                {error && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                    {error}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="distance">Race Distance <span className="text-destructive">*</span></Label>
+                  <Select value={newGoal.distance} onValueChange={(v) => setNewGoal({ ...newGoal, distance: v })}>
+                    <SelectTrigger className="bg-secondary border-border">
+                      <SelectValue placeholder="Select distance" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DISTANCES.map((d) => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="raceName">Race Name (optional)</Label>
+                  <Input
+                    id="raceName"
+                    placeholder="e.g. Boston Marathon"
+                    value={newGoal.raceName}
+                    onChange={(e) => setNewGoal({ ...newGoal, raceName: e.target.value })}
+                    className="bg-secondary border-border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date">Race Date <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={newGoal.raceDate}
+                    onChange={(e) => setNewGoal({ ...newGoal, raceDate: e.target.value })}
+                    className="bg-secondary border-border"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="targetTime">Target Time (optional)</Label>
+                  <Input
+                    id="targetTime"
+                    placeholder="e.g. 1:45:00"
+                    value={newGoal.targetTime}
+                    onChange={(e) => setNewGoal({ ...newGoal, targetTime: e.target.value })}
+                    className="bg-secondary border-border"
+                  />
+                </div>
+              </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  type="button"
+                  disabled={isSaving}
+                  onClick={handleAddGoal}
+                >
+                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Set Goal
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </Card>
     );
