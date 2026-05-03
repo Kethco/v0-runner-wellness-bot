@@ -47,12 +47,13 @@ export function GoalCard({ race, date, targetTime, onGoalAdded }: GoalCardProps)
   const daysUntil = date ? Math.ceil((new Date(date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
 
   const handleAddGoal = async () => {
+    setError(null); // Clear any previous error first
+    
     if (!newGoal.distance || !newGoal.raceDate) {
       setError("Please fill in Race Distance and Race Date");
       return;
     }
 
-    setError(null);
     setIsSaving(true);
 
     try {
