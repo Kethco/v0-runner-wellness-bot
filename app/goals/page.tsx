@@ -42,7 +42,6 @@ const fetcher = async (url: string) => {
   const res = await fetch(url);
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    console.log("[v0] Goals fetch error:", res.status, errorData);
     throw new Error(errorData.error || "Failed to fetch");
   }
   return res.json();
@@ -178,11 +177,29 @@ export default function GoalsPage() {
   };
 
   if (error) {
+    const isUnauthorized = error.message === "Unauthorized";
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <p className="text-muted-foreground">Failed to load goals. Please try again.</p>
+          <Card className="border-border bg-card">
+            <CardContent className="py-16 text-center">
+              <Target className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                {isUnauthorized ? "Please Log In" : "Unable to Load Goals"}
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                {isUnauthorized 
+                  ? "Log in to view and manage your race goals."
+                  : "There was an error loading your goals. Please refresh the page or try again later."}
+              </p>
+              {isUnauthorized && (
+                <Button onClick={() => window.location.href = "/auth"}>
+                  Log In
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         </main>
       </div>
     );
