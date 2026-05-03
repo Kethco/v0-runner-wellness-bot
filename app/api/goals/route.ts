@@ -2,9 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
+  console.log("[v0] GET /api/goals - starting");
   const supabase = await createClient();
   
   const { data: { user }, error: authError } = await supabase.auth.getUser();
+  console.log("[v0] GET /api/goals - user:", user?.id, "authError:", authError?.message);
+  
   if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -14,6 +17,8 @@ export async function GET() {
     .select("*")
     .eq("user_id", user.id)
     .order("race_date", { ascending: true });
+
+  console.log("[v0] GET /api/goals - found:", goals?.length, "goals, error:", error?.message);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

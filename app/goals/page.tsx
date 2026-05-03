@@ -40,7 +40,11 @@ interface Goal {
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch");
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    console.log("[v0] Goals fetch error:", res.status, errorData);
+    throw new Error(errorData.error || "Failed to fetch");
+  }
   return res.json();
 };
 
