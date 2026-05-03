@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { Navbar } from "@/components/dashboard/navbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -71,26 +70,6 @@ function formatDateStatic(dateStr: string): string {
   });
 }
 
-// Separate component to handle URL params (wrapped in Suspense)
-function OpenDialogOnMount({ onOpen }: { onOpen: () => void }) {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const hasOpened = useRef(false);
-  
-  useEffect(() => {
-    if (searchParams.get("add") === "true" && !hasOpened.current) {
-      hasOpened.current = true;
-      onOpen();
-      // Use setTimeout to delay URL change until after dialog state is set
-      setTimeout(() => {
-        router.replace("/goals", { scroll: false });
-      }, 100);
-    }
-  }, [searchParams, router, onOpen]);
-  
-  return null;
-}
-
 function GoalsPageContent() {
   const { data, error, mutate, isLoading } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -102,10 +81,6 @@ function GoalsPageContent() {
     raceDate: "",
     targetTime: "",
   });
-  
-  const handleOpenDialog = useCallback(() => {
-    setIsDialogOpen(true);
-  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -232,9 +207,6 @@ function GoalsPageContent() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Suspense fallback={null}>
-        <OpenDialogOnMount onOpen={handleOpenDialog} />
-      </Suspense>
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
