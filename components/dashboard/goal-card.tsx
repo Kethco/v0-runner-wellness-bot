@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Target, Calendar, Timer, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ race, date, targetTime }: GoalCardProps) {
+  const router = useRouter();
   // Calculate days until race if date is provided
   const daysUntil = date ? Math.ceil((new Date(date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
 
@@ -26,7 +28,12 @@ export function GoalCard({ race, date, targetTime }: GoalCardProps) {
           <p className="text-xs text-muted-foreground mb-3">
             Set a goal to track your training progress
           </p>
-          <Button variant="outline" size="sm" className="gap-1">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-1"
+            onClick={() => router.push("/goals")}
+          >
             <Plus className="w-3 h-3" />
             Add Goal
           </Button>
