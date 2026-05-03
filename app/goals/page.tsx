@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { Navbar } from "@/components/dashboard/navbar";
@@ -71,7 +71,7 @@ function formatDateStatic(dateStr: string): string {
   });
 }
 
-export default function GoalsPage() {
+function GoalsPageContent() {
   const searchParams = useSearchParams();
   const { data, error, mutate, isLoading } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -540,5 +540,22 @@ export default function GoalsPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function GoalsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        </main>
+      </div>
+    }>
+      <GoalsPageContent />
+    </Suspense>
   );
 }
