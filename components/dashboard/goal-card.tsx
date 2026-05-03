@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { Target, Calendar, Timer, Plus, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,16 +24,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface GoalCardProps {
-  race?: string;
-  date?: string;
-  targetTime?: string;
-  onGoalAdded?: () => void;
+interface Goal {
+  id: string;
+  distance: string;
+  race_name?: string;
+  target_date: string;
+  target_time?: string;
+  status: string;
 }
 
 const DISTANCES = ["5K", "10K", "Half Marathon", "Marathon", "Ultra"];
 
-export function GoalCard({ race, date, targetTime, onGoalAdded }: GoalCardProps) {
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return res.json();
+};
+
+export function GoalCard() {
+  const { data, mutate } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +53,25 @@ export function GoalCard({ race, date, targetTime, onGoalAdded }: GoalCardProps)
     targetTime: "",
   });
 
-  // Calculate days until race if date is provided
-  const daysUntil = date ? Math.ceil((new Date(date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+  // Find the active goal
+  const activeGoal = data?.goals?.find(g => g.status === "active");
+  
+  // Format date for display
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+  
+  // Calculate days until race
+  const calculateDaysUntil = (dateStr: string) => {
+    const raceDate = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    raceDate.setHours(0, 0, 0, 0);
+    return Math.ceil((raceDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  };
+  
+  const daysUntil = activeGoal?.target_date ? calculateDaysUntil(activeGoal.target_date) : null;
 
   const handleAddGoal = async () => {
     setError(null); // Clear any previous error first
@@ -72,8 +99,7 @@ export function GoalCard({ race, date, targetTime, onGoalAdded }: GoalCardProps)
       if (response.ok) {
         setNewGoal({ distance: "", raceName: "", raceDate: "", targetTime: "" });
         setIsDialogOpen(false);
-        onGoalAdded?.();
-        window.location.reload(); // Refresh to show the new goal
+        mutate(); // Refresh goals data
       } else {
         const errorData = await response.json();
         if (errorData.error === "Unauthorized") {
@@ -89,8 +115,8 @@ export function GoalCard({ race, date, targetTime, onGoalAdded }: GoalCardProps)
     }
   };
 
-  // Show empty state if no goal is set
-  if (!race || !date) {
+  // Show empty state if no active goal
+  if (!activeGoal) {
     return (
       <Card className="bg-card border-border p-4 relative overflow-hidden">
         <div className="flex flex-col items-center justify-center py-4 text-center">
@@ -196,8 +222,8 @@ export function GoalCard({ race, date, targetTime, onGoalAdded }: GoalCardProps)
           <Target className="w-4 h-4 text-primary" />
         </div>
         <div>
-          <p className="text-xs font-bold">Goal Race</p>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{race}</p>
+          <p className="text-xs font-bold">{activeGoal.race_name || activeGoal.distance}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{activeGoal.distance}</p>
         </div>
       </div>
 
@@ -206,15 +232,15 @@ export function GoalCard({ race, date, targetTime, onGoalAdded }: GoalCardProps)
           <Calendar className="w-4 h-4 text-muted-foreground" />
           <div>
             <p className="text-xs text-muted-foreground">Date</p>
-            <p className="text-sm font-bold">{date}</p>
+            <p className="text-sm font-bold">{formatDate(activeGoal.target_date)}</p>
           </div>
         </div>
-        {targetTime && (
+        {activeGoal.target_time && (
           <div className="flex items-center gap-2">
             <Timer className="w-4 h-4 text-muted-foreground" />
             <div>
               <p className="text-xs text-muted-foreground">Target</p>
-              <p className="text-sm font-bold">{targetTime}</p>
+              <p className="text-sm font-bold">{activeGoal.target_time}</p>
             </div>
           </div>
         )}
