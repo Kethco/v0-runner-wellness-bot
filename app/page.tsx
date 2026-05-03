@@ -29,13 +29,35 @@ export default function Dashboard() {
   const [greeting, setGreeting] = useState("Hello");
   const [weekLabel, setWeekLabel] = useState("");
   
-  // Fetch weekly miles and streak
-  const { data: runsData } = useSWR("/api/runs?period=week", fetcher);
-  const { data: checkinsData } = useSWR("/api/checkins?limit=1", fetcher);
+  // Fetch streak and check-in status
+  const { data: checkinsData } = useSWR("/api/checkins?limit=7", fetcher);
   
-  const weeklyMiles = runsData?.weeklyTotal || 0;
-  const hasCheckedInToday = checkinsData?.checkins?.[0]?.date === new Date().toISOString().split("T")[0];
-  const currentStreak = user?.user_metadata?.current_streak || 0;
+  const todayStr = new Date().toISOString().split("T")[0];
+  const hasCheckedInToday = checkinsData?.checkins?.[0]?.date === todayStr;
+  
+  // Calculate streak from check-ins
+  const calculateStreak = () => {
+    if (!checkinsData?.checkins?.length) return 0;
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    for (let i = 0; i < checkinsData.checkins.length; i++) {
+      const checkinDate = new Date(checkinsData.checkins[i].date);
+      checkinDate.setHours(0, 0, 0, 0);
+      const expectedDate = new Date(today);
+      expectedDate.setDate(today.getDate() - i);
+      
+      if (checkinDate.getTime() === expectedDate.getTime()) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  };
+  
+  const currentStreak = calculateStreak();
   
   useEffect(() => {
     setGreeting(getGreeting());
@@ -57,24 +79,29 @@ export default function Dashboard() {
         {/* Trial Banner */}
         <TrialBanner />
 
-        {/* Hero Section */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-4">
+        {/* Hero Section - Greeting + Quick Stats */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
           <div>
-            <p className="text-sm md:text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
               {greeting}, {userName}
-            </p>
-            <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-none">
-              {weeklyMiles.toFixed(1)}
             </h1>
-            <p className="text-sm font-bold uppercase tracking-widest text-muted-foreground mt-1">
-              Miles this week
+            <p className="text-sm text-muted-foreground mt-1">
+              {weekLabel || "Loading..."}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full px-4 py-2">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-sm md:text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                {weekLabel || "Loading..."}
+          <div className="flex items-center gap-4">
+            {/* Streak Counter */}
+            {currentStreak > 0 && (
+              <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2">
+                <span className="text-lg">🔥</span>
+                <span className="text-sm font-bold text-primary">{currentStreak} day streak</span>
+              </div>
+            )}
+            {/* Check-in Status */}
+            <div className={`flex items-center gap-2 rounded-full px-4 py-2 ${hasCheckedInToday ? 'bg-green-500/10 border border-green-500/20' : 'bg-card border border-border'}`}>
+              <div className={`w-2 h-2 rounded-full ${hasCheckedInToday ? 'bg-green-500' : 'bg-muted-foreground'}`} />
+              <span className={`text-sm font-medium ${hasCheckedInToday ? 'text-green-500' : 'text-muted-foreground'}`}>
+                {hasCheckedInToday ? 'Checked in today' : 'Not checked in yet'}
               </span>
             </div>
           </div>

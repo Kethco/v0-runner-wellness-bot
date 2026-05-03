@@ -97,12 +97,9 @@ export function WeeklyChart() {
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-3 mb-1">
-              <p className="text-sm md:text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                This Week
-              </p>
-              <LogRunModal onRunLogged={() => mutate()} />
-            </div>
+            <p className="text-sm md:text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">
+              This Week
+            </p>
             <CardTitle className="text-4xl font-black tracking-tight">
               {totalMiles.toFixed(1)}
               <span className="text-lg font-normal text-muted-foreground ml-1">miles</span>
@@ -200,21 +197,24 @@ export function WeeklyChart() {
           </div>
         )}
 
-        {/* Milestones */}
-        <div className="flex gap-4 flex-wrap">
-          {weekData
-            .filter((d) => d.miles > 0)
-            .map((d, i) => (
-              <div key={i} className="text-center">
-                <p className="text-sm font-black">{d.miles.toFixed(1)}mi</p>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">
-                  {d.day}
-                </p>
-              </div>
-            ))}
-          {weekData.filter(d => d.miles > 0).length === 0 && (
-            <p className="text-sm text-muted-foreground">No runs logged this week. Click &quot;Log Run&quot; to get started!</p>
-          )}
+        {/* Bottom section with milestones and Log Run button */}
+        <div className="flex items-center justify-between">
+          <div className="flex gap-4 flex-wrap">
+            {weekData
+              .filter((d) => d.miles > 0)
+              .map((d, i) => (
+                <div key={i} className="text-center">
+                  <p className="text-sm font-black">{d.miles.toFixed(1)}mi</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                    {d.day}
+                  </p>
+                </div>
+              ))}
+            {weekData.filter(d => d.miles > 0).length === 0 && (
+              <p className="text-sm text-muted-foreground">No runs logged yet this week</p>
+            )}
+          </div>
+          <LogRunModal onRunLogged={() => mutate()} />
         </div>
       </CardContent>
     </Card>
