@@ -31,7 +31,7 @@ interface Goal {
   id: string;
   distance: string;
   race_name?: string;
-  race_date: string;
+  target_date: string;
   target_time?: string;
   actual_time?: string;
   status: "active" | "completed" | "upcoming";
@@ -356,7 +356,7 @@ function GoalsPageContent() {
                       )}
                       <p className="text-muted-foreground flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
-                        {formatDate(activeGoal.race_date)}
+                        {formatDate(activeGoal.target_date)}
                       </p>
                       {activeGoal.target_time && (
                         <p className="text-muted-foreground flex items-center gap-2 mt-1">
@@ -369,13 +369,13 @@ function GoalsPageContent() {
                       <div className="grid grid-cols-2 gap-4 text-center">
                         <div className="p-4 bg-secondary rounded-lg">
                           <div className="text-3xl font-bold text-primary" suppressHydrationWarning>
-                            {getDaysUntil(activeGoal.race_date)}
+                            {getDaysUntil(activeGoal.target_date)}
                           </div>
                           <div className="text-xs text-muted-foreground uppercase tracking-wide">Days</div>
                         </div>
                         <div className="p-4 bg-secondary rounded-lg">
                           <div className="text-3xl font-bold text-foreground" suppressHydrationWarning>
-                            {getWeeksUntil(activeGoal.race_date)}
+                            {getWeeksUntil(activeGoal.target_date)}
                           </div>
                           <div className="text-xs text-muted-foreground uppercase tracking-wide">Weeks</div>
                         </div>
@@ -442,7 +442,7 @@ function GoalsPageContent() {
                               <p className="text-sm text-muted-foreground">{goal.distance}</p>
                             )}
                             <p className="text-sm text-muted-foreground">
-                              {formatDate(goal.race_date)}
+                              {formatDate(goal.target_date)}
                             </p>
                             {goal.target_time && (
                               <p className="text-sm text-muted-foreground">
@@ -453,7 +453,7 @@ function GoalsPageContent() {
                           <div className="flex items-center gap-3">
                             <div className="text-right">
                               <div className="text-lg font-bold text-foreground" suppressHydrationWarning>
-                                {getDaysUntil(goal.race_date)}
+                                {getDaysUntil(goal.target_date)}
                               </div>
                               <div className="text-xs text-muted-foreground">days</div>
                             </div>
@@ -521,7 +521,7 @@ function GoalsPageContent() {
                                 <p className="text-sm text-muted-foreground">{goal.distance}</p>
                               )}
                               <p className="text-sm text-muted-foreground">
-                                {formatDate(goal.race_date)}
+                                {formatDate(goal.target_date)}
                               </p>
                             </div>
                           </div>
