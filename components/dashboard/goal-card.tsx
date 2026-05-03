@@ -105,7 +105,7 @@ export function GoalCard() {
         if (errorData.error === "Unauthorized") {
           setError("Please log in to save your goal");
         } else {
-          setError("Failed to save goal. Please try again.");
+          setError(errorData.error || "Failed to save goal. Please try again.");
         }
       }
     } catch (err) {
