@@ -32,6 +32,7 @@ export function LogRunModal({ onRunLogged }: LogRunModalProps) {
     miles: "",
     pace: "",
     duration: "",
+    runType: "easy",
     feeling: "",
     notes: "",
     date: new Date().toISOString().split("T")[0],
@@ -49,6 +50,7 @@ export function LogRunModal({ onRunLogged }: LogRunModalProps) {
           miles: parseFloat(formData.miles),
           pace: formData.pace || null,
           duration_minutes: formData.duration ? parseInt(formData.duration) : null,
+          runType: formData.runType,
           feeling: formData.feeling || null,
           notes: formData.notes || null,
           date: formData.date,
@@ -61,6 +63,7 @@ export function LogRunModal({ onRunLogged }: LogRunModalProps) {
           miles: "",
           pace: "",
           duration: "",
+          runType: "easy",
           feeling: "",
           notes: "",
           date: new Date().toISOString().split("T")[0],
@@ -144,19 +147,41 @@ export function LogRunModal({ onRunLogged }: LogRunModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="feeling">How did it feel?</Label>
+            <Label htmlFor="runType">Run Type</Label>
+            <Select
+              value={formData.runType}
+              onValueChange={(value) => setFormData({ ...formData, runType: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select run type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="easy">Easy Run</SelectItem>
+                <SelectItem value="tempo">Tempo Run</SelectItem>
+                <SelectItem value="long">Long Run</SelectItem>
+                <SelectItem value="interval">Intervals</SelectItem>
+                <SelectItem value="recovery">Recovery</SelectItem>
+                <SelectItem value="fartlek">Fartlek</SelectItem>
+                <SelectItem value="hills">Hill Training</SelectItem>
+                <SelectItem value="race">Race</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="feeling">Effort Level</Label>
             <Select
               value={formData.feeling}
               onValueChange={(value) => setFormData({ ...formData, feeling: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select feeling" />
+                <SelectValue placeholder="How hard was it?" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="easy">Easy</SelectItem>
                 <SelectItem value="moderate">Moderate</SelectItem>
                 <SelectItem value="hard">Hard</SelectItem>
-                <SelectItem value="race">Race</SelectItem>
+                <SelectItem value="max">Max Effort</SelectItem>
               </SelectContent>
             </Select>
           </div>

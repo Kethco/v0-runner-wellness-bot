@@ -27,6 +27,7 @@ const fetcher = (url: string) => fetch(url).then(res => res.json());
 export default function Dashboard() {
   const { user } = useAuth();
   const [greeting, setGreeting] = useState("Hello");
+  const [weekLabel, setWeekLabel] = useState("");
   
   // Fetch weekly miles and streak
   const { data: runsData } = useSWR("/api/runs?period=week", fetcher);
@@ -38,6 +39,13 @@ export default function Dashboard() {
   
   useEffect(() => {
     setGreeting(getGreeting());
+    
+    // Calculate week number on client to avoid hydration mismatch
+    const now = new Date();
+    const weekNum = Math.ceil((now.getDate() + new Date(now.getFullYear(), now.getMonth(), 1).getDay()) / 7);
+    const monthName = now.toLocaleString("default", { month: "short" });
+    const year = now.getFullYear();
+    setWeekLabel(`Week ${weekNum} · ${monthName} ${year}`);
   }, []);
   
   const userName = user?.user_metadata?.first_name || "Runner";
@@ -66,7 +74,7 @@ export default function Dashboard() {
             <div className="inline-flex items-center gap-2 bg-card border border-border rounded-full px-4 py-2">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-sm md:text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Week 17 · May 2026
+                {weekLabel || "Loading..."}
               </span>
             </div>
           </div>
@@ -103,13 +111,8 @@ export default function Dashboard() {
             {/* Wellness Metrics */}
             <WellnessMetrics />
 
-            {/* Goal Card */}
-            <GoalCard
-              race="Half Marathon"
-              date="May 15, 2026"
-              daysUntil={14}
-              targetTime="1:45:00"
-            />
+            {/* Goal Card - empty state for new users */}
+            <GoalCard />
           </div>
         </div>
       </main>

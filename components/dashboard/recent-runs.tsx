@@ -3,47 +3,122 @@
 import { ChevronRight, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import useSWR from "swr";
 
-const runs = [
-  {
-    title: "Morning Run",
-    subtitle: "Easy · Today 6:12 AM",
-    dist: "6.0",
-    pace: "8:24",
-    time: "50:24",
-    feel: "Great",
-    feelColor: "text-green-400",
-  },
-  {
-    title: "Easy Recovery",
-    subtitle: "Recovery · Yesterday 7:00 AM",
-    dist: "4.2",
-    pace: "9:10",
-    time: "38:30",
-    feel: "Good",
-    feelColor: "text-blue-400",
-  },
-  {
-    title: "Tempo Intervals",
-    subtitle: "Hard · Apr 25 5:45 AM",
-    dist: "5.4",
-    pace: "7:48",
-    time: "42:08",
-    feel: "Hard",
-    feelColor: "text-orange-400",
-  },
-  {
-    title: "Long Run",
-    subtitle: "Long · Apr 23 7:30 AM",
-    dist: "8.6",
-    pace: "8:55",
-    time: "1:16:43",
-    feel: "Great",
-    feelColor: "text-green-400",
-  },
-];
+const fetcher = (url: string) => fetch(url).then(res => res.ok ? res.json() : { runs: [] });
+
+const RUN_TYPE_LABELS: Record<string, string> = {
+  easy: "Easy",
+  tempo: "Tempo",
+  long: "Long Run",
+  interval: "Intervals",
+  recovery: "Recovery",
+  fartlek: "Fartlek",
+  hills: "Hills",
+  race: "Race",
+};
+
+function formatRunDate(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00");
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes}:00`;
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hrs}:${mins.toString().padStart(2, "0")}:00`;
+}
+
+function getFeelingColor(feeling?: string): string {
+  switch (feeling) {
+    case "easy": return "text-green-400";
+    case "moderate": return "text-blue-400";
+    case "hard": return "text-orange-400";
+    case "max": return "text-red-400";
+    default: return "text-muted-foreground";
+  }
+}
+
+function getFeelingLabel(feeling?: string): string {
+  switch (feeling) {
+    case "easy": return "Great";
+    case "moderate": return "Good";
+    case "hard": return "Hard";
+    case "max": return "Max";
+    default: return "";
+  }
+}
+
+interface Run {
+  id: string;
+  date: string;
+  miles: number;
+  pace?: string;
+  duration_minutes?: number;
+  run_type?: string;
+  feeling?: string;
+  notes?: string;
+}
 
 export function RecentRuns() {
+  const { data, isLoading } = useSWR("/api/runs?days=30", fetcher, {
+    refreshInterval: 30000,
+  });
+
+  const runs: Run[] = data?.runs || [];
+
+  if (isLoading) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            Recent Runs
+          </p>
+        </div>
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="bg-card border-border p-4 animate-pulse">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-muted rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-32 bg-muted rounded" />
+                  <div className="h-3 w-24 bg-muted rounded" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (runs.length === 0) {
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+            Recent Runs
+          </p>
+        </div>
+        <Card className="bg-card border-border p-8 text-center">
+          <Activity className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+          <p className="text-sm font-medium mb-1">No runs logged yet</p>
+          <p className="text-xs text-muted-foreground">
+            Log your first run to start tracking your training
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -59,9 +134,9 @@ export function RecentRuns() {
         </Button>
       </div>
       <div className="space-y-2">
-        {runs.map((run, i) => (
+        {runs.slice(0, 4).map((run) => (
           <Card
-            key={i}
+            key={run.id}
             className="bg-card border-border hover:border-primary/40 p-4 flex items-center gap-4 cursor-pointer transition-colors group"
           >
             <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
@@ -69,35 +144,45 @@ export function RecentRuns() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-0.5">
-                <p className="text-sm font-bold leading-tight truncate">{run.title}</p>
-                <span className={`text-xs font-semibold ${run.feelColor} ml-2`}>
-                  {run.feel}
-                </span>
+                <p className="text-sm font-bold leading-tight truncate">
+                  {RUN_TYPE_LABELS[run.run_type || "easy"] || "Run"}
+                </p>
+                {run.feeling && (
+                  <span className={`text-xs font-semibold ${getFeelingColor(run.feeling)} ml-2`}>
+                    {getFeelingLabel(run.feeling)}
+                  </span>
+                )}
               </div>
-              <p className="text-[11px] text-muted-foreground">{run.subtitle}</p>
+              <p className="text-[11px] text-muted-foreground">
+                {run.run_type ? RUN_TYPE_LABELS[run.run_type] : "Run"} · {formatRunDate(run.date)}
+              </p>
             </div>
             <div className="hidden sm:flex gap-6 text-right shrink-0">
               <div>
                 <p className="text-sm font-black">
-                  {run.dist}
+                  {run.miles.toFixed(1)}
                   <span className="text-[10px] text-muted-foreground font-normal">mi</span>
                 </p>
                 <p className="text-[9px] text-muted-foreground uppercase tracking-wide">
                   Dist
                 </p>
               </div>
-              <div>
-                <p className="text-sm font-black">{run.pace}</p>
-                <p className="text-[9px] text-muted-foreground uppercase tracking-wide">
-                  Pace
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-black">{run.time}</p>
-                <p className="text-[9px] text-muted-foreground uppercase tracking-wide">
-                  Time
-                </p>
-              </div>
+              {run.pace && (
+                <div>
+                  <p className="text-sm font-black">{run.pace}</p>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wide">
+                    Pace
+                  </p>
+                </div>
+              )}
+              {run.duration_minutes && (
+                <div>
+                  <p className="text-sm font-black">{formatDuration(run.duration_minutes)}</p>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-wide">
+                    Time
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
         ))}

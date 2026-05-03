@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { miles, pace, duration_minutes, feeling, notes, date } = body;
+    const { miles, pace, duration_minutes, runType, feeling, notes, date } = body;
 
     if (!miles || miles <= 0) {
       return NextResponse.json({ error: "Miles is required and must be positive" }, { status: 400 });
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
         miles: parseFloat(miles),
         pace,
         duration_minutes: duration_minutes ? parseInt(duration_minutes) : null,
+        run_type: runType || "easy",
         feeling,
         notes,
         source: "app",

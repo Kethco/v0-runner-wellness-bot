@@ -2,55 +2,95 @@
 
 import { Moon, Thermometer, Battery, Zap, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import useSWR from "swr";
 
-const metrics = [
-  {
-    icon: Moon,
-    label: "Sleep",
-    value: "7.5h",
-    score: 82,
-    color: "oklch(0.65 0.20 280)", // Purple
-  },
-  {
-    icon: Thermometer,
-    label: "Soreness",
-    value: "Low",
-    score: 78,
-    color: "oklch(0.75 0.18 60)", // Orange
-  },
-  {
-    icon: Battery,
-    label: "Energy",
-    value: "High",
-    score: 91,
-    color: "oklch(0.70 0.18 150)", // Green
-  },
-  {
-    icon: Zap,
-    label: "Readiness",
-    value: "88",
-    score: 88,
-    color: "oklch(0.65 0.22 25)", // Primary red
-  },
-];
+const fetcher = (url: string) => fetch(url).then(res => res.ok ? res.json() : null);
 
-const statCards = [
-  {
-    icon: TrendingUp,
-    label: "Monthly Miles",
-    value: "94.7",
-    unit: "mi",
-    color: "oklch(0.70 0.18 150)", // Green
-  },
-];
+function getSleepLabel(rating: number): string {
+  if (rating >= 4) return "Great";
+  if (rating >= 3) return "Good";
+  if (rating >= 2) return "Fair";
+  return "Poor";
+}
+
+function getSorenessLabel(level: number): string {
+  if (level <= 1) return "None";
+  if (level <= 2) return "Low";
+  if (level <= 3) return "Moderate";
+  return "High";
+}
+
+function getEnergyLabel(level: number): string {
+  if (level >= 4) return "High";
+  if (level >= 3) return "Good";
+  if (level >= 2) return "Low";
+  return "Tired";
+}
 
 export function WellnessMetrics() {
+  const { data: checkinData } = useSWR("/api/checkins?limit=1", fetcher, {
+    refreshInterval: 30000,
+  });
+  
+  const { data: runsData } = useSWR("/api/runs?days=30", fetcher, {
+    refreshInterval: 60000,
+  });
+
+  const todayCheckin = checkinData?.checkins?.[0];
+  const isToday = todayCheckin?.date === new Date().toISOString().split("T")[0];
+  
+  // Calculate monthly miles from runs data
+  const monthlyMiles = runsData?.runs?.reduce((sum: number, r: { miles: number }) => 
+    sum + Number(r.miles), 0) || 0;
+
+  // Default values for no check-in
+  const sleep = isToday ? (todayCheckin?.sleep_rating || 3) : 0;
+  const soreness = isToday ? (todayCheckin?.soreness || 1) : 0;
+  const energy = isToday ? (todayCheckin?.energy || 3) : 0;
+  const readiness = isToday ? (todayCheckin?.readiness || 3) : 0;
+
+  const metrics = [
+    {
+      icon: Moon,
+      label: "Sleep",
+      value: isToday ? getSleepLabel(sleep) : "--",
+      score: isToday ? (sleep / 5) * 100 : 0,
+      color: "oklch(0.65 0.20 280)", // Purple
+    },
+    {
+      icon: Thermometer,
+      label: "Soreness",
+      value: isToday ? getSorenessLabel(soreness) : "--",
+      score: isToday ? ((5 - soreness) / 4) * 100 : 0, // Inverse - lower soreness is better
+      color: "oklch(0.75 0.18 60)", // Orange
+    },
+    {
+      icon: Battery,
+      label: "Energy",
+      value: isToday ? getEnergyLabel(energy) : "--",
+      score: isToday ? (energy / 5) * 100 : 0,
+      color: "oklch(0.70 0.18 150)", // Green
+    },
+    {
+      icon: Zap,
+      label: "Readiness",
+      value: isToday ? `${Math.round((readiness / 5) * 100)}` : "--",
+      score: isToday ? (readiness / 5) * 100 : 0,
+      color: "oklch(0.65 0.22 25)", // Primary red
+    },
+  ];
+
   return (
     <div className="space-y-4">
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
           Today&apos;s Wellness
         </p>
+        {!isToday && (
+          <p className="text-xs text-muted-foreground mb-3">
+            Complete your daily check-in to see today&apos;s metrics
+          </p>
+        )}
         <div className="space-y-2">
           {metrics.map((m, i) => {
             const Icon = m.icon;
@@ -93,29 +133,21 @@ export function WellnessMetrics() {
           Performance
         </p>
         <div className="grid grid-cols-1 gap-2">
-          {statCards.map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <Card
-                key={i}
-                className="bg-card border-border p-4 hover:border-primary/30 transition-colors cursor-pointer"
-              >
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center mb-2"
-                  style={{ backgroundColor: `color-mix(in oklch, ${s.color} 20%, transparent)` }}
-                >
-                  <Icon className="w-4 h-4" style={{ color: s.color }} />
-                </div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
-                  {s.label}
-                </p>
-                <p className="text-xl font-black">
-                  {s.value}
-                  <span className="text-xs font-normal text-muted-foreground ml-1">{s.unit}</span>
-                </p>
-              </Card>
-            );
-          })}
+          <Card className="bg-card border-border p-4 hover:border-primary/30 transition-colors cursor-pointer">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center mb-2"
+              style={{ backgroundColor: "color-mix(in oklch, oklch(0.70 0.18 150) 20%, transparent)" }}
+            >
+              <TrendingUp className="w-4 h-4" style={{ color: "oklch(0.70 0.18 150)" }} />
+            </div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
+              Monthly Miles
+            </p>
+            <p className="text-xl font-black">
+              {monthlyMiles.toFixed(1)}
+              <span className="text-xs font-normal text-muted-foreground ml-1">mi</span>
+            </p>
+          </Card>
         </div>
       </div>
     </div>
