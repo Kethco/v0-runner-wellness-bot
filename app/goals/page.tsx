@@ -98,16 +98,12 @@ function GoalsPageContent() {
   const completedGoals = goals.filter((g) => g.status === "completed");
 
   const handleAddGoal = async () => {
-    console.log("[v0] handleAddGoal called - newGoal:", newGoal);
     if (!newGoal.distance || !newGoal.raceDate) {
-      console.log("[v0] handleAddGoal - validation failed, distance:", newGoal.distance, "raceDate:", newGoal.raceDate);
       return;
     }
     
-    console.log("[v0] handleAddGoal - validation passed, saving...");
     setIsSaving(true);
     try {
-      console.log("[v0] handleAddGoal - making API call...");
       const response = await fetch("/api/goals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -120,18 +116,18 @@ function GoalsPageContent() {
         }),
       });
 
-      console.log("[v0] handleAddGoal - response status:", response.status);
       if (response.ok) {
-        console.log("[v0] handleAddGoal - success, closing dialog");
         mutate();
         setNewGoal({ distance: "", raceName: "", raceDate: "", targetTime: "" });
         setIsDialogOpen(false);
       } else {
         const errorData = await response.json();
-        console.log("[v0] handleAddGoal - error:", errorData);
+        alert(errorData.error === "Unauthorized" 
+          ? "Please log in again to save your goal" 
+          : "Failed to save goal. Please try again.");
       }
     } catch (err) {
-      console.error("[v0] Failed to add goal:", err);
+      alert("Failed to save goal. Please check your connection.");
     } finally {
       setIsSaving(false);
     }
@@ -267,9 +263,16 @@ function GoalsPageContent() {
                   Cancel
                 </Button>
                 <Button 
-                  type="button"
-                  onClick={handleAddGoal}
-                  disabled={isSaving || !newGoal.distance || !newGoal.raceDate}
+                  type="submit"
+                  disabled={isSaving}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!newGoal.distance || !newGoal.raceDate) {
+                      alert("Please fill in Race Distance and Race Date");
+                      return;
+                    }
+                    handleAddGoal();
+                  }}
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Set Goal
