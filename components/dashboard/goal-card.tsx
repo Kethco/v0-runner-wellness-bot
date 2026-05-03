@@ -32,7 +32,7 @@ export function GoalCard({ race, date, targetTime }: GoalCardProps) {
             variant="outline" 
             size="sm" 
             className="gap-1"
-            onClick={() => router.push("/goals")}
+            onClick={() => router.push("/goals?add=true")}
           >
             <Plus className="w-3 h-3" />
             Add Goal

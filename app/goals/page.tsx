@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { Navbar } from "@/components/dashboard/navbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -71,6 +72,7 @@ function formatDateStatic(dateStr: string): string {
 }
 
 export default function GoalsPage() {
+  const searchParams = useSearchParams();
   const { data, error, mutate, isLoading } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -84,7 +86,11 @@ export default function GoalsPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Check if we should open dialog from URL param
+    if (searchParams.get("add") === "true") {
+      setIsDialogOpen(true);
+    }
+  }, [searchParams]);
 
   const goals = data?.goals || [];
 
