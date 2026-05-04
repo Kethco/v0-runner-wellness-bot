@@ -34,7 +34,7 @@ interface Goal {
   target_date: string;
   target_time?: string;
   actual_time?: string;
-  status: "active" | "completed" | "upcoming";
+  status: "active" | "completed" | "cancelled";
   notes?: string;
 }
 
@@ -94,8 +94,9 @@ function GoalsPageContent() {
     return formatDateStatic(dateStr);
   };
 
-  const activeGoal = goals.find((g) => g.status === "active");
-  const upcomingGoals = goals.filter((g) => g.status === "upcoming");
+  const activeGoals = goals.filter((g) => g.status === "active");
+  const activeGoal = activeGoals[0]; // Primary active goal
+  const otherActiveGoals = activeGoals.slice(1); // Other active goals
   const completedGoals = goals.filter((g) => g.status === "completed");
 
   const handleAddGoal = async () => {
@@ -116,7 +117,7 @@ function GoalsPageContent() {
           raceName: newGoal.raceName || null,
           raceDate: newGoal.raceDate,
           targetTime: newGoal.targetTime || null,
-          status: activeGoal ? "upcoming" : "active",
+          status: "active",
         }),
       });
 
@@ -166,15 +167,7 @@ function GoalsPageContent() {
 
   const handleSetActive = async (id: string) => {
     try {
-      // First, set current active goal to upcoming
-      if (activeGoal) {
-        await fetch("/api/goals", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: activeGoal.id, status: "upcoming" }),
-        });
-      }
-      // Then set selected goal to active
+      // Set selected goal to active
       const response = await fetch("/api/goals", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -415,27 +408,27 @@ function GoalsPageContent() {
             )}
 
             <div className="grid lg:grid-cols-2 gap-6">
-              {/* Upcoming Goals */}
+              {/* Other Active Goals */}
               <Card className="border-border bg-card">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-muted-foreground" />
-                    Upcoming Races
+                    Other Goals
                   </CardTitle>
-                  <CardDescription>Future races on your calendar</CardDescription>
+                  <CardDescription>Additional race goals</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {upcomingGoals.length === 0 ? (
+                  {otherActiveGoals.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>No upcoming races scheduled</p>
+                      <p>No other goals</p>
                       <Button variant="link" onClick={() => setIsDialogOpen(true)}>
                         Add a goal race
                       </Button>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {upcomingGoals.map((goal) => (
+                      {otherActiveGoals.map((goal) => (
                         <div 
                           key={goal.id} 
                           className="flex items-center justify-between p-4 bg-secondary rounded-lg"
