@@ -74,6 +74,7 @@ function GoalsPageContent() {
   const { data, error, mutate, isLoading } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [newGoal, setNewGoal] = useState({
     distance: "",
@@ -98,7 +99,10 @@ function GoalsPageContent() {
   const completedGoals = goals.filter((g) => g.status === "completed");
 
   const handleAddGoal = async () => {
+    setSaveError(null);
+    
     if (!newGoal.distance || !newGoal.raceDate) {
+      setSaveError("Please fill in Race Distance and Race Date");
       return;
     }
     
@@ -119,15 +123,16 @@ function GoalsPageContent() {
       if (response.ok) {
         mutate();
         setNewGoal({ distance: "", raceName: "", raceDate: "", targetTime: "" });
+        setSaveError(null);
         setIsDialogOpen(false);
       } else {
         const errorData = await response.json();
-        alert(errorData.error === "Unauthorized" 
+        setSaveError(errorData.error === "Unauthorized" 
           ? "Please log in again to save your goal" 
-          : "Failed to save goal. Please try again.");
+          : errorData.error || "Failed to save goal. Please try again.");
       }
     } catch (err) {
-      alert("Failed to save goal. Please check your connection.");
+      setSaveError("Failed to save goal. Please check your connection.");
     } finally {
       setIsSaving(false);
     }
@@ -199,7 +204,10 @@ function GoalsPageContent() {
               Set targets and track your progress toward race day
             </p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (open) setSaveError(null);
+            }}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="w-4 h-4" />
@@ -214,6 +222,11 @@ function GoalsPageContent() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                {saveError && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                    {saveError}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="distance">Race Distance <span className="text-destructive">*</span></Label>
                   <Select value={newGoal.distance} onValueChange={(v) => setNewGoal({ ...newGoal, distance: v })}>
@@ -263,16 +276,9 @@ function GoalsPageContent() {
                   Cancel
                 </Button>
                 <Button 
-                  type="submit"
+                  type="button"
                   disabled={isSaving}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (!newGoal.distance || !newGoal.raceDate) {
-                      alert("Please fill in Race Distance and Race Date");
-                      return;
-                    }
-                    handleAddGoal();
-                  }}
+                  onClick={handleAddGoal}
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Set Goal
