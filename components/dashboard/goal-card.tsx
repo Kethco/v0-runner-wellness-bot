@@ -82,6 +82,7 @@ export function GoalCard() {
     }
 
     setIsSaving(true);
+    console.log("[v0] Saving goal:", newGoal);
 
     try {
       const response = await fetch("/api/goals", {
@@ -96,12 +97,15 @@ export function GoalCard() {
         }),
       });
 
+      console.log("[v0] Goal API response:", response.status);
       if (response.ok) {
+        console.log("[v0] Goal saved successfully");
         setNewGoal({ distance: "", raceName: "", raceDate: "", targetTime: "" });
         setIsDialogOpen(false);
         mutate(); // Refresh goals data
       } else {
         const errorData = await response.json();
+        console.log("[v0] Goal save error:", errorData);
         if (errorData.error === "Unauthorized") {
           setError("Please log in to save your goal");
         } else {
