@@ -8,6 +8,8 @@ import useSWR from "swr";
 import Link from "next/link";
 import { CheckInModal } from "@/components/dashboard/checkin-modal";
 import { LogRunModal } from "@/components/dashboard/log-run-modal";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -336,76 +338,65 @@ export default function Dashboard() {
       )}
 
       {/* Weekly Goal Modal */}
-      {showGoalModal && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
-          onClick={() => setShowGoalModal(false)}
-        >
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-[#1C1C1E] rounded-3xl p-6 w-full max-w-sm border border-[#3A3A3C]"
-          >
-            <h3 className="text-xl font-bold text-white mb-2">Set Weekly Goal</h3>
-            <p className="text-[#AEAEB2] text-sm mb-6">How many miles do you want to run each week?</p>
-            
-            <div className="flex items-center gap-3 mb-6">
-              <input
-                type="number"
-                value={newGoalValue}
-                onChange={(e) => setNewGoalValue(e.target.value)}
-                placeholder="25"
-                className="flex-1 bg-[#2C2C2E] border border-[#3A3A3C] rounded-xl px-4 py-3 text-white text-2xl font-bold text-center focus:outline-none focus:border-[#FF4500]"
-                min="1"
-                max="200"
-              />
-              <span className="text-[#AEAEB2] text-lg font-semibold">miles</span>
-            </div>
+      <Dialog open={showGoalModal} onOpenChange={setShowGoalModal}>
+        <DialogContent className="bg-[#1C1C1E] border-[#3A3A3C] max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white">Set Weekly Goal</DialogTitle>
+            <DialogDescription className="text-[#AEAEB2]">
+              How many miles do you want to run each week?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex items-center gap-3 my-4">
+            <input
+              type="number"
+              value={newGoalValue}
+              onChange={(e) => setNewGoalValue(e.target.value)}
+              placeholder="25"
+              className="flex-1 bg-[#2C2C2E] border border-[#3A3A3C] rounded-xl px-4 py-3 text-white text-2xl font-bold text-center focus:outline-none focus:border-[#FF4500]"
+              min="1"
+              max="200"
+            />
+            <span className="text-[#AEAEB2] text-lg font-semibold">miles</span>
+          </div>
 
-            <div className="flex gap-3 relative z-10">
-              <button
-                type="button"
-                onClick={() => setShowGoalModal(false)}
-                className="flex-1 py-3 rounded-xl bg-[#2C2C2E] text-white font-semibold flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
-              >
-                <X className="w-4 h-4" />
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  const goal = parseInt(newGoalValue);
-                  if (goal > 0 && goal <= 200) {
-                    try {
-                      const res = await fetch("/api/profile", {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        credentials: "include",
-                        body: JSON.stringify({ weekly_goal: goal })
-                      });
-                      if (res.ok) {
-                        await mutateProfile();
-                        setShowGoalModal(false);
-                      } else {
-                        console.log("[v0] Failed to save goal:", res.status);
-                      }
-                    } catch (err) {
-                      console.log("[v0] Error saving goal:", err);
+          <DialogFooter className="flex gap-3 sm:gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowGoalModal(false)}
+              className="flex-1 bg-[#2C2C2E] border-[#3A3A3C] text-white hover:bg-[#3A3A3C]"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={async () => {
+                const goal = parseInt(newGoalValue);
+                if (goal > 0 && goal <= 200) {
+                  try {
+                    const res = await fetch("/api/profile", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      credentials: "include",
+                      body: JSON.stringify({ weekly_goal: goal })
+                    });
+                    if (res.ok) {
+                      await mutateProfile();
+                      setShowGoalModal(false);
                     }
+                  } catch (err) {
+                    console.error("Error saving goal:", err);
                   }
-                }}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FF4500] to-[#FF6B00] text-white font-semibold flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
-              >
-                <Check className="w-4 h-4" />
-                Save
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
+                }
+              }}
+              className="flex-1 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] text-white hover:opacity-90"
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
