@@ -3,13 +3,11 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, X } from "lucide-react";
 import { useAppUpdate } from "@/hooks/use-app-update";
-import { useState } from "react";
 
 export function UpdateBanner() {
-  const { updateAvailable, refreshApp } = useAppUpdate();
-  const [dismissed, setDismissed] = useState(false);
+  const { updateAvailable, refreshApp, dismissUpdate } = useAppUpdate();
 
-  if (!updateAvailable || dismissed) return null;
+  if (!updateAvailable) return null;
 
   return (
     <AnimatePresence>
@@ -34,7 +32,7 @@ export function UpdateBanner() {
               Update Now
             </button>
             <button
-              onClick={() => setDismissed(true)}
+              onClick={dismissUpdate}
               className="p-1.5 hover:bg-white/20 rounded-full transition-colors"
             >
               <X className="w-4 h-4 text-white" />
