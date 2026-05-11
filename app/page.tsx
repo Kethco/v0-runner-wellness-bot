@@ -77,7 +77,7 @@ return (
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center justify-between">
           <div>
-            <p className="text-[#AEAEB2] text-sm font-medium">{greeting}</p>
+            <p className={`text-sm font-bold bg-gradient-to-r ${greeting.gradient} bg-clip-text text-transparent`}>{greeting.text}</p>
             <h1 className="text-2xl font-bold text-white tracking-tight">{userName}</h1>
           </div>
           
@@ -94,14 +94,14 @@ return (
       </header>
 
       <main className="px-5 py-6 space-y-6">
-        {/* Hero Stats Card */}
+        {/* Hero Stats Card with Animated Border */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] p-6 border border-[#3A3A3C]"
+          className="goal-card-border relative overflow-hidden p-6"
         >
-          {/* Glow effect */}
-          <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#FF4500] rounded-full blur-[100px] opacity-40" />
+          {/* Inner glow effect */}
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#FF4500] rounded-full blur-[100px] opacity-30" />
           
           <div className="relative z-10">
             <div className="flex items-start justify-between mb-6">
@@ -470,9 +470,16 @@ function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: {
 
 function getGreeting() {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour >= 5 && hour < 12) {
+    return { text: "Good morning", gradient: "from-[#FFD700] via-[#FFA500] to-[#FF8C00]" };
+  }
+  if (hour >= 12 && hour < 17) {
+    return { text: "Good afternoon", gradient: "from-[#FF6B00] via-[#FF4500] to-[#FF2D00]" };
+  }
+  if (hour >= 17 && hour < 21) {
+    return { text: "Good evening", gradient: "from-[#AF52DE] via-[#BF5AF2] to-[#FF2D55]" };
+  }
+  return { text: "Good night", gradient: "from-[#0A84FF] via-[#00D4FF] to-[#5AC8FA]" };
 }
 
 function getRunStyles(type: string) {

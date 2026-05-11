@@ -172,6 +172,69 @@
   box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
 }
 
+/* Animated gradient border for goal card */
+@keyframes gradient-rotate {
+  0% { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.goal-card-border {
+  position: relative;
+  background: linear-gradient(135deg, #1C1C1E, #0D0D0D);
+  border-radius: 1.5rem;
+}
+
+.goal-card-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: 1.5rem;
+  background: conic-gradient(
+    from var(--gradient-angle),
+    #FF4500,
+    #FF6B00,
+    #FF8C00,
+    #FFD700,
+    #FF8C00,
+    #FF6B00,
+    #FF4500
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: gradient-rotate 4s linear infinite;
+}
+
+.goal-card-border::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 1.75rem;
+  background: conic-gradient(
+    from var(--gradient-angle),
+    transparent,
+    rgba(255, 69, 0, 0.3),
+    transparent,
+    rgba(255, 107, 0, 0.3),
+    transparent
+  );
+  filter: blur(12px);
+  animation: gradient-rotate 4s linear infinite, pulse-glow 2s ease-in-out infinite;
+  z-index: -1;
+}
+
 /* Text glow */
 .text-glow-orange {
   text-shadow: 0 0 10px rgba(255, 69, 0, 0.8), 0 0 20px rgba(255, 69, 0, 0.5);
