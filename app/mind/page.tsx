@@ -6,9 +6,10 @@ import {
   Sparkles, Sun, Moon as MoonIcon, Heart, Wind, 
   ArrowLeft, Check, ChevronRight, Flame, 
   CloudRain, Smile, Frown, Meh, Zap, Coffee,
-  Activity, TrendingUp, Target, User
+  Activity, TrendingUp, Target, User, MessageCircle
 } from "lucide-react";
 import Link from "next/link";
+import { RunningBuddy } from "@/components/running-buddy";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -17,7 +18,7 @@ const fetcher = async (url: string) => {
   return res.json();
 };
 
-type MindMode = "home" | "pre-run" | "post-run" | "burnout";
+type MindMode = "home" | "pre-run" | "post-run" | "burnout" | "buddy";
 
 export default function MindPage() {
   const [mode, setMode] = useState<MindMode>("home");
@@ -45,7 +46,8 @@ export default function MindPage() {
             <h1 className="text-xl font-bold text-white">
               {mode === "home" ? "Mind & Soul" : 
                mode === "pre-run" ? "Pre-Run Mindset" :
-               mode === "post-run" ? "Post-Run Reflection" : "Motivation Support"}
+               mode === "post-run" ? "Post-Run Reflection" : 
+               mode === "buddy" ? "Running Buddy" : "Motivation Support"}
             </h1>
             <p className="text-[#8E8E93] text-sm">
               {mode === "home" ? "Your mental wellness toolkit" :
@@ -61,8 +63,18 @@ export default function MindPage() {
           {mode === "home" && <HomeView onSelectMode={setMode} />}
           {mode === "pre-run" && <PreRunView onComplete={() => setMode("home")} />}
           {mode === "post-run" && <PostRunView onComplete={() => { setMode("home"); mutate(); }} />}
-          {mode === "burnout" && <BurnoutView />}
-        </AnimatePresence>
+{mode === "burnout" && <BurnoutView />}
+{mode === "buddy" && (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="h-[calc(100vh-200px)]"
+  >
+    <RunningBuddy onClose={() => setMode("home")} isFullPage />
+  </motion.div>
+)}
+</AnimatePresence>
       </main>
 
       {/* Bottom Navigation */}
@@ -143,11 +155,36 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
         </div>
       </motion.div>
 
-      {/* Main Actions */}
-      <div className="space-y-4">
-        <h2 className="text-[#8E8E93] text-xs font-bold uppercase tracking-wider px-1">Mindset Tools</h2>
-        
-        {/* Pre-Run Mindset */}
+{/* Running Buddy - Featured */}
+  <motion.button
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.1 }}
+    whileHover={{ scale: 1.01 }}
+    whileTap={{ scale: 0.98 }}
+    onClick={() => onSelectMode("buddy")}
+    className="w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#AF52DE] via-[#BF5AF2] to-[#FF2D55] p-1"
+  >
+    <div className="relative bg-[#0A0A0A] rounded-[22px] p-5 flex items-center gap-4">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#AF52DE] to-[#FF2D55] flex items-center justify-center shadow-lg shadow-[#AF52DE]/30">
+        <MessageCircle className="w-8 h-8 text-white" />
+      </div>
+      <div className="flex-1 text-left">
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-white font-bold text-lg">Running Buddy</p>
+          <span className="px-2 py-0.5 rounded-full bg-[#AF52DE]/20 text-[#AF52DE] text-xs font-bold">AI</span>
+        </div>
+        <p className="text-[#8E8E93] text-sm">Your personal companion who knows your journey</p>
+      </div>
+      <ChevronRight className="w-5 h-5 text-[#AF52DE]" />
+    </div>
+  </motion.button>
+
+  {/* Main Actions */}
+  <div className="space-y-4">
+  <h2 className="text-[#8E8E93] text-xs font-bold uppercase tracking-wider px-1">Mindset Tools</h2>
+  
+  {/* Pre-Run Mindset */}
         <motion.button
           whileHover={{ scale: 1.01, x: 4 }}
           whileTap={{ scale: 0.99 }}
