@@ -365,15 +365,17 @@ export default function Dashboard() {
               <span className="text-[#AEAEB2] text-lg font-semibold">miles</span>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 relative z-10">
               <button
+                type="button"
                 onClick={() => setShowGoalModal(false)}
-                className="flex-1 py-3 rounded-xl bg-[#2C2C2E] text-white font-semibold flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl bg-[#2C2C2E] text-white font-semibold flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
               >
                 <X className="w-4 h-4" />
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={async () => {
                   const goal = parseInt(newGoalValue);
                   if (goal > 0 && goal <= 200) {
@@ -395,7 +397,7 @@ export default function Dashboard() {
                     }
                   }
                 }}
-                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FF4500] to-[#FF6B00] text-white font-semibold flex items-center justify-center gap-2"
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FF4500] to-[#FF6B00] text-white font-semibold flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
               >
                 <Check className="w-4 h-4" />
                 Save
