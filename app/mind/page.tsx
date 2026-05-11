@@ -80,7 +80,46 @@ export default function MindPage() {
   );
 }
 
+// Christian-inspired daily wisdom - rotates based on day of year
+const CHRISTIAN_WISDOM = [
+  { quote: "I can do all things through Christ who strengthens me.", reference: "Philippians 4:13" },
+  { quote: "But those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary.", reference: "Isaiah 40:31" },
+  { quote: "The Lord is my strength and my shield; my heart trusts in him, and he helps me.", reference: "Psalm 28:7" },
+  { quote: "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.", reference: "Joshua 1:9" },
+  { quote: "Come to me, all you who are weary and burdened, and I will give you rest.", reference: "Matthew 11:28" },
+  { quote: "For God has not given us a spirit of fear, but of power and of love and of a sound mind.", reference: "2 Timothy 1:7" },
+  { quote: "The joy of the Lord is your strength.", reference: "Nehemiah 8:10" },
+  { quote: "Trust in the Lord with all your heart and lean not on your own understanding.", reference: "Proverbs 3:5" },
+  { quote: "Be strong and take heart, all you who hope in the Lord.", reference: "Psalm 31:24" },
+  { quote: "He gives strength to the weary and increases the power of the weak.", reference: "Isaiah 40:29" },
+  { quote: "The Lord will fight for you; you need only to be still.", reference: "Exodus 14:14" },
+  { quote: "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.", reference: "Philippians 4:6" },
+  { quote: "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.", reference: "Jeremiah 29:11" },
+  { quote: "The Lord is my shepherd; I shall not want.", reference: "Psalm 23:1" },
+  { quote: "Cast all your anxiety on him because he cares for you.", reference: "1 Peter 5:7" },
+  { quote: "And let us run with perseverance the race marked out for us, fixing our eyes on Jesus.", reference: "Hebrews 12:1-2" },
+  { quote: "My grace is sufficient for you, for my power is made perfect in weakness.", reference: "2 Corinthians 12:9" },
+  { quote: "The Lord is close to the brokenhearted and saves those who are crushed in spirit.", reference: "Psalm 34:18" },
+  { quote: "Wait for the Lord; be strong and take heart and wait for the Lord.", reference: "Psalm 27:14" },
+  { quote: "But seek first his kingdom and his righteousness, and all these things will be given to you as well.", reference: "Matthew 6:33" },
+  { quote: "I have told you these things, so that in me you may have peace. In this world you will have trouble. But take heart! I have overcome the world.", reference: "John 16:33" },
+  { quote: "Be still, and know that I am God.", reference: "Psalm 46:10" },
+  { quote: "The name of the Lord is a fortified tower; the righteous run to it and are safe.", reference: "Proverbs 18:10" },
+  { quote: "He who began a good work in you will carry it on to completion.", reference: "Philippians 1:6" },
+  { quote: "Do not fear, for I am with you; do not be dismayed, for I am your God.", reference: "Isaiah 41:10" },
+  { quote: "Create in me a pure heart, O God, and renew a steadfast spirit within me.", reference: "Psalm 51:10" },
+  { quote: "Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up.", reference: "Galatians 6:9" },
+  { quote: "The steadfast love of the Lord never ceases; his mercies never come to an end; they are new every morning.", reference: "Lamentations 3:22-23" },
+  { quote: "Commit your way to the Lord; trust in him and he will act.", reference: "Psalm 37:5" },
+  { quote: "God is our refuge and strength, an ever-present help in trouble.", reference: "Psalm 46:1" },
+  { quote: "In all your ways acknowledge him, and he will make straight your paths.", reference: "Proverbs 3:6" },
+];
+
 function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) {
+  // Get daily wisdom based on day of year for consistency throughout the day
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+  const todaysWisdom = CHRISTIAN_WISDOM[dayOfYear % CHRISTIAN_WISDOM.length];
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -88,7 +127,7 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
       exit={{ opacity: 0 }}
       className="space-y-6"
     >
-      {/* Quote of the day */}
+      {/* Daily Wisdom */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -98,9 +137,9 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
         <div className="relative z-10">
           <p className="text-[#AF52DE] text-xs font-bold uppercase tracking-wider mb-3">Daily Wisdom</p>
           <p className="text-white text-xl font-medium leading-relaxed italic">
-            "The miracle isn't that I finished. The miracle is that I had the courage to start."
+            "{todaysWisdom.quote}"
           </p>
-          <p className="text-[#8E8E93] text-sm mt-3">— John Bingham</p>
+          <p className="text-[#8E8E93] text-sm mt-3">— {todaysWisdom.reference}</p>
         </div>
       </motion.div>
 
