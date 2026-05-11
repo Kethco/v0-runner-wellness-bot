@@ -181,16 +181,8 @@ export default function TrendsPage() {
     return "High";
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <p className="text-muted-foreground">Failed to load trends. Please try again.</p>
-        </main>
-      </div>
-    );
-  }
+  // Treat errors as empty state (user may not be logged in or have no data yet)
+  const showEmptyState = error || checkins.length === 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -234,7 +226,7 @@ export default function TrendsPage() {
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
-        ) : checkins.length === 0 ? (
+        ) : showEmptyState ? (
           <Card className="border-border bg-card">
             <CardContent className="py-16 text-center">
               <BarChart3 className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
