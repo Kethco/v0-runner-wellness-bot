@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [newGoalValue, setNewGoalValue] = useState("");
+  const [localGoal, setLocalGoal] = useState<number | null>(null);
   
   // Check if on trial (to adjust for fixed banner)
   const plan = user?.user_metadata?.plan;
@@ -45,7 +46,7 @@ export default function Dashboard() {
   const profile = profileData?.profile;
   
   const weeklyMiles = runs.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
-  const weeklyGoal = profile?.weekly_goal || 25;
+  const weeklyGoal = localGoal || profile?.weekly_goal || 25;
   const progressPercent = Math.min((weeklyMiles / weeklyGoal) * 100, 100);
   const currentStreak = profile?.current_streak || checkins.length;
 
@@ -374,6 +375,11 @@ export default function Dashboard() {
               onClick={async () => {
                 const goal = parseInt(newGoalValue);
                 if (goal > 0 && goal <= 200) {
+                  // Always save locally first for immediate feedback
+                  setLocalGoal(goal);
+                  setShowGoalModal(false);
+                  
+                  // Then try to save to server
                   try {
                     const res = await fetch("/api/profile", {
                       method: "PATCH",
@@ -383,10 +389,9 @@ export default function Dashboard() {
                     });
                     if (res.ok) {
                       await mutateProfile();
-                      setShowGoalModal(false);
                     }
                   } catch (err) {
-                    console.error("Error saving goal:", err);
+                    // Silent fail - local state already updated
                   }
                 }
               }}
