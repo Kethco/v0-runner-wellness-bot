@@ -30,7 +30,7 @@ export default function Dashboard() {
   
   const { data: checkinsData, mutate: mutateCheckins } = useSWR("/api/checkins?limit=7", fetcher);
   const { data: runsData, mutate: mutateRuns } = useSWR("/api/runs?days=7", fetcher);
-  const { data: profileData } = useSWR("/api/profile", fetcher);
+  const { data: profileData, mutate: mutateProfile } = useSWR("/api/profile", fetcher);
   const { data: aiAdvice } = useSWR("/api/ai-advice", fetcher);
   
   // Use local timezone for today's date
