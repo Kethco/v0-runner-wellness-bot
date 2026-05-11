@@ -8,7 +8,6 @@ import { LogRunModal } from "@/components/dashboard/log-run-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Flame, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
-import { PageContent } from "@/components/page-transition";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -77,7 +76,6 @@ export default function RunsPage() {
   };
 
 return (
-  <PageContent>
   <div className="min-h-screen bg-[#0A0A0A] text-white pb-24">
   <Navbar />
       
@@ -195,6 +193,5 @@ return (
         </div>
 </main>
   </div>
-  </PageContent>
   );
-  }
+}

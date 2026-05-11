@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PageContent } from "@/components/page-transition";
+
 import {
   Dialog,
   DialogContent,
@@ -122,7 +122,6 @@ export default function ProfilePage() {
   };
 
 return (
-  <PageContent>
   <div className="min-h-screen bg-background">
       <Navbar />
       
@@ -404,6 +403,5 @@ return (
         </div>
       </main>
     </div>
-  </PageContent>
   );
 }

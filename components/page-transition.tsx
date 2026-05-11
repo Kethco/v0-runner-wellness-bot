@@ -1,73 +1,42 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
-interface PageTransitionProps {
+interface PageContentProps {
   children: ReactNode;
   className?: string;
 }
 
-const variants = {
-  initial: {
-    opacity: 0,
-    x: 30,
-  },
-  enter: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.3,
-      ease: [0.25, 0.1, 0.25, 1], // cubic-bezier for smooth ease-in-out
-    },
-  },
-  exit: {
-    opacity: 0,
-    x: -30,
-    transition: {
-      duration: 0.25,
-      ease: [0.25, 0.1, 0.25, 1],
-    },
-  },
-};
-
-export function PageTransition({ children, className = "" }: PageTransitionProps) {
-  const pathname = usePathname();
-
-  return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={pathname}
-        variants={variants}
-        initial="initial"
-        animate="enter"
-        exit="exit"
-        className={className}
-        style={{ willChange: "transform, opacity" }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
-}
-
-// Simplified version for wrapping page content without AnimatePresence
-// Use this inside pages, with AnimatePresence in layout
-export function PageContent({ children, className = "" }: PageTransitionProps) {
+// Full-width slide animation like native mobile apps
+// Current page slides out to the left, new page slides in from the right
+export function PageContent({ children, className = "" }: PageContentProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: 30 }}
+      initial={{ 
+        opacity: 0, 
+        x: "100%", // Start fully off-screen to the right
+      }}
       animate={{ 
         opacity: 1, 
-        x: 0,
+        x: 0, // Slide to center
         transition: {
-          duration: 0.3,
-          ease: [0.25, 0.1, 0.25, 1],
+          duration: 0.35,
+          ease: [0.32, 0.72, 0, 1], // iOS-like spring curve
         }
       }}
-      className={className}
-      style={{ willChange: "transform, opacity" }}
+      exit={{
+        opacity: 0.5,
+        x: "-100%", // Exit fully to the left
+        transition: {
+          duration: 0.3,
+          ease: [0.32, 0.72, 0, 1],
+        }
+      }}
+      className={`${className} overflow-x-hidden`}
+      style={{ 
+        willChange: "transform, opacity",
+      }}
     >
       {children}
     </motion.div>
