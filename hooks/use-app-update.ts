@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const VERSION_CHECK_INTERVAL = 60 * 1000; // Check every minute
-const CLIENT_VERSION_KEY = "app-client-version";
-const DISMISSED_KEY = "app-update-dismissed";
 
 export function useAppUpdate() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  // Store the initial version when the component first mounts (when user loaded the page)
+  const initialVersionRef = useRef<string | null>(null);
+  const hasCheckedRef = useRef(false);
 
   const checkForUpdate = useCallback(async () => {
     try {
-      const response = await fetch(`/api/version?t=${Date.now()}`, { 
-        cache: 'no-store'
+      const response = await fetch(`/api/version?_t=${Date.now()}`, { 
+        cache: 'no-store',
+        headers: { 'Cache-Control': 'no-cache' }
       });
       
       if (!response.ok) return;
@@ -22,19 +24,15 @@ export function useAppUpdate() {
       
       if (!serverVersion) return;
       
-      // Get stored client version
-      const clientVersion = localStorage.getItem(CLIENT_VERSION_KEY);
-      const dismissed = sessionStorage.getItem(DISMISSED_KEY);
-      
-      // First visit ever - store the version
-      if (!clientVersion) {
-        localStorage.setItem(CLIENT_VERSION_KEY, serverVersion);
+      // First check - store the initial version the user loaded with
+      if (!hasCheckedRef.current) {
+        initialVersionRef.current = serverVersion;
+        hasCheckedRef.current = true;
         return;
       }
       
-      // Version changed and not dismissed this session
-      if (serverVersion !== clientVersion && dismissed !== serverVersion) {
-        console.log("[v0] Update available:", clientVersion, "->", serverVersion);
+      // Compare current server version with the version user originally loaded
+      if (initialVersionRef.current && serverVersion !== initialVersionRef.current) {
         setUpdateAvailable(true);
       }
     } catch {
@@ -43,37 +41,30 @@ export function useAppUpdate() {
   }, []);
 
   const refreshApp = useCallback(() => {
-    // Store the new version before refreshing
-    fetch(`/api/version?t=${Date.now()}`, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(data => {
-        if (data.version) {
-          localStorage.setItem(CLIENT_VERSION_KEY, data.version);
-        }
-        window.location.reload();
-      })
-      .catch(() => window.location.reload());
+    // Force a hard reload to get the new version
+    window.location.reload();
   }, []);
 
   const dismissUpdate = useCallback(() => {
-    fetch(`/api/version?t=${Date.now()}`, { cache: 'no-store' })
+    // Update the initial version to the current one so we don't show the banner again
+    fetch(`/api/version?_t=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
       .then(data => {
         if (data.version) {
-          sessionStorage.setItem(DISMISSED_KEY, data.version);
+          initialVersionRef.current = data.version;
         }
       });
     setUpdateAvailable(false);
   }, []);
 
   useEffect(() => {
-    // Check after a short delay to let the app load
-    const initialCheck = setTimeout(checkForUpdate, 2000);
+    // First check immediately to capture initial version
+    checkForUpdate();
 
-    // Periodic checking
+    // Then check periodically
     const interval = setInterval(checkForUpdate, VERSION_CHECK_INTERVAL);
 
-    // Check on tab focus
+    // Check on tab focus (user coming back to the app)
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         checkForUpdate();
@@ -82,7 +73,6 @@ export function useAppUpdate() {
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      clearTimeout(initialCheck);
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
