@@ -18,6 +18,20 @@ export async function GET(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // Debug: check what user ID the session has
+  if (action === "debug-session") {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabaseAuth = await createClient();
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    
+    return NextResponse.json({
+      sessionUserId: user?.id || "no session",
+      sessionEmail: user?.email || "no email",
+      expectedUserId: CORRECT_USER_ID,
+      match: user?.id === CORRECT_USER_ID
+    });
+  }
+
   // Check today's data
   if (action === "check-today") {
     const today = new Date().toISOString().split("T")[0];
