@@ -22,7 +22,14 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.log("[v0] Fetch error:", url, res.status);
+    return null;
+  }
+  return res.json();
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -33,7 +40,14 @@ export default function Dashboard() {
   const { data: checkinsData } = useSWR("/api/checkins?limit=7", fetcher);
   
   const todayStr = new Date().toISOString().split("T")[0];
-  const hasCheckedInToday = checkinsData?.checkins?.[0]?.date === todayStr;
+  const hasCheckedInToday = checkinsData?.checkins?.some((c: { date: string }) => c.date === todayStr) ?? false;
+  
+  // Debug: log check-in status
+  if (checkinsData) {
+    console.log("[v0] Today:", todayStr);
+    console.log("[v0] Checkins data:", checkinsData);
+    console.log("[v0] Has checked in today:", hasCheckedInToday);
+  }
   
   // Calculate streak from check-ins
   const calculateStreak = () => {
