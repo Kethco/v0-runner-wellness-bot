@@ -5,9 +5,9 @@ const WRONG_USER_ID = "09b728c4-a45b-4ab6-96e5-f4f76632f22c";
 const CORRECT_USER_ID = "3a30f9f9-0a85-4dc1-8e00-be39e5fa01fd";
 
 export async function GET(request: NextRequest) {
-  // Require secret key in URL for security
   const { searchParams } = new URL(request.url);
   const key = searchParams.get("key");
+  const action = searchParams.get("action");
   
   if (key !== "fix-runner-2026") {
     return NextResponse.json({ error: "Invalid key" }, { status: 401 });
@@ -17,6 +17,63 @@ export async function GET(request: NextRequest) {
     process.env.SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  // Check today's data
+  if (action === "check-today") {
+    const today = new Date().toISOString().split("T")[0];
+    
+    const { data: todayCheckins } = await supabase
+      .from("checkins")
+      .select("*")
+      .eq("date", today);
+    
+    const { data: todayAdvice } = await supabase
+      .from("ai_advice")
+      .select("*")
+      .gte("created_at", today);
+    
+    const { data: allCheckins } = await supabase
+      .from("checkins")
+      .select("id, user_id, date")
+      .order("date", { ascending: false })
+      .limit(10);
+    
+    return NextResponse.json({
+      today,
+      correctUserId: CORRECT_USER_ID,
+      todayCheckins,
+      todayAdvice,
+      recentCheckins: allCheckins
+    });
+  }
+  
+  // Fix today's check-in if it has wrong user ID
+  if (action === "fix-today") {
+    const today = new Date().toISOString().split("T")[0];
+    
+    // Update any check-ins from today with wrong user ID
+    const { data: updated, error } = await supabase
+      .from("checkins")
+      .update({ user_id: CORRECT_USER_ID })
+      .eq("date", today)
+      .neq("user_id", CORRECT_USER_ID)
+      .select();
+    
+    // Also update AI advice from today
+    const { data: updatedAdvice } = await supabase
+      .from("ai_advice")
+      .update({ user_id: CORRECT_USER_ID })
+      .gte("created_at", today)
+      .neq("user_id", CORRECT_USER_ID)
+      .select();
+    
+    return NextResponse.json({
+      success: true,
+      checkins_fixed: updated?.length || 0,
+      advice_fixed: updatedAdvice?.length || 0,
+      error: error?.message
+    });
+  }
 
   const results: string[] = [];
 
