@@ -19,7 +19,13 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ profile, email: user.email });
+  // If weekly_goal not in profile, check user metadata
+  const finalProfile = {
+    ...profile,
+    weekly_goal: profile?.weekly_goal ?? user.user_metadata?.weekly_goal ?? null
+  };
+
+  return NextResponse.json({ profile: finalProfile, email: user.email });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -50,6 +56,29 @@ export async function PATCH(request: NextRequest) {
     .single();
 
   if (error) {
+    // If weekly_goal column doesn't exist, try without it
+    if (error.message.includes("weekly_goal") && body.weekly_goal !== undefined) {
+      const { weekly_goal, ...restData } = updateData;
+      // Save weekly_goal to user metadata as fallback
+      await supabase.auth.updateUser({
+        data: { weekly_goal: body.weekly_goal }
+      });
+      
+      if (Object.keys(restData).length > 0) {
+        const { data: fallbackProfile, error: fallbackError } = await supabase
+          .from("profiles")
+          .update(restData)
+          .eq("id", user.id)
+          .select()
+          .single();
+        
+        if (fallbackError) {
+          return NextResponse.json({ error: fallbackError.message }, { status: 500 });
+        }
+        return NextResponse.json({ profile: { ...fallbackProfile, weekly_goal: body.weekly_goal } });
+      }
+      return NextResponse.json({ profile: { weekly_goal: body.weekly_goal } });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

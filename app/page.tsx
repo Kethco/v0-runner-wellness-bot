@@ -377,13 +377,22 @@ export default function Dashboard() {
                 onClick={async () => {
                   const goal = parseInt(newGoalValue);
                   if (goal > 0 && goal <= 200) {
-                    await fetch("/api/profile", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ weekly_goal: goal })
-                    });
-                    mutateProfile();
-                    setShowGoalModal(false);
+                    try {
+                      const res = await fetch("/api/profile", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ weekly_goal: goal })
+                      });
+                      if (res.ok) {
+                        await mutateProfile();
+                        setShowGoalModal(false);
+                      } else {
+                        console.log("[v0] Failed to save goal:", res.status);
+                      }
+                    } catch (err) {
+                      console.log("[v0] Error saving goal:", err);
+                    }
                   }
                 }}
                 className="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#FF4500] to-[#FF6B00] text-white font-semibold flex items-center justify-center gap-2"
