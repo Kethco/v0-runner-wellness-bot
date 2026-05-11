@@ -240,19 +240,7 @@ export default function Dashboard() {
               </div>
             </div>
             
-            <p className="text-[#E5E5EA] text-base leading-relaxed line-clamp-2">
-              {aiAdvice?.advice || "Complete your daily check-in to receive personalized training insights."}
-            </p>
-            
-            <Link href="/coach">
-              <motion.div
-                whileHover={{ x: 4 }}
-                className="flex items-center gap-2 text-[#00D4FF] font-semibold text-sm mt-4"
-              >
-                Get full advice
-                <ChevronRight className="w-4 h-4" />
-              </motion.div>
-            </Link>
+            <ExpandableAdvice advice={aiAdvice?.advice} />
           </div>
         </motion.div>
 
@@ -325,6 +313,31 @@ export default function Dashboard() {
             mutateCheckins();
           }} 
         />
+      )}
+    </div>
+  );
+}
+
+function ExpandableAdvice({ advice }: { advice?: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const defaultText = "Complete your daily check-in to receive personalized training insights.";
+  const displayText = advice || defaultText;
+  
+  return (
+    <div>
+      <p className={`text-[#E5E5EA] text-base leading-relaxed ${!expanded ? "line-clamp-2" : ""}`}>
+        {displayText}
+      </p>
+      
+      {advice && advice.length > 100 && (
+        <motion.button
+          whileHover={{ x: 4 }}
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 text-[#00D4FF] font-semibold text-sm mt-4"
+        >
+          {expanded ? "Show less" : "Get full advice"}
+          <ChevronRight className={`w-4 h-4 transition-transform ${expanded ? "rotate-90" : ""}`} />
+        </motion.button>
       )}
     </div>
   );
