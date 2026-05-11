@@ -87,7 +87,19 @@ return (
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-4 py-2.5 rounded-full shadow-lg shadow-[#FF4500]/30"
           >
-            <Flame className="w-5 h-5 text-white" />
+            <motion.div
+              animate={{ 
+                scale: [1, 1.2, 1],
+                rotate: [0, -5, 5, 0],
+              }}
+              transition={{ 
+                duration: 1.5, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+            >
+              <Flame className="w-5 h-5 text-white drop-shadow-[0_0_8px_rgba(255,200,0,0.8)]" />
+            </motion.div>
             <span className="text-white font-black text-lg">{currentStreak}</span>
           </motion.div>
         </div>
@@ -147,7 +159,14 @@ return (
                   </defs>
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl font-black text-white">{Math.round(progressPercent)}%</span>
+                  <motion.span 
+                    className="text-2xl font-black text-white"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <CountUp target={Math.round(progressPercent)} />%
+                  </motion.span>
                 </div>
               </div>
             </div>
@@ -178,9 +197,17 @@ return (
         </motion.div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="grid grid-cols-2 gap-4"
+        >
           <LogRunModal onRunLogged={() => mutateRuns()}>
             <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#FF4500] to-[#FF6B00] shadow-xl shadow-[#FF4500]/40"
@@ -196,6 +223,9 @@ return (
           </LogRunModal>
 
           <motion.button
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25 }}
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => !hasCheckedInToday && setShowCheckinModal(true)}
@@ -219,14 +249,14 @@ return (
               </p>
             </div>
           </motion.button>
-        </div>
+        </motion.div>
 
         {/* Wellness Metrics */}
         {todayCheckin && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
             className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
           >
             <div className="flex items-center justify-between mb-5">
@@ -247,7 +277,7 @@ return (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
           className="relative overflow-hidden rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
         >
           <div className="absolute -bottom-16 -right-16 w-40 h-40 bg-[#00D4FF] rounded-full blur-[80px] opacity-30" />
@@ -272,7 +302,7 @@ return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-bold text-lg">Recent Runs</h3>
@@ -466,6 +496,34 @@ function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: {
       </div>
     </motion.div>
   );
+}
+
+function CountUp({ target }: { target: number }) {
+  const [count, setCount] = useState(0);
+  
+  useEffect(() => {
+    if (target === 0) return;
+    
+    const duration = 1500;
+    const steps = 30;
+    const increment = target / steps;
+    const stepDuration = duration / steps;
+    let current = 0;
+    
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(Math.round(current));
+      }
+    }, stepDuration);
+    
+    return () => clearInterval(timer);
+  }, [target]);
+  
+  return <>{count}</>;
 }
 
 function getGreeting() {
