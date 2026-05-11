@@ -8,3 +8,8 @@ export { AICoachCard } from "./ai-coach-card";
 export { CheckInHistory } from "./checkin-history";
 export { GoalCard } from "./goal-card";
 export { TrendsChart } from "./trends-chart";
+export { PremiumProgressRing } from "./premium-progress-ring";
+export { AnimatedWeeklyChart } from "./animated-weekly-chart";
+export { AITrainingCard } from "./ai-training-card";
+export { WellnessOrbs } from "./wellness-orbs";
+export { RecentRunsCarousel } from "./recent-runs-carousel";

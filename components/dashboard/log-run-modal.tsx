@@ -89,7 +89,7 @@ export function LogRunModal({ onRunLogged }: LogRunModalProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="default" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
+        <Button size="sm" className="gap-2 bg-gradient-to-r from-[#FF2D55] to-[#FF6B00] hover:opacity-90 text-white border-0 shadow-lg shadow-[#FF2D55]/20">
           <Plus className="w-4 h-4" />
           Log Run
         </Button>

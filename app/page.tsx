@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Navbar } from "@/components/dashboard/navbar";
-import { WeeklyChart } from "@/components/dashboard/weekly-chart";
-import { WellnessMetrics } from "@/components/dashboard/wellness-metrics";
-import { CheckInCard } from "@/components/dashboard/checkin-card";
-import { RecentRuns } from "@/components/dashboard/recent-runs";
-import { AICoachCard } from "@/components/dashboard/ai-coach-card";
-import { CheckInHistory } from "@/components/dashboard/checkin-history";
-import { GoalCard } from "@/components/dashboard/goal-card";
-import { TrendsChart } from "@/components/dashboard/trends-chart";
-import { TrialBanner } from "@/components/dashboard/trial-banner";
-import { SMSGuideCard } from "@/components/dashboard/sms-guide-card";
+import { motion, AnimatePresence } from "framer-motion";
+import { Bell, Activity } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import useSWR from "swr";
+import Link from "next/link";
+
+// Import dashboard components
+import { PremiumProgressRing } from "@/components/dashboard/premium-progress-ring";
+import { AnimatedWeeklyChart } from "@/components/dashboard/animated-weekly-chart";
+import { AITrainingCard } from "@/components/dashboard/ai-training-card";
+import { WellnessOrbs } from "@/components/dashboard/wellness-orbs";
+import { RecentRunsCarousel } from "@/components/dashboard/recent-runs-carousel";
+import { CheckInCard } from "@/components/dashboard/checkin-card";
+import { CheckInModal } from "@/components/dashboard/checkin-modal";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -24,32 +25,49 @@ function getGreeting(): string {
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
-  if (!res.ok) {
-    console.log("[v0] Fetch error:", url, res.status);
-    return null;
-  }
+  if (!res.ok) return null;
   return res.json();
+};
+
+// Stagger animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15,
+    },
+  },
 };
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [greeting, setGreeting] = useState("Hello");
-  const [weekLabel, setWeekLabel] = useState("");
   
-  // Fetch streak and check-in status
+  // Fetch data
   const { data: checkinsData } = useSWR("/api/checkins?limit=7", fetcher);
+  const { data: runsData } = useSWR("/api/runs?days=7", fetcher);
+  const { data: goalsData } = useSWR("/api/goals", fetcher);
   
   const todayStr = new Date().toISOString().split("T")[0];
   const hasCheckedInToday = checkinsData?.checkins?.some((c: { date: string }) => c.date === todayStr) ?? false;
+  const todayCheckin = checkinsData?.checkins?.find((c: { date: string }) => c.date === todayStr);
   
-  // Debug: log check-in status
-  if (checkinsData) {
-    console.log("[v0] Today:", todayStr);
-    console.log("[v0] Checkins data:", checkinsData);
-    console.log("[v0] Has checked in today:", hasCheckedInToday);
-  }
-  
-  // Calculate streak from check-ins
+  // Calculate streak
   const calculateStreak = () => {
     if (!checkinsData?.checkins?.length) return 0;
     let streak = 0;
@@ -73,108 +91,176 @@ export default function Dashboard() {
   
   const currentStreak = calculateStreak();
   
+  // Calculate weekly miles
+  const weeklyMiles = runsData?.runs?.reduce((sum: number, run: { miles: number }) => sum + run.miles, 0) || 0;
+  const goalMiles = goalsData?.goals?.[0]?.weekly_miles_target || 30;
+  const progressPercent = Math.min((weeklyMiles / goalMiles) * 100, 100);
+  
   useEffect(() => {
     setGreeting(getGreeting());
-    
-    // Calculate week number on client to avoid hydration mismatch
-    const now = new Date();
-    const weekNum = Math.ceil((now.getDate() + new Date(now.getFullYear(), now.getMonth(), 1).getDay()) / 7);
-    const monthName = now.toLocaleString("default", { month: "short" });
-    const year = now.getFullYear();
-    setWeekLabel(`Week ${weekNum} · ${monthName} ${year}`);
   }, []);
   
   const userName = user?.user_metadata?.first_name || "Runner";
+  const userInitials = userName.substring(0, 2).toUpperCase();
+
   return (
-    <div className="min-h-screen bg-background pb-16 md:pb-0">
-      <Navbar />
+    <div className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden">
+      {/* Ambient glow effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#FF2D55]/10 rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#FF6B00]/10 rounded-full blur-[120px]" />
+      </div>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
-        {/* Trial Banner */}
-        <TrialBanner />
-
-        {/* Hero Section - Greeting + Quick Stats */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {greeting}, {userName}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {weekLabel || "Loading..."}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Streak Counter */}
-            {currentStreak > 0 && (
-              <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2">
-                <span className="text-lg">🔥</span>
-                <span className="text-sm font-bold text-primary">{currentStreak} day streak</span>
-              </div>
-            )}
-            {/* Check-in Status */}
-            <div className={`flex items-center gap-2 rounded-full px-4 py-2 ${hasCheckedInToday ? 'bg-green-500/10 border border-green-500/20' : 'bg-card border border-border'}`}>
-              <div className={`w-2 h-2 rounded-full ${hasCheckedInToday ? 'bg-green-500' : 'bg-muted-foreground'}`} />
-              <span className={`text-sm font-medium ${hasCheckedInToday ? 'text-green-500' : 'text-muted-foreground'}`}>
-                {hasCheckedInToday ? 'Checked in today' : 'Not checked in yet'}
-              </span>
+      {/* Header */}
+      <motion.header 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-50 backdrop-blur-xl bg-[#0A0A0A]/80 border-b border-white/5"
+      >
+        <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF2D55] to-[#FF6B00] flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
             </div>
+            <span className="font-bold text-sm tracking-tight">Runner Wellness</span>
+          </Link>
+          
+          {/* Right side */}
+          <div className="flex items-center gap-3">
+            <motion.button 
+              whileTap={{ scale: 0.95 }}
+              className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center relative"
+            >
+              <Bell className="w-4 h-4 text-white/70" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF2D55] rounded-full" />
+            </motion.button>
+            <Link href="/profile">
+              <motion.div 
+                whileTap={{ scale: 0.95 }}
+                className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF2D55] to-[#FF6B00] flex items-center justify-center text-xs font-bold"
+              >
+                {userInitials}
+              </motion.div>
+            </Link>
           </div>
         </div>
+      </motion.header>
 
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* Weekly Chart */}
-            <WeeklyChart />
+      {/* Main Content */}
+      <motion.main 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-lg mx-auto px-4 py-6 space-y-6 relative z-10"
+      >
+        {/* Greeting */}
+        <motion.div variants={itemVariants} className="text-center">
+          <p className="text-white/50 text-sm uppercase tracking-widest mb-1">{greeting}</p>
+          <h1 className="text-2xl font-bold">{userName}</h1>
+        </motion.div>
 
-            {/* AI Coach */}
-            <AICoachCard />
+        {/* Hero Progress Ring */}
+        <motion.div variants={itemVariants}>
+          <PremiumProgressRing 
+            currentMiles={weeklyMiles}
+            goalMiles={goalMiles}
+            progressPercent={progressPercent}
+            streak={currentStreak}
+          />
+        </motion.div>
 
-            {/* Wellness Trends Chart */}
-            <TrendsChart />
+        {/* Weekly Chart */}
+        <motion.div variants={itemVariants}>
+          <AnimatedWeeklyChart runs={runsData?.runs || []} />
+        </motion.div>
 
-            {/* Recent Runs */}
-            <RecentRuns />
+        {/* AI Training Advice */}
+        <motion.div variants={itemVariants}>
+          <AITrainingCard />
+        </motion.div>
 
-            {/* Check-in History */}
-            <CheckInHistory />
-          </div>
+        {/* Wellness Metrics Orbs */}
+        <motion.div variants={itemVariants}>
+          <WellnessOrbs checkin={todayCheckin} hasCheckedIn={hasCheckedInToday} />
+        </motion.div>
 
-          {/* Right Column - Sidebar */}
-          <div className="lg:col-span-4 space-y-6">
-            {/* SMS Guide */}
-            <SMSGuideCard />
-
-            {/* Check-in Card & Streak */}
+        {/* Check-in Card (if not checked in) */}
+        {!hasCheckedInToday && (
+          <motion.div variants={itemVariants}>
             <CheckInCard streak={currentStreak} hasCheckedInToday={hasCheckedInToday} />
+          </motion.div>
+        )}
 
-            {/* Wellness Metrics */}
-            <WellnessMetrics />
+        {/* Recent Runs Carousel */}
+        <motion.div variants={itemVariants}>
+          <RecentRunsCarousel runs={runsData?.runs || []} />
+        </motion.div>
 
-            {/* Goal Card - empty state for new users */}
-            <GoalCard />
-          </div>
+        {/* Bottom spacing for mobile nav */}
+        <div className="h-20" />
+      </motion.main>
+
+      {/* Bottom Navigation */}
+      <motion.nav 
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
+        className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-xl border-t border-white/5"
+      >
+        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-around">
+          <NavItem href="/" icon="home" label="Home" active />
+          <NavItem href="/runs" icon="runs" label="Runs" />
+          <NavItem href="/goals" icon="target" label="Goals" />
+          <NavItem href="/profile" icon="profile" label="Profile" />
         </div>
-      </main>
+      </motion.nav>
 
-      {/* Footer */}
-      <footer className="border-t border-border mt-12 py-6">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold tracking-tight">RUNNER</span>
-            <span className="text-sm font-bold tracking-tight text-primary">WELLNESS</span>
-          </div>
-          <div className="flex items-center gap-6 text-sm md:text-xs text-muted-foreground">
-            <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-foreground transition-colors">Terms</a>
-            <a href="/help" className="hover:text-foreground transition-colors">Help</a>
-          </div>
-          <p className="text-sm md:text-xs text-muted-foreground">
-            AI assistant — NOT a doctor. Consult your coach for health decisions.
-          </p>
-        </div>
-      </footer>
+      {/* Check-in Modal */}
+      <CheckInModal />
     </div>
+  );
+}
+
+function NavItem({ href, icon, label, active }: { href: string; icon: string; label: string; active?: boolean }) {
+  const icons: Record<string, React.ReactNode> = {
+    home: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+    runs: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
+    target: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    profile: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
+  };
+
+  return (
+    <Link href={href}>
+      <motion.div 
+        whileTap={{ scale: 0.9 }}
+        className={`flex flex-col items-center gap-1 px-4 py-1 ${active ? 'text-[#FF2D55]' : 'text-white/40'}`}
+      >
+        {icons[icon]}
+        <span className="text-[10px] font-medium">{label}</span>
+        {active && (
+          <motion.div 
+            layoutId="nav-indicator"
+            className="absolute -bottom-1 w-1 h-1 bg-[#FF2D55] rounded-full"
+          />
+        )}
+      </motion.div>
+    </Link>
   );
 }
