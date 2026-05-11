@@ -58,6 +58,23 @@ export const PRODUCTS: Product[] = [
     ],
   },
   {
+    id: 'coach_trial',
+    name: 'Coach Free Trial',
+    description: 'Try Coach Pro free for 7 days - no credit card required',
+    priceInCents: 0,
+    trialDays: 7,
+    maxAthletes: 30,
+    features: [
+      'Full Coach Pro access for 7 days',
+      'Team dashboard',
+      'Up to 30 athletes',
+      'At-risk athlete alerts',
+      'AI training recommendations',
+      'Team wellness reports',
+      'SMS invitations',
+    ],
+  },
+  {
     id: 'coach_starter',
     name: 'Coach Starter',
     description: 'Perfect for small teams and JV squads',

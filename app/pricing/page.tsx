@@ -19,6 +19,7 @@ export default function PricingPage() {
     : PRODUCTS.find((p) => p.id === "pro_monthly")!;
   
   // Coach tiers
+  const coachTrial = PRODUCTS.find((p) => p.id === "coach_trial")!;
   const coachStarter = PRODUCTS.find((p) => p.id === "coach_starter")!;
   const coachPro = PRODUCTS.find((p) => p.id === "coach_pro")!;
   const coachElite = PRODUCTS.find((p) => p.id === "coach_elite")!;
@@ -146,6 +147,27 @@ export default function PricingPage() {
           Coach Plans
         </h2>
         <p className="text-muted-foreground mb-6">Manage your team and monitor athlete wellness</p>
+        
+        {/* Coach Free Trial Banner */}
+        <Card className="border-2 border-dashed border-primary/50 bg-primary/5 mb-6">
+          <CardContent className="flex flex-col md:flex-row items-center justify-between gap-4 py-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">{coachTrial.name}</h3>
+                <p className="text-sm text-muted-foreground">{coachTrial.description}</p>
+              </div>
+            </div>
+            <Button className="gap-2 whitespace-nowrap" asChild>
+              <Link href="/signup?plan=coach_trial">
+                Start 7-Day Free Trial
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
         
         <div className="grid md:grid-cols-3 gap-6">
           {/* Coach Starter */}

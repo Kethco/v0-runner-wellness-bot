@@ -19,7 +19,7 @@ const FEATURES = [
 ];
 
 type UserType = "athlete" | "coach";
-type PlanType = "free_trial" | "pro_monthly" | "pro_annual" | "coach_starter" | "coach_pro" | "coach_elite";
+type PlanType = "free_trial" | "pro_monthly" | "pro_annual" | "coach_trial" | "coach_starter" | "coach_pro" | "coach_elite";
 
 const PLANS = {
   athlete: [
@@ -52,6 +52,15 @@ const PLANS = {
     },
   ],
   coach: [
+    { 
+      id: "coach_trial" as PlanType, 
+      name: "Coach Free Trial", 
+      price: "$0", 
+      period: "for 7 days",
+      features: ["Full Coach Pro access", "Up to 30 athletes", "AI recommendations", "No credit card required"],
+      popular: false,
+      badge: "7-DAY TRIAL"
+    },
     { 
       id: "coach_starter" as PlanType, 
       name: "Coach Starter", 
@@ -154,8 +163,8 @@ export default function SignUpPage() {
         setErrors({ email: error.message });
         setIsLoading(false);
       } else {
-        // For paid plans, redirect to checkout page
-        if (selectedPlan !== "free_trial") {
+        // For paid plans (not free trials), redirect to checkout page
+        if (selectedPlan !== "free_trial" && selectedPlan !== "coach_trial") {
           // Store plan in localStorage for checkout page
           localStorage.setItem("pending_plan", selectedPlan);
           localStorage.setItem("pending_email", formData.email);
@@ -258,7 +267,7 @@ export default function SignUpPage() {
                 </button>
                 
                 <button
-                  onClick={() => { setUserType("coach"); setSelectedPlan("coach_pro"); setStep("plan"); }}
+                  onClick={() => { setUserType("coach"); setSelectedPlan("coach_trial"); setStep("plan"); }}
                   className={`w-full p-6 rounded-lg border-2 transition-all text-left hover:border-primary ${
                     userType === "coach" ? "border-primary bg-primary/10" : "border-border bg-secondary"
                   }`}
@@ -345,7 +354,7 @@ export default function SignUpPage() {
                   onClick={() => setStep("form")} 
                   className="w-full gap-2 mt-4"
                 >
-                  {selectedPlan === "free_trial" ? "Start 7-Day Free Trial" : `Continue with ${PLANS[userType].find(p => p.id === selectedPlan)?.name}`}
+                  {(selectedPlan === "free_trial" || selectedPlan === "coach_trial") ? "Start 7-Day Free Trial" : `Continue with ${PLANS[userType].find(p => p.id === selectedPlan)?.name}`}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </CardContent>
@@ -364,7 +373,7 @@ export default function SignUpPage() {
                 </button>
                 <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
                 <CardDescription>
-                  {selectedPlan === "free_trial" 
+                  {(selectedPlan === "free_trial" || selectedPlan === "coach_trial")
                     ? "Start your 7-day free trial - no credit card required" 
                     : `Enter your details for your ${selectedPlan.includes("pro") ? "Pro" : "Coach"} account`}
                 </CardDescription>
