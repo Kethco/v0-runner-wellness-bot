@@ -32,6 +32,65 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // Sync all data to a specific user ID
+  if (action === "sync-to-user") {
+    const targetUserId = searchParams.get("userId");
+    if (!targetUserId) {
+      return NextResponse.json({ error: "userId required" }, { status: 400 });
+    }
+    
+    // Update all checkins from old profile ID to target user ID
+    const { data: updatedCheckins, error: e1 } = await supabase
+      .from("checkins")
+      .update({ user_id: targetUserId })
+      .eq("user_id", CORRECT_USER_ID)
+      .select();
+    
+    // Update all ai_advice
+    const { data: updatedAdvice, error: e2 } = await supabase
+      .from("ai_advice")
+      .update({ user_id: targetUserId })
+      .eq("user_id", CORRECT_USER_ID)
+      .select();
+    
+    // Update all runs
+    const { data: updatedRuns, error: e3 } = await supabase
+      .from("runs")
+      .update({ user_id: targetUserId })
+      .eq("user_id", CORRECT_USER_ID)
+      .select();
+    
+    // Update all goals
+    const { data: updatedGoals, error: e4 } = await supabase
+      .from("goals")
+      .update({ user_id: targetUserId })
+      .eq("user_id", CORRECT_USER_ID)
+      .select();
+      
+    return NextResponse.json({
+      success: true,
+      checkins_synced: updatedCheckins?.length || 0,
+      advice_synced: updatedAdvice?.length || 0,
+      runs_synced: updatedRuns?.length || 0,
+      goals_synced: updatedGoals?.length || 0,
+      errors: [e1?.message, e2?.message, e3?.message, e4?.message].filter(Boolean)
+    });
+  }
+
+  // Get current auth user ID (call from within app)
+  if (action === "get-my-id") {
+    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    const authSupabase = await createServerClient();
+    const { data: { user } } = await authSupabase.auth.getUser();
+    
+    return NextResponse.json({
+      authUserId: user?.id || null,
+      email: user?.email || null,
+      currentProfileId: CORRECT_USER_ID,
+      needsSync: user?.id && user.id !== CORRECT_USER_ID
+    });
+  }
+
   // Check today's data
   if (action === "check-today") {
     const today = new Date().toISOString().split("T")[0];
