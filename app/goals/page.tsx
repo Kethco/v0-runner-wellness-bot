@@ -134,7 +134,6 @@ function GoalsPageContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [showPrediction, setShowPrediction] = useState(false);
   const [newGoal, setNewGoal] = useState({
     distance: "",
     raceName: "",
@@ -389,70 +388,69 @@ function GoalsPageContent() {
         ) : (
           <>
 {/* Race Prediction Card */}
-  {activeGoal && recentRuns.length >= 3 && (
+  {activeGoal && (
     <Card className="mb-6 border-[#00D4FF]/30 bg-gradient-to-br from-[#00D4FF]/10 to-transparent">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-[#00D4FF]/20">
-              <Zap className="w-5 h-5 text-[#00D4FF]" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Race Prediction</CardTitle>
-              <CardDescription>Based on your recent training</CardDescription>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-[#00D4FF]/20">
+            <Zap className="w-5 h-5 text-[#00D4FF]" />
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowPrediction(!showPrediction)}
-          >
-            {showPrediction ? "Hide" : "Show"}
-          </Button>
+          <div>
+            <CardTitle className="text-lg">Race Prediction</CardTitle>
+            <CardDescription>AI-powered time prediction for {activeGoal.distance}</CardDescription>
+          </div>
         </div>
       </CardHeader>
-      {showPrediction && (() => {
-        const prediction = predictRaceTime(recentRuns, activeGoal.distance);
-        if (!prediction) return (
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              Log more runs with pace data to get a prediction for your {activeGoal.distance}.
-            </p>
-          </CardContent>
-        );
-        return (
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground mb-1">Predicted {activeGoal.distance} Time</p>
-                <p className="text-3xl font-bold text-[#00D4FF]">{prediction.predictedTime}</p>
-              </div>
-              <div className="text-right">
-                <Badge variant={prediction.confidence === "High" ? "default" : prediction.confidence === "Medium" ? "secondary" : "outline"}>
-                  {prediction.confidence} Confidence
-                </Badge>
-              </div>
+      <CardContent className="space-y-4">
+        {(() => {
+          const prediction = predictRaceTime(recentRuns, activeGoal.distance);
+          if (!prediction || recentRuns.length < 1) return (
+            <div className="text-center py-4">
+              <p className="text-muted-foreground text-sm mb-2">
+                Log runs with pace data to unlock your {activeGoal.distance} prediction.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                We use the Riegel formula to predict your race time based on training.
+              </p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TrendingUp className="w-4 h-4" />
-              <span>Based on: {prediction.basedOn}</span>
-            </div>
-            {activeGoal.target_time && (
-              <div className="pt-2 border-t border-border">
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Your target: </span>
-                  <span className="font-semibold">{activeGoal.target_time}</span>
-                  {prediction.predictedTime < activeGoal.target_time ? (
-                    <span className="text-green-500 ml-2">You&apos;re on track!</span>
-                  ) : (
-                    <span className="text-yellow-500 ml-2">Keep training - you can do it!</span>
-                  )}
-                </p>
+          );
+          return (
+            <>
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground mb-1">Predicted Finish Time</p>
+                  <p className="text-4xl font-bold text-[#00D4FF]">{prediction.predictedTime}</p>
+                </div>
+                <div className="text-right">
+                  <Badge variant={prediction.confidence === "High" ? "default" : prediction.confidence === "Medium" ? "secondary" : "outline"} className="mb-2">
+                    {prediction.confidence} Confidence
+                  </Badge>
+                  <p className="text-xs text-muted-foreground">{recentRuns.length} runs analyzed</p>
+                </div>
               </div>
-            )}
-          </CardContent>
-        );
-      })()}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-[#1A1A1A] rounded-lg p-3">
+                <TrendingUp className="w-4 h-4 text-[#00D4FF]" />
+                <span>Based on: {prediction.basedOn}</span>
+              </div>
+              {activeGoal.target_time && (
+                <div className="pt-3 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground text-sm">Your target:</span>
+                    <span className="font-bold text-lg">{activeGoal.target_time}</span>
+                  </div>
+                  <p className="text-sm mt-2">
+                    {prediction.predictedTime < activeGoal.target_time ? (
+                      <span className="text-green-500 font-medium">You&apos;re ahead of your goal pace!</span>
+                    ) : (
+                      <span className="text-yellow-500 font-medium">Keep training - every run counts!</span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </>
+          );
+        })()}
+      </CardContent>
     </Card>
   )}
 
