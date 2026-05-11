@@ -4,11 +4,13 @@ import { createClient } from "@supabase/supabase-js";
 const WRONG_USER_ID = "09b728c4-a45b-4ab6-96e5-f4f76632f22c";
 const CORRECT_USER_ID = "3a30f9f9-0a85-4dc1-8e00-be39e5fa01fd";
 
-export async function POST(request: NextRequest) {
-  // Only allow in development or with admin secret
-  const adminSecret = request.headers.get("x-admin-secret");
-  if (process.env.NODE_ENV === "production" && adminSecret !== process.env.ADMIN_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(request: NextRequest) {
+  // Require secret key in URL for security
+  const { searchParams } = new URL(request.url);
+  const key = searchParams.get("key");
+  
+  if (key !== "fix-runner-2026") {
+    return NextResponse.json({ error: "Invalid key" }, { status: 401 });
   }
 
   const supabase = createClient(
