@@ -202,7 +202,7 @@ export function RunningBuddy({ userName, onClose, isFullPage = false }: RunningB
             onChange={(e) => setInput(e.target.value)}
             placeholder="Message your Running Buddy..."
             disabled={isLoading}
-            className="flex-1 bg-[#1C1C1E] border border-[#2A2A2A] rounded-full px-4 py-3 text-white placeholder:text-[#636366] focus:outline-none focus:border-[#AF52DE] transition-colors text-sm"
+            className="flex-1 bg-[#1C1C1E] border border-[#2A2A2A] rounded-full px-4 py-3 text-white placeholder:text-[#8E8E93] focus:outline-none focus:border-[#AF52DE] transition-colors text-sm"
           />
           <Button
             type="submit"

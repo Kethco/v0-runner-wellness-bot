@@ -5,24 +5,25 @@
 
 :root {
   /* Premium Sports App Theme - Strava/Nike Run inspired */
-  --background: #000000;
-  --foreground: #FFFFFF;
-  --card: #111111;
-  --card-foreground: #FFFFFF;
-  --popover: #111111;
-  --popover-foreground: #FFFFFF;
+  /* IMPROVED READABILITY: Lighter backgrounds, higher contrast text */
+  --background: #0A0A0A;
+  --foreground: #F5F5F7;
+  --card: #161618;
+  --card-foreground: #F5F5F7;
+  --popover: #161618;
+  --popover-foreground: #F5F5F7;
   
   /* Primary - Electric Orange (high visibility) */
   --primary: #FF4500;
   --primary-foreground: #FFFFFF;
   
-  /* Secondary - Elevated surface */
-  --secondary: #1C1C1E;
-  --secondary-foreground: #FFFFFF;
+  /* Secondary - Elevated surface with better contrast */
+  --secondary: #252528;
+  --secondary-foreground: #F5F5F7;
   
-  /* Muted - Softer backgrounds */
-  --muted: #2C2C2E;
-  --muted-foreground: #A1A1A6;
+  /* Muted - MUCH BRIGHTER for readability */
+  --muted: #323235;
+  --muted-foreground: #C7C7CC;
   
   /* Accent - Bright cyan for highlights */
   --accent: #00D4FF;
@@ -36,9 +37,9 @@
   --destructive: #FF453A;
   --destructive-foreground: #FFFFFF;
   
-  /* Borders and inputs */
-  --border: #3A3A3C;
-  --input: #1C1C1E;
+  /* Borders - slightly brighter for visibility */
+  --border: #48484A;
+  --input: #252528;
   --ring: #FF4500;
   
   /* Chart colors - Vibrant sports palette */
@@ -62,24 +63,24 @@
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #FFFFFF;
-  --card: #111111;
-  --card-foreground: #FFFFFF;
-  --popover: #111111;
-  --popover-foreground: #FFFFFF;
+  --background: #0A0A0A;
+  --foreground: #F5F5F7;
+  --card: #161618;
+  --card-foreground: #F5F5F7;
+  --popover: #161618;
+  --popover-foreground: #F5F5F7;
   --primary: #FF4500;
   --primary-foreground: #FFFFFF;
-  --secondary: #1C1C1E;
-  --secondary-foreground: #FFFFFF;
-  --muted: #2C2C2E;
-  --muted-foreground: #A1A1A6;
+  --secondary: #252528;
+  --secondary-foreground: #F5F5F7;
+  --muted: #323235;
+  --muted-foreground: #C7C7CC;
   --accent: #00D4FF;
   --accent-foreground: #000000;
   --destructive: #FF453A;
   --destructive-foreground: #FFFFFF;
-  --border: #3A3A3C;
-  --input: #1C1C1E;
+  --border: #48484A;
+  --input: #252528;
   --ring: #FF4500;
   --chart-1: #FF4500;
   --chart-2: #30D158;
@@ -143,6 +144,18 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Improved text readability */
+  p, span, label {
+    @apply leading-relaxed;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
   }
 }
 

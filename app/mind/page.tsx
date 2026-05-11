@@ -27,7 +27,7 @@ export default function MindPage() {
   return (
     <div className="min-h-screen bg-black text-white pb-28">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#2A2A2A]">
+      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center gap-4">
           {mode !== "home" ? (
             <motion.button
@@ -49,7 +49,7 @@ export default function MindPage() {
                mode === "post-run" ? "Post-Run Reflection" : 
                mode === "buddy" ? "Running Buddy" : "Motivation Support"}
             </h1>
-            <p className="text-[#8E8E93] text-sm">
+            <p className="text-[#AEAEB2] text-sm">
               {mode === "home" ? "Your mental wellness toolkit" :
                mode === "pre-run" ? "Set your intention" :
                mode === "post-run" ? "Celebrate the moment" : "You're not alone"}
@@ -78,7 +78,7 @@ export default function MindPage() {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t-2 border-[#2A2A2A]">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t-2 border-[#3A3A3C]">
         <div className="flex items-center justify-around py-4 px-4 max-w-lg mx-auto">
           <NavButton icon={Activity} label="Home" href="/" />
           <NavButton icon={TrendingUp} label="Runs" href="/runs" />
@@ -143,7 +143,7 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] p-6 border border-[#2A2A2A]"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] p-6 border border-[#3A3A3C]"
       >
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#AF52DE] rounded-full blur-[80px] opacity-40" />
         <div className="relative z-10">
@@ -151,7 +151,7 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
           <p className="text-white text-xl font-medium leading-relaxed italic">
             "{todaysWisdom.quote}"
           </p>
-          <p className="text-[#8E8E93] text-sm mt-3">— {todaysWisdom.reference}</p>
+          <p className="text-[#AEAEB2] text-sm mt-3">— {todaysWisdom.reference}</p>
         </div>
       </motion.div>
 
@@ -174,7 +174,7 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
           <p className="text-white font-bold text-lg">Running Buddy</p>
           <span className="px-2 py-0.5 rounded-full bg-[#AF52DE]/20 text-[#AF52DE] text-xs font-bold">AI</span>
         </div>
-        <p className="text-[#8E8E93] text-sm">Your personal companion who knows your journey</p>
+        <p className="text-[#AEAEB2] text-sm">Your personal companion who knows your journey</p>
       </div>
       <ChevronRight className="w-5 h-5 text-[#AF52DE]" />
     </div>
@@ -182,7 +182,7 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
 
   {/* Main Actions */}
   <div className="space-y-4">
-  <h2 className="text-[#8E8E93] text-xs font-bold uppercase tracking-wider px-1">Mindset Tools</h2>
+  <h2 className="text-[#AEAEB2] text-xs font-bold uppercase tracking-wider px-1">Mindset Tools</h2>
   
   {/* Pre-Run Mindset */}
         <motion.button
@@ -196,9 +196,9 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
           </div>
           <div className="flex-1 text-left">
             <p className="text-white font-bold text-lg">Pre-Run Mindset</p>
-            <p className="text-[#8E8E93] text-sm">Set your intention before you head out</p>
+            <p className="text-[#AEAEB2] text-sm">Set your intention before you head out</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-[#636366]" />
+          <ChevronRight className="w-5 h-5 text-[#8E8E93]" />
         </motion.button>
 
         {/* Post-Run Reflection */}
@@ -213,9 +213,9 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
           </div>
           <div className="flex-1 text-left">
             <p className="text-white font-bold text-lg">Post-Run Reflection</p>
-            <p className="text-[#8E8E93] text-sm">Capture the joy, not just the stats</p>
+            <p className="text-[#AEAEB2] text-sm">Capture the joy, not just the stats</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-[#636366]" />
+          <ChevronRight className="w-5 h-5 text-[#8E8E93]" />
         </motion.button>
 
         {/* Motivation Support */}
@@ -230,9 +230,9 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
           </div>
           <div className="flex-1 text-left">
             <p className="text-white font-bold text-lg">Feeling Low?</p>
-            <p className="text-[#8E8E93] text-sm">Support for motivation dips & burnout</p>
+            <p className="text-[#AEAEB2] text-sm">Support for motivation dips & burnout</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-[#636366]" />
+          <ChevronRight className="w-5 h-5 text-[#8E8E93]" />
         </motion.button>
       </div>
 
@@ -241,7 +241,7 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] p-5"
+        className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
       >
         <h3 className="text-white font-bold mb-4">Quick Calm</h3>
         <BreathingExercise />
@@ -287,7 +287,7 @@ function PreRunView({ onComplete }: { onComplete: () => void }) {
               <Sun className="w-10 h-10 text-[#FF9500]" />
             </motion.div>
             <h2 className="text-2xl font-bold text-white mb-2">How are you feeling?</h2>
-            <p className="text-[#8E8E93]">Check in with yourself before you run</p>
+            <p className="text-[#AEAEB2]">Check in with yourself before you run</p>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -300,7 +300,7 @@ function PreRunView({ onComplete }: { onComplete: () => void }) {
                 className={`p-4 rounded-2xl border-2 transition-all ${
                   energy === level.id 
                     ? `border-[${level.color}] bg-[${level.color}]/20` 
-                    : "border-[#2A2A2A] bg-[#1C1C1E]"
+                    : "border-[#3A3A3C] bg-[#1C1C1E]"
                 }`}
               >
                 <level.icon className="w-8 h-8 mx-auto mb-2" style={{ color: level.color }} />
@@ -315,7 +315,7 @@ function PreRunView({ onComplete }: { onComplete: () => void }) {
         <div className="space-y-6">
           <div className="text-center py-4">
             <h2 className="text-2xl font-bold text-white mb-2">Set Your Intention</h2>
-            <p className="text-[#8E8E93]">Choose or create your own</p>
+            <p className="text-[#AEAEB2]">Choose or create your own</p>
           </div>
 
           <div className="space-y-3">
@@ -330,7 +330,7 @@ function PreRunView({ onComplete }: { onComplete: () => void }) {
                 className={`w-full p-4 rounded-xl text-left transition-all ${
                   intention === text 
                     ? "bg-[#FF9500]/20 border-2 border-[#FF9500]" 
-                    : "bg-[#1C1C1E] border-2 border-[#2A2A2A]"
+                    : "bg-[#1C1C1E] border-2 border-[#3A3A3C]"
                 }`}
               >
                 <p className="text-white font-medium">{text}</p>
@@ -343,7 +343,7 @@ function PreRunView({ onComplete }: { onComplete: () => void }) {
               placeholder="Or write your own..."
               value={intention}
               onChange={(e) => setIntention(e.target.value)}
-              className="w-full p-4 rounded-xl bg-[#1C1C1E] border-2 border-[#2A2A2A] text-white placeholder-[#636366] resize-none h-24 focus:border-[#FF9500] focus:outline-none transition-colors"
+              className="w-full p-4 rounded-xl bg-[#1C1C1E] border-2 border-[#3A3A3C] text-white placeholder-[#8E8E93] resize-none h-24 focus:border-[#FF9500] focus:outline-none transition-colors"
             />
           </div>
 
@@ -371,8 +371,8 @@ function PreRunView({ onComplete }: { onComplete: () => void }) {
               <Check className="w-12 h-12 text-[#30D158]" />
             </motion.div>
             <h2 className="text-2xl font-bold text-white mb-4">You're Ready</h2>
-            <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#2A2A2A]">
-              <p className="text-[#8E8E93] text-sm mb-2">Your intention:</p>
+            <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#3A3A3C]">
+              <p className="text-[#AEAEB2] text-sm mb-2">Your intention:</p>
               <p className="text-white text-xl font-medium italic">"{intention}"</p>
             </div>
           </div>
@@ -452,7 +452,7 @@ function PostRunView({ onComplete }: { onComplete: () => void }) {
               <Heart className="w-10 h-10 text-[#30D158]" />
             </motion.div>
             <h2 className="text-2xl font-bold text-white mb-2">How was your run?</h2>
-            <p className="text-[#8E8E93]">Not the pace - the experience</p>
+            <p className="text-[#AEAEB2]">Not the pace - the experience</p>
           </div>
 
           <div className="flex justify-between gap-2">
@@ -473,7 +473,7 @@ function PostRunView({ onComplete }: { onComplete: () => void }) {
                   className="w-8 h-8 mx-auto mb-1" 
                   style={{ color: level.color }} 
                 />
-                <p className="text-[#8E8E93] text-xs">{level.label}</p>
+                <p className="text-[#AEAEB2] text-xs">{level.label}</p>
               </motion.button>
             ))}
           </div>
@@ -484,7 +484,7 @@ function PostRunView({ onComplete }: { onComplete: () => void }) {
         <div className="space-y-6">
           <div className="text-center py-4">
             <h2 className="text-2xl font-bold text-white mb-2">Capture a moment</h2>
-            <p className="text-[#8E8E93]">What made this run worth it?</p>
+            <p className="text-[#AEAEB2]">What made this run worth it?</p>
           </div>
 
           <div className="space-y-3">
@@ -499,7 +499,7 @@ function PostRunView({ onComplete }: { onComplete: () => void }) {
                 className={`w-full p-4 rounded-xl text-left transition-all ${
                   gratitude === text 
                     ? "bg-[#30D158]/20 border-2 border-[#30D158]" 
-                    : "bg-[#1C1C1E] border-2 border-[#2A2A2A]"
+                    : "bg-[#1C1C1E] border-2 border-[#3A3A3C]"
                 }`}
               >
                 <p className="text-white font-medium">{text}</p>
@@ -511,7 +511,7 @@ function PostRunView({ onComplete }: { onComplete: () => void }) {
             placeholder="Or write your own reflection..."
             value={gratitude}
             onChange={(e) => setGratitude(e.target.value)}
-            className="w-full p-4 rounded-xl bg-[#1C1C1E] border-2 border-[#2A2A2A] text-white placeholder-[#636366] resize-none h-24 focus:border-[#30D158] focus:outline-none transition-colors"
+            className="w-full p-4 rounded-xl bg-[#1C1C1E] border-2 border-[#3A3A3C] text-white placeholder-[#8E8E93] resize-none h-24 focus:border-[#30D158] focus:outline-none transition-colors"
           />
 
           <motion.button
@@ -537,13 +537,13 @@ function PostRunView({ onComplete }: { onComplete: () => void }) {
             <Sparkles className="w-12 h-12 text-[#30D158]" />
           </motion.div>
           <h2 className="text-2xl font-bold text-white mb-2">Beautiful</h2>
-          <p className="text-[#8E8E93] mb-8">Your reflection has been saved</p>
+          <p className="text-[#AEAEB2] mb-8">Your reflection has been saved</p>
           
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onComplete}
-            className="px-8 py-4 rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] text-white font-bold"
+            className="px-8 py-4 rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] text-white font-bold"
           >
             Done
           </motion.button>
@@ -593,7 +593,7 @@ function BurnoutView() {
           <Wind className="w-10 h-10 text-[#00D4FF]" />
         </motion.div>
         <h2 className="text-2xl font-bold text-white mb-2">You're not alone</h2>
-        <p className="text-[#8E8E93]">Every runner goes through this</p>
+        <p className="text-[#AEAEB2]">Every runner goes through this</p>
       </div>
 
       <div className="space-y-4">
@@ -603,7 +603,7 @@ function BurnoutView() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.15 }}
-            className="p-5 rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A]"
+            className="p-5 rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C]"
           >
             <div className="flex items-start gap-4">
               <div 
@@ -612,7 +612,7 @@ function BurnoutView() {
               />
               <div>
                 <h3 className="text-white font-bold mb-2">{msg.title}</h3>
-                <p className="text-[#8E8E93] leading-relaxed">{msg.body}</p>
+                <p className="text-[#AEAEB2] leading-relaxed">{msg.body}</p>
               </div>
             </div>
           </motion.div>
@@ -620,7 +620,7 @@ function BurnoutView() {
       </div>
 
       {/* Breathing Exercise */}
-      <div className="rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] p-5 mt-8">
+      <div className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5 mt-8">
         <h3 className="text-white font-bold mb-4">Take a breath</h3>
         <BreathingExercise />
       </div>
@@ -704,8 +704,8 @@ function NavButton({ icon: Icon, label, href, active }: {
           active ? "bg-[#AF52DE]/20" : ""
         }`}
       >
-        <Icon className={`w-6 h-6 ${active ? "text-[#AF52DE]" : "text-[#636366]"}`} />
-        <span className={`text-xs font-bold ${active ? "text-[#AF52DE]" : "text-[#636366]"}`}>
+        <Icon className={`w-6 h-6 ${active ? "text-[#AF52DE]" : "text-[#8E8E93]"}`} />
+        <span className={`text-xs font-bold ${active ? "text-[#AF52DE]" : "text-[#8E8E93]"}`}>
           {label}
         </span>
       </motion.div>

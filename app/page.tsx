@@ -68,10 +68,10 @@ export default function Dashboard() {
   return (
     <div className={`min-h-screen bg-black text-white pb-28 ${showTrialBanner ? "pt-10" : ""}`}>
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#2A2A2A]">
+      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center justify-between">
           <div>
-            <p className="text-[#8E8E93] text-sm font-medium">{greeting}</p>
+            <p className="text-[#AEAEB2] text-sm font-medium">{greeting}</p>
             <h1 className="text-2xl font-bold text-white tracking-tight">{userName}</h1>
           </div>
           
@@ -92,7 +92,7 @@ export default function Dashboard() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] p-6 border border-[#2A2A2A]"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] p-6 border border-[#3A3A3C]"
         >
           {/* Glow effect */}
           <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#FF4500] rounded-full blur-[100px] opacity-40" />
@@ -100,7 +100,7 @@ export default function Dashboard() {
           <div className="relative z-10">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <p className="text-[#8E8E93] text-sm font-semibold uppercase tracking-wider">This Week</p>
+                <p className="text-[#AEAEB2] text-sm font-semibold uppercase tracking-wider">This Week</p>
                 <div className="flex items-baseline gap-2 mt-2">
                   <motion.span 
                     initial={{ opacity: 0 }}
@@ -109,7 +109,7 @@ export default function Dashboard() {
                   >
                     {weeklyMiles.toFixed(1)}
                   </motion.span>
-                  <span className="text-[#8E8E93] text-xl font-semibold">/ {weeklyGoal} mi</span>
+                  <span className="text-[#AEAEB2] text-xl font-semibold">/ {weeklyGoal} mi</span>
                 </div>
               </div>
               
@@ -156,7 +156,7 @@ export default function Dashboard() {
                           : "bg-[#2A2A2A]"
                     }`}
                   />
-                  <span className={`text-xs font-bold ${day.date === todayStr ? "text-[#FF4500]" : "text-[#636366]"}`}>
+                  <span className={`text-xs font-bold ${day.date === todayStr ? "text-[#FF4500]" : "text-[#8E8E93]"}`}>
                     {day.day}
                   </span>
                 </div>
@@ -202,7 +202,7 @@ export default function Dashboard() {
               <p className={`font-bold text-xl ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`}>
                 {hasCheckedInToday ? "Done!" : "Check In"}
               </p>
-              <p className={`text-sm font-medium ${hasCheckedInToday ? "text-[#8E8E93]" : "text-white/80"}`}>
+              <p className={`text-sm font-medium ${hasCheckedInToday ? "text-[#AEAEB2]" : "text-white/80"}`}>
                 {hasCheckedInToday ? "All set today" : "Daily wellness"}
               </p>
             </div>
@@ -215,7 +215,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] p-5"
+            className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
           >
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-white font-bold text-lg">Today&apos;s Wellness</h3>
@@ -236,7 +236,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="relative overflow-hidden rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] p-5"
+          className="relative overflow-hidden rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
         >
           <div className="absolute -bottom-16 -right-16 w-40 h-40 bg-[#00D4FF] rounded-full blur-[80px] opacity-30" />
           
@@ -247,7 +247,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h3 className="text-white font-bold text-lg">AI Coach</h3>
-                <p className="text-[#8E8E93] text-sm font-medium">Your personal advisor</p>
+                <p className="text-[#AEAEB2] text-sm font-medium">Your personal advisor</p>
               </div>
             </div>
             
@@ -279,7 +279,7 @@ export default function Dashboard() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 + i * 0.1 }}
                   whileHover={{ scale: 1.01, x: 4 }}
-                  className="flex items-center justify-between p-4 rounded-xl bg-[#1C1C1E] border border-[#2A2A2A] hover:border-[#3A3A3C] transition-all"
+                  className="flex items-center justify-between p-4 rounded-xl bg-[#1C1C1E] border border-[#3A3A3C] hover:border-[#3A3A3C] transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getRunStyles(run.run_type).bg}`}>
@@ -287,12 +287,12 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <p className="text-white font-bold text-lg">{run.miles} mi</p>
-                      <p className="text-[#8E8E93] text-sm font-medium capitalize">{run.run_type || "Run"}</p>
+                      <p className="text-[#AEAEB2] text-sm font-medium capitalize">{run.run_type || "Run"}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-white font-semibold">{run.pace || "--"}</p>
-                    <p className="text-[#636366] text-sm">
+                    <p className="text-[#8E8E93] text-sm">
                       {new Date(run.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </p>
                   </div>
@@ -304,7 +304,7 @@ export default function Dashboard() {
       </main>
 
       {/* Bottom Navigation - High Visibility */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t-2 border-[#2A2A2A]">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t-2 border-[#3A3A3C]">
         <div className="flex items-center justify-around py-4 px-4 max-w-lg mx-auto">
           <NavButton icon={Activity} label="Home" href="/" active />
           <NavButton icon={TrendingUp} label="Runs" href="/runs" />
@@ -394,8 +394,8 @@ function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: {
       
       {/* Value with scale */}
       <div className="text-center">
-        <p className="text-white font-bold text-lg leading-tight">{value}<span className="text-[#636366] text-xs font-medium">/{maxValue}</span></p>
-        <p className="text-[#8E8E93] text-[10px] font-semibold uppercase tracking-wide">{label}</p>
+        <p className="text-white font-bold text-lg leading-tight">{value}<span className="text-[#8E8E93] text-xs font-medium">/{maxValue}</span></p>
+        <p className="text-[#AEAEB2] text-[10px] font-semibold uppercase tracking-wide">{label}</p>
       </div>
     </motion.div>
   );
@@ -415,8 +415,8 @@ function NavButton({ icon: Icon, label, href, active }: {
           active ? "bg-[#FF4500]/20" : ""
         }`}
       >
-        <Icon className={`w-7 h-7 ${active ? "text-[#FF4500]" : "text-[#636366]"}`} />
-        <span className={`text-xs font-bold ${active ? "text-[#FF4500]" : "text-[#636366]"}`}>
+        <Icon className={`w-7 h-7 ${active ? "text-[#FF4500]" : "text-[#8E8E93]"}`} />
+        <span className={`text-xs font-bold ${active ? "text-[#FF4500]" : "text-[#8E8E93]"}`}>
           {label}
         </span>
       </motion.div>
