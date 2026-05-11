@@ -31,6 +31,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
+  console.log("[v0] PATCH profile body:", body);
   
   const updateData: Record<string, unknown> = {};
   if (body.firstName !== undefined) updateData.first_name = body.firstName;
@@ -41,6 +42,8 @@ export async function PATCH(request: NextRequest) {
   if (body.notificationMorning !== undefined) updateData.notification_morning = body.notificationMorning;
   if (body.notificationAfternoon !== undefined) updateData.notification_afternoon = body.notificationAfternoon;
   if (body.weekly_goal !== undefined) updateData.weekly_goal = body.weekly_goal;
+  
+  console.log("[v0] updateData:", updateData);
 
   const { data: profile, error } = await supabase
     .from("profiles")
@@ -48,6 +51,8 @@ export async function PATCH(request: NextRequest) {
     .eq("id", user.id)
     .select()
     .single();
+
+  console.log("[v0] Profile update result:", { profile, error });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
