@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2 } from "lucide-react";
+import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp } from "lucide-react";
 
 interface Goal {
   id: string;
@@ -60,6 +60,63 @@ function getWeeksUntil(dateStr: string): number {
   return Math.floor(getDaysUntil(dateStr) / 7);
 }
 
+// Race time prediction using Riegel formula: T2 = T1 × (D2/D1)^1.06
+// Also factors in recent training data for more accurate predictions
+function predictRaceTime(
+  recentRuns: { miles: number; duration_minutes?: number; pace_seconds?: number }[],
+  targetDistance: string
+): { predictedTime: string; confidence: string; basedOn: string } | null {
+  // Distance in miles
+  const distanceMap: Record<string, number> = {
+    "5K": 3.1,
+    "10K": 6.2,
+    "Half Marathon": 13.1,
+    "Marathon": 26.2,
+    "Ultra": 31, // 50K default
+  };
+  
+  const targetMiles = distanceMap[targetDistance];
+  if (!targetMiles) return null;
+  
+  // Find runs with pace data, sorted by distance (prefer longer runs for prediction)
+  const runsWithPace = recentRuns
+    .filter(r => r.pace_seconds && r.miles >= 2)
+    .sort((a, b) => b.miles - a.miles);
+  
+  if (runsWithPace.length === 0) return null;
+  
+  // Use the longest recent run as base for prediction
+  const baseRun = runsWithPace[0];
+  const baseMiles = baseRun.miles;
+  const basePaceSeconds = baseRun.pace_seconds!;
+  const baseTimeMinutes = (baseMiles * basePaceSeconds) / 60;
+  
+  // Riegel formula with 1.06 exponent (accounts for fatigue in longer races)
+  const predictedMinutes = baseTimeMinutes * Math.pow(targetMiles / baseMiles, 1.06);
+  
+  // Format time
+  const hours = Math.floor(predictedMinutes / 60);
+  const minutes = Math.floor(predictedMinutes % 60);
+  const seconds = Math.floor((predictedMinutes % 1) * 60);
+  
+  const predictedTime = hours > 0 
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+    : `${minutes}:${String(seconds).padStart(2, '0')}`;
+  
+  // Confidence based on how close the base run is to target distance
+  const distanceRatio = baseMiles / targetMiles;
+  let confidence = "Low";
+  if (distanceRatio >= 0.5) confidence = "Medium";
+  if (distanceRatio >= 0.75) confidence = "High";
+  if (runsWithPace.length >= 5) confidence = confidence === "Low" ? "Medium" : confidence;
+  
+  return {
+    predictedTime,
+    confidence,
+    basedOn: `${baseMiles.toFixed(1)} mi run at ${Math.floor(basePaceSeconds / 60)}:${String(basePaceSeconds % 60).padStart(2, '0')}/mi`
+  };
+}
+
 function formatDateStatic(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00");
   return date.toLocaleDateString("en-US", {
@@ -72,16 +129,20 @@ function formatDateStatic(dateStr: string): string {
 
 function GoalsPageContent() {
   const { data, error, mutate, isLoading } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher);
+  const { data: runsData } = useSWR<{ runs: { miles: number; duration_minutes?: number; pace_seconds?: number }[] }>("/api/runs?days=30", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [showPrediction, setShowPrediction] = useState(false);
   const [newGoal, setNewGoal] = useState({
     distance: "",
     raceName: "",
     raceDate: "",
     targetTime: "",
   });
+  
+  const recentRuns = runsData?.runs || [];
 
   useEffect(() => {
     setMounted(true);
@@ -327,9 +388,77 @@ function GoalsPageContent() {
           </Card>
         ) : (
           <>
-            {/* Active Goal */}
-            {activeGoal && (
-              <Card className="mb-8 border-primary/50 bg-gradient-to-br from-primary/10 to-transparent">
+{/* Race Prediction Card */}
+  {activeGoal && recentRuns.length >= 3 && (
+    <Card className="mb-6 border-[#00D4FF]/30 bg-gradient-to-br from-[#00D4FF]/10 to-transparent">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-[#00D4FF]/20">
+              <Zap className="w-5 h-5 text-[#00D4FF]" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Race Prediction</CardTitle>
+              <CardDescription>Based on your recent training</CardDescription>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowPrediction(!showPrediction)}
+          >
+            {showPrediction ? "Hide" : "Show"}
+          </Button>
+        </div>
+      </CardHeader>
+      {showPrediction && (() => {
+        const prediction = predictRaceTime(recentRuns, activeGoal.distance);
+        if (!prediction) return (
+          <CardContent>
+            <p className="text-muted-foreground text-sm">
+              Log more runs with pace data to get a prediction for your {activeGoal.distance}.
+            </p>
+          </CardContent>
+        );
+        return (
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground mb-1">Predicted {activeGoal.distance} Time</p>
+                <p className="text-3xl font-bold text-[#00D4FF]">{prediction.predictedTime}</p>
+              </div>
+              <div className="text-right">
+                <Badge variant={prediction.confidence === "High" ? "default" : prediction.confidence === "Medium" ? "secondary" : "outline"}>
+                  {prediction.confidence} Confidence
+                </Badge>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <TrendingUp className="w-4 h-4" />
+              <span>Based on: {prediction.basedOn}</span>
+            </div>
+            {activeGoal.target_time && (
+              <div className="pt-2 border-t border-border">
+                <p className="text-sm">
+                  <span className="text-muted-foreground">Your target: </span>
+                  <span className="font-semibold">{activeGoal.target_time}</span>
+                  {prediction.predictedTime < activeGoal.target_time ? (
+                    <span className="text-green-500 ml-2">You&apos;re on track!</span>
+                  ) : (
+                    <span className="text-yellow-500 ml-2">Keep training - you can do it!</span>
+                  )}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        );
+      })()}
+    </Card>
+  )}
+
+  {/* Active Goal */}
+  {activeGoal && (
+  <Card className="mb-8 border-primary/50 bg-gradient-to-br from-primary/10 to-transparent">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">

@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
 import { InstallPrompt } from '@/components/pwa/install-prompt'
+import { UpdateBanner } from '@/components/update-banner'
 import './globals.css'
 
 const inter = Inter({ 
@@ -46,6 +47,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         <AuthProvider>
+          <UpdateBanner />
           {children}
           <InstallPrompt />
         </AuthProvider>
