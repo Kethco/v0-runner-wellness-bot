@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { RunningBuddy } from "@/components/running-buddy";
+import { PageContent } from "@/components/page-transition";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -24,8 +25,9 @@ export default function MindPage() {
   const [mode, setMode] = useState<MindMode>("home");
   const { data: reflectionsData, mutate } = useSWR("/api/reflections", fetcher);
   
-  return (
-    <div className="min-h-screen bg-black text-white pb-28">
+return (
+  <PageContent>
+  <div className="min-h-screen bg-black text-white pb-28">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center gap-4">
@@ -89,6 +91,7 @@ export default function MindPage() {
         <div className="h-[env(safe-area-inset-bottom)]" />
       </nav>
     </div>
+  </PageContent>
   );
 }
 

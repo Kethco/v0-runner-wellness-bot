@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp } from "lucide-react";
+import { PageContent } from "@/components/page-transition";
 
 interface Goal {
   id: string;
@@ -244,8 +245,9 @@ function GoalsPageContent() {
   // Check if user is unauthorized
   const isUnauthorized = error?.message === "Unauthorized";
 
-  return (
-    <div className="min-h-screen bg-background">
+return (
+  <PageContent>
+  <div className="min-h-screen bg-background">
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -678,6 +680,7 @@ function GoalsPageContent() {
         )}
       </main>
     </div>
+  </PageContent>
   );
 }
 

@@ -8,6 +8,7 @@ import { LogRunModal } from "@/components/dashboard/log-run-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Flame, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { PageContent } from "@/components/page-transition";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -75,9 +76,10 @@ export default function RunsPage() {
     return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
   };
 
-  return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white pb-24">
-      <Navbar />
+return (
+  <PageContent>
+  <div className="min-h-screen bg-[#0A0A0A] text-white pb-24">
+  <Navbar />
       
       <main className="container max-w-lg mx-auto px-4 pt-20">
         {/* Header */}
@@ -191,7 +193,8 @@ export default function RunsPage() {
             </motion.div>
           )}
         </div>
-      </main>
-    </div>
+</main>
+  </div>
+  </PageContent>
   );
-}
+  }

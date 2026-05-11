@@ -10,6 +10,7 @@ import { CheckInModal } from "@/components/dashboard/checkin-modal";
 import { LogRunModal } from "@/components/dashboard/log-run-modal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PageContent } from "@/components/page-transition";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -70,8 +71,9 @@ export default function Dashboard() {
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
 
-  return (
-    <div className={`min-h-screen bg-black text-white pb-28 ${showTrialBanner ? "pt-10" : ""}`}>
+return (
+  <PageContent>
+  <div className={`min-h-screen bg-black text-white pb-28 ${showTrialBanner ? "pt-10" : ""}`}>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center justify-between">
@@ -401,10 +403,11 @@ export default function Dashboard() {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-    </div>
+</Dialog>
+  </div>
+  </PageContent>
   );
-}
+  }
 
 function ExpandableAdvice({ advice }: { advice?: string }) {
   const [expanded, setExpanded] = useState(false);
