@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Activity, Flame, Play, Target, Brain, User, TrendingUp, Moon, Battery, Heart, Gauge, ChevronRight, Zap } from "lucide-react";
+import { Activity, Flame, Play, Target, Brain, User, TrendingUp, Moon, Battery, Heart, Gauge, ChevronRight, Zap, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import useSWR from "swr";
 import Link from "next/link";
@@ -24,7 +24,9 @@ export default function Dashboard() {
   const { data: profileData } = useSWR("/api/profile", fetcher);
   const { data: aiAdvice } = useSWR("/api/ai-advice", fetcher);
   
-  const todayStr = new Date().toISOString().split("T")[0];
+  // Use local timezone for today's date
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const runs = runsData?.runs || [];
   const checkins = checkinsData?.checkins || [];
   const hasCheckedInToday = checkins.some((c: { date: string }) => c.date === todayStr);
@@ -39,17 +41,19 @@ export default function Dashboard() {
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   const greeting = getGreeting();
 
-  // Chart data for last 7 days
+  // Chart data for last 7 days using local timezone
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
-    return date.toISOString().split("T")[0];
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   });
 
-  const chartData = last7Days.map(date => {
-    const dayRuns = runs.filter((r: { date: string }) => r.date === date);
+  const chartData = last7Days.map(dateStr => {
+    const dayRuns = runs.filter((r: { date: string }) => r.date === dateStr);
     const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
-    return { date, miles, day: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0) };
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+    return { date: dateStr, miles, day: localDate.toLocaleDateString('en-US', { weekday: 'short' }).charAt(0) };
   });
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
@@ -294,9 +298,10 @@ export default function Dashboard() {
 
       {/* Bottom Navigation - High Visibility */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t-2 border-[#2A2A2A]">
-        <div className="flex items-center justify-around py-4 px-6 max-w-lg mx-auto">
+        <div className="flex items-center justify-around py-4 px-4 max-w-lg mx-auto">
           <NavButton icon={Activity} label="Home" href="/" active />
           <NavButton icon={TrendingUp} label="Runs" href="/runs" />
+          <NavButton icon={Sparkles} label="Mind" href="/mind" />
           <NavButton icon={Target} label="Goals" href="/goals" />
           <NavButton icon={User} label="Profile" href="/profile" />
         </div>
@@ -343,31 +348,48 @@ function ExpandableAdvice({ advice }: { advice?: string }) {
   );
 }
 
-function MetricOrb({ icon: Icon, label, value, color }: { 
+function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: { 
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: number;
   color: string;
+  maxValue?: number;
 }) {
+  const percent = (value / maxValue) * 100;
+  const radius = 24;
+  const circumference = 2 * Math.PI * radius;
+  
   return (
     <motion.div 
       whileHover={{ scale: 1.05 }}
-      className="flex flex-col items-center gap-2"
+      className="flex flex-col items-center gap-1"
     >
-      <div 
-        className="w-14 h-14 rounded-2xl flex items-center justify-center relative"
-        style={{ backgroundColor: `${color}20` }}
-      >
-        <Icon className="w-6 h-6" style={{ color }} />
-        <motion.div
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute inset-0 rounded-2xl"
-          style={{ boxShadow: `0 0 20px ${color}30` }}
-        />
+      {/* Circular progress with icon */}
+      <div className="relative w-16 h-16">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r={radius} stroke="#2A2A2A" strokeWidth="5" fill="none" />
+          <motion.circle
+            cx="32" cy="32" r={radius}
+            stroke={color}
+            strokeWidth="5"
+            fill="none"
+            strokeLinecap="round"
+            initial={{ strokeDasharray: `0 ${circumference}` }}
+            animate={{ strokeDasharray: `${(percent / 100) * circumference} ${circumference}` }}
+            transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+            style={{ filter: `drop-shadow(0 0 6px ${color})` }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Icon className="w-5 h-5" style={{ color }} />
+        </div>
       </div>
-      <p className="text-white font-bold text-xl">{value}</p>
-      <p className="text-[#8E8E93] text-xs font-semibold uppercase">{label}</p>
+      
+      {/* Value with scale */}
+      <div className="text-center">
+        <p className="text-white font-bold text-lg leading-tight">{value}<span className="text-[#636366] text-xs font-medium">/{maxValue}</span></p>
+        <p className="text-[#8E8E93] text-[10px] font-semibold uppercase tracking-wide">{label}</p>
+      </div>
     </motion.div>
   );
 }

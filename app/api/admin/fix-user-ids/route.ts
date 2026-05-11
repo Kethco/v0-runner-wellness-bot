@@ -91,6 +91,56 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // Create reflections table for mental wellness feature
+  if (action === "create-reflections-table") {
+    const { error } = await supabase.rpc('exec_sql', {
+      sql: `
+        CREATE TABLE IF NOT EXISTS reflections (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+          type TEXT NOT NULL CHECK (type IN ('pre_run', 'post_run', 'gratitude')),
+          enjoyment INTEGER CHECK (enjoyment >= 1 AND enjoyment <= 5),
+          gratitude TEXT,
+          intention TEXT,
+          energy TEXT,
+          date DATE NOT NULL DEFAULT CURRENT_DATE,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        
+        ALTER TABLE reflections ENABLE ROW LEVEL SECURITY;
+        
+        CREATE POLICY IF NOT EXISTS "Users can view own reflections" ON reflections
+          FOR SELECT USING (auth.uid() = user_id);
+        CREATE POLICY IF NOT EXISTS "Users can insert own reflections" ON reflections
+          FOR INSERT WITH CHECK (auth.uid() = user_id);
+      `
+    });
+    
+    if (error) {
+      // Try direct SQL if RPC doesn't exist
+      const createResult = await supabase.from('reflections').select('id').limit(1);
+      if (createResult.error?.code === '42P01') {
+        return NextResponse.json({ 
+          error: "Table doesn't exist. Please create it manually in Supabase dashboard.",
+          sql: `CREATE TABLE reflections (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            user_id UUID NOT NULL,
+            type TEXT NOT NULL,
+            enjoyment INTEGER,
+            gratitude TEXT,
+            intention TEXT,
+            energy TEXT,
+            date DATE NOT NULL DEFAULT CURRENT_DATE,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          );`
+        });
+      }
+      return NextResponse.json({ tableExists: true });
+    }
+    
+    return NextResponse.json({ success: true, message: "Reflections table created" });
+  }
+
   // Check today's data
   if (action === "check-today") {
     const today = new Date().toISOString().split("T")[0];

@@ -1,0 +1,638 @@
+"use client";
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Sparkles, Sun, Moon as MoonIcon, Heart, Wind, 
+  ArrowLeft, Check, ChevronRight, Flame, 
+  CloudRain, Smile, Frown, Meh, Zap, Coffee,
+  Activity, TrendingUp, Target, User
+} from "lucide-react";
+import Link from "next/link";
+import useSWR from "swr";
+
+const fetcher = async (url: string) => {
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  return res.json();
+};
+
+type MindMode = "home" | "pre-run" | "post-run" | "burnout";
+
+export default function MindPage() {
+  const [mode, setMode] = useState<MindMode>("home");
+  const { data: reflectionsData, mutate } = useSWR("/api/reflections", fetcher);
+  
+  return (
+    <div className="min-h-screen bg-black text-white pb-28">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#2A2A2A]">
+        <div className="px-5 py-4 flex items-center gap-4">
+          {mode !== "home" ? (
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setMode("home")}
+              className="w-10 h-10 rounded-xl bg-[#1C1C1E] flex items-center justify-center"
+            >
+              <ArrowLeft className="w-5 h-5 text-white" />
+            </motion.button>
+          ) : (
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#AF52DE] to-[#BF5AF2] flex items-center justify-center shadow-lg shadow-[#AF52DE]/30">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+          )}
+          <div>
+            <h1 className="text-xl font-bold text-white">
+              {mode === "home" ? "Mind & Soul" : 
+               mode === "pre-run" ? "Pre-Run Mindset" :
+               mode === "post-run" ? "Post-Run Reflection" : "Motivation Support"}
+            </h1>
+            <p className="text-[#8E8E93] text-sm">
+              {mode === "home" ? "Your mental wellness toolkit" :
+               mode === "pre-run" ? "Set your intention" :
+               mode === "post-run" ? "Celebrate the moment" : "You're not alone"}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <main className="px-5 py-6">
+        <AnimatePresence mode="wait">
+          {mode === "home" && <HomeView onSelectMode={setMode} />}
+          {mode === "pre-run" && <PreRunView onComplete={() => setMode("home")} />}
+          {mode === "post-run" && <PostRunView onComplete={() => { setMode("home"); mutate(); }} />}
+          {mode === "burnout" && <BurnoutView />}
+        </AnimatePresence>
+      </main>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t-2 border-[#2A2A2A]">
+        <div className="flex items-center justify-around py-4 px-4 max-w-lg mx-auto">
+          <NavButton icon={Activity} label="Home" href="/" />
+          <NavButton icon={TrendingUp} label="Runs" href="/runs" />
+          <NavButton icon={Sparkles} label="Mind" href="/mind" active />
+          <NavButton icon={Target} label="Goals" href="/goals" />
+          <NavButton icon={User} label="Profile" href="/profile" />
+        </div>
+        <div className="h-[env(safe-area-inset-bottom)]" />
+      </nav>
+    </div>
+  );
+}
+
+function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-6"
+    >
+      {/* Quote of the day */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] p-6 border border-[#2A2A2A]"
+      >
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#AF52DE] rounded-full blur-[80px] opacity-40" />
+        <div className="relative z-10">
+          <p className="text-[#AF52DE] text-xs font-bold uppercase tracking-wider mb-3">Daily Wisdom</p>
+          <p className="text-white text-xl font-medium leading-relaxed italic">
+            "The miracle isn't that I finished. The miracle is that I had the courage to start."
+          </p>
+          <p className="text-[#8E8E93] text-sm mt-3">— John Bingham</p>
+        </div>
+      </motion.div>
+
+      {/* Main Actions */}
+      <div className="space-y-4">
+        <h2 className="text-[#8E8E93] text-xs font-bold uppercase tracking-wider px-1">Mindset Tools</h2>
+        
+        {/* Pre-Run Mindset */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => onSelectMode("pre-run")}
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#FF9500]/20 to-[#FF9500]/5 border border-[#FF9500]/30 hover:border-[#FF9500]/50 transition-colors"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#FF9500]/20 flex items-center justify-center">
+            <Sun className="w-7 h-7 text-[#FF9500]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Pre-Run Mindset</p>
+            <p className="text-[#8E8E93] text-sm">Set your intention before you head out</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#636366]" />
+        </motion.button>
+
+        {/* Post-Run Reflection */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => onSelectMode("post-run")}
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#30D158]/20 to-[#30D158]/5 border border-[#30D158]/30 hover:border-[#30D158]/50 transition-colors"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#30D158]/20 flex items-center justify-center">
+            <Heart className="w-7 h-7 text-[#30D158]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Post-Run Reflection</p>
+            <p className="text-[#8E8E93] text-sm">Capture the joy, not just the stats</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#636366]" />
+        </motion.button>
+
+        {/* Motivation Support */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => onSelectMode("burnout")}
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#00D4FF]/20 to-[#00D4FF]/5 border border-[#00D4FF]/30 hover:border-[#00D4FF]/50 transition-colors"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#00D4FF]/20 flex items-center justify-center">
+            <Wind className="w-7 h-7 text-[#00D4FF]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Feeling Low?</p>
+            <p className="text-[#8E8E93] text-sm">Support for motivation dips & burnout</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#636366]" />
+        </motion.button>
+      </div>
+
+      {/* Breathing Exercise Quick Access */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] p-5"
+      >
+        <h3 className="text-white font-bold mb-4">Quick Calm</h3>
+        <BreathingExercise />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function PreRunView({ onComplete }: { onComplete: () => void }) {
+  const [step, setStep] = useState(0);
+  const [intention, setIntention] = useState("");
+  const [energy, setEnergy] = useState<string | null>(null);
+
+  const energyLevels = [
+    { id: "low", icon: Coffee, label: "Need a boost", color: "#FF9500" },
+    { id: "medium", icon: Meh, label: "Steady", color: "#30D158" },
+    { id: "high", icon: Zap, label: "Ready to go!", color: "#00D4FF" },
+  ];
+
+  const intentions = [
+    "I run for the joy of movement",
+    "Today I listen to my body",
+    "Every step is progress",
+    "I am stronger than I think",
+    "This run is a gift to myself",
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
+    >
+      {step === 0 && (
+        <div className="space-y-6">
+          <div className="text-center py-8">
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-20 h-20 mx-auto rounded-full bg-[#FF9500]/20 flex items-center justify-center mb-6"
+            >
+              <Sun className="w-10 h-10 text-[#FF9500]" />
+            </motion.div>
+            <h2 className="text-2xl font-bold text-white mb-2">How are you feeling?</h2>
+            <p className="text-[#8E8E93]">Check in with yourself before you run</p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            {energyLevels.map((level) => (
+              <motion.button
+                key={level.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => { setEnergy(level.id); setStep(1); }}
+                className={`p-4 rounded-2xl border-2 transition-all ${
+                  energy === level.id 
+                    ? `border-[${level.color}] bg-[${level.color}]/20` 
+                    : "border-[#2A2A2A] bg-[#1C1C1E]"
+                }`}
+              >
+                <level.icon className="w-8 h-8 mx-auto mb-2" style={{ color: level.color }} />
+                <p className="text-white text-sm font-medium">{level.label}</p>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step === 1 && (
+        <div className="space-y-6">
+          <div className="text-center py-4">
+            <h2 className="text-2xl font-bold text-white mb-2">Set Your Intention</h2>
+            <p className="text-[#8E8E93]">Choose or create your own</p>
+          </div>
+
+          <div className="space-y-3">
+            {intentions.map((text, i) => (
+              <motion.button
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIntention(text)}
+                className={`w-full p-4 rounded-xl text-left transition-all ${
+                  intention === text 
+                    ? "bg-[#FF9500]/20 border-2 border-[#FF9500]" 
+                    : "bg-[#1C1C1E] border-2 border-[#2A2A2A]"
+                }`}
+              >
+                <p className="text-white font-medium">{text}</p>
+              </motion.button>
+            ))}
+          </div>
+
+          <div className="relative">
+            <textarea
+              placeholder="Or write your own..."
+              value={intention}
+              onChange={(e) => setIntention(e.target.value)}
+              className="w-full p-4 rounded-xl bg-[#1C1C1E] border-2 border-[#2A2A2A] text-white placeholder-[#636366] resize-none h-24 focus:border-[#FF9500] focus:outline-none transition-colors"
+            />
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setStep(2)}
+            disabled={!intention}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#FF9500] to-[#FF6B00] text-white font-bold text-lg shadow-lg shadow-[#FF9500]/30 disabled:opacity-50"
+          >
+            Continue
+          </motion.button>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="space-y-8">
+          <div className="text-center py-8">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", bounce: 0.5 }}
+              className="w-24 h-24 mx-auto rounded-full bg-[#30D158]/20 flex items-center justify-center mb-6"
+            >
+              <Check className="w-12 h-12 text-[#30D158]" />
+            </motion.div>
+            <h2 className="text-2xl font-bold text-white mb-4">You're Ready</h2>
+            <div className="bg-[#1C1C1E] rounded-2xl p-6 border border-[#2A2A2A]">
+              <p className="text-[#8E8E93] text-sm mb-2">Your intention:</p>
+              <p className="text-white text-xl font-medium italic">"{intention}"</p>
+            </div>
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onComplete}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#30D158] to-[#34C759] text-white font-bold text-lg shadow-lg shadow-[#30D158]/30"
+          >
+            Go Run!
+          </motion.button>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function PostRunView({ onComplete }: { onComplete: () => void }) {
+  const [step, setStep] = useState(0);
+  const [enjoyment, setEnjoyment] = useState<number | null>(null);
+  const [gratitude, setGratitude] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const enjoymentLevels = [
+    { value: 1, icon: Frown, label: "Tough", color: "#FF453A" },
+    { value: 2, icon: CloudRain, label: "Meh", color: "#FF9500" },
+    { value: 3, icon: Meh, label: "Okay", color: "#FFD60A" },
+    { value: 4, icon: Smile, label: "Good", color: "#30D158" },
+    { value: 5, icon: Heart, label: "Loved it!", color: "#FF2D55" },
+  ];
+
+  const gratitudePrompts = [
+    "I'm grateful my body let me run today",
+    "I enjoyed the fresh air and freedom",
+    "I feel proud I showed up for myself",
+    "The scenery made me smile",
+    "I had a moment of peace out there",
+  ];
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await fetch("/api/reflections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "post_run",
+          enjoyment,
+          gratitude,
+          date: new Date().toISOString().split("T")[0],
+        }),
+      });
+      setStep(2);
+    } catch {
+      // Handle error silently
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      className="space-y-6"
+    >
+      {step === 0 && (
+        <div className="space-y-6">
+          <div className="text-center py-6">
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-20 h-20 mx-auto rounded-full bg-[#30D158]/20 flex items-center justify-center mb-6"
+            >
+              <Heart className="w-10 h-10 text-[#30D158]" />
+            </motion.div>
+            <h2 className="text-2xl font-bold text-white mb-2">How was your run?</h2>
+            <p className="text-[#8E8E93]">Not the pace - the experience</p>
+          </div>
+
+          <div className="flex justify-between gap-2">
+            {enjoymentLevels.map((level) => (
+              <motion.button
+                key={level.value}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { setEnjoyment(level.value); setStep(1); }}
+                className={`flex-1 p-3 rounded-xl transition-all ${
+                  enjoyment === level.value 
+                    ? "bg-white/10 border-2" 
+                    : "bg-[#1C1C1E] border-2 border-transparent"
+                }`}
+                style={{ borderColor: enjoyment === level.value ? level.color : undefined }}
+              >
+                <level.icon 
+                  className="w-8 h-8 mx-auto mb-1" 
+                  style={{ color: level.color }} 
+                />
+                <p className="text-[#8E8E93] text-xs">{level.label}</p>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step === 1 && (
+        <div className="space-y-6">
+          <div className="text-center py-4">
+            <h2 className="text-2xl font-bold text-white mb-2">Capture a moment</h2>
+            <p className="text-[#8E8E93]">What made this run worth it?</p>
+          </div>
+
+          <div className="space-y-3">
+            {gratitudePrompts.map((text, i) => (
+              <motion.button
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.08 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setGratitude(text)}
+                className={`w-full p-4 rounded-xl text-left transition-all ${
+                  gratitude === text 
+                    ? "bg-[#30D158]/20 border-2 border-[#30D158]" 
+                    : "bg-[#1C1C1E] border-2 border-[#2A2A2A]"
+                }`}
+              >
+                <p className="text-white font-medium">{text}</p>
+              </motion.button>
+            ))}
+          </div>
+
+          <textarea
+            placeholder="Or write your own reflection..."
+            value={gratitude}
+            onChange={(e) => setGratitude(e.target.value)}
+            className="w-full p-4 rounded-xl bg-[#1C1C1E] border-2 border-[#2A2A2A] text-white placeholder-[#636366] resize-none h-24 focus:border-[#30D158] focus:outline-none transition-colors"
+          />
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleSubmit}
+            disabled={!gratitude || isSubmitting}
+            className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#30D158] to-[#34C759] text-white font-bold text-lg shadow-lg shadow-[#30D158]/30 disabled:opacity-50"
+          >
+            {isSubmitting ? "Saving..." : "Save Reflection"}
+          </motion.button>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="text-center py-12">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", bounce: 0.5 }}
+            className="w-24 h-24 mx-auto rounded-full bg-[#30D158]/20 flex items-center justify-center mb-6"
+          >
+            <Sparkles className="w-12 h-12 text-[#30D158]" />
+          </motion.div>
+          <h2 className="text-2xl font-bold text-white mb-2">Beautiful</h2>
+          <p className="text-[#8E8E93] mb-8">Your reflection has been saved</p>
+          
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onComplete}
+            className="px-8 py-4 rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] text-white font-bold"
+          >
+            Done
+          </motion.button>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function BurnoutView() {
+  const supportMessages = [
+    {
+      title: "It's okay to take a break",
+      body: "Rest is part of training. Your body and mind need recovery to come back stronger. Taking time off doesn't erase your progress.",
+      color: "#00D4FF"
+    },
+    {
+      title: "You don't have to feel motivated",
+      body: "Motivation comes and goes. What matters is showing up when you can - even if it's just a short walk. That still counts.",
+      color: "#30D158"
+    },
+    {
+      title: "Running should feel good",
+      body: "If every run feels like a chore, something needs to change. Try a new route, run slower, or skip the watch. Rediscover why you started.",
+      color: "#FF9500"
+    },
+    {
+      title: "You're not falling behind",
+      body: "There is no timeline. There is no race you have to run. You're exactly where you need to be right now.",
+      color: "#AF52DE"
+    },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-6"
+    >
+      <div className="text-center py-6">
+        <motion.div
+          animate={{ y: [0, -5, 0] }}
+          transition={{ duration: 3, repeat: Infinity }}
+          className="w-20 h-20 mx-auto rounded-full bg-[#00D4FF]/20 flex items-center justify-center mb-6"
+        >
+          <Wind className="w-10 h-10 text-[#00D4FF]" />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-white mb-2">You're not alone</h2>
+        <p className="text-[#8E8E93]">Every runner goes through this</p>
+      </div>
+
+      <div className="space-y-4">
+        {supportMessages.map((msg, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.15 }}
+            className="p-5 rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A]"
+          >
+            <div className="flex items-start gap-4">
+              <div 
+                className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
+                style={{ backgroundColor: msg.color }}
+              />
+              <div>
+                <h3 className="text-white font-bold mb-2">{msg.title}</h3>
+                <p className="text-[#8E8E93] leading-relaxed">{msg.body}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Breathing Exercise */}
+      <div className="rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] p-5 mt-8">
+        <h3 className="text-white font-bold mb-4">Take a breath</h3>
+        <BreathingExercise />
+      </div>
+    </motion.div>
+  );
+}
+
+function BreathingExercise() {
+  const [isActive, setIsActive] = useState(false);
+  const [phase, setPhase] = useState<"inhale" | "hold" | "exhale">("inhale");
+  
+  const startBreathing = () => {
+    setIsActive(true);
+    setPhase("inhale");
+    
+    // Simple 4-4-4 breathing cycle
+    const cycle = () => {
+      setPhase("inhale");
+      setTimeout(() => setPhase("hold"), 4000);
+      setTimeout(() => setPhase("exhale"), 8000);
+    };
+    
+    cycle();
+    const interval = setInterval(cycle, 12000);
+    
+    setTimeout(() => {
+      clearInterval(interval);
+      setIsActive(false);
+    }, 36000); // 3 cycles
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      <motion.div
+        animate={isActive ? {
+          scale: phase === "inhale" ? 1.3 : phase === "hold" ? 1.3 : 1,
+        } : {}}
+        transition={{ duration: 4, ease: "easeInOut" }}
+        className="w-24 h-24 rounded-full bg-gradient-to-br from-[#00D4FF]/30 to-[#AF52DE]/30 flex items-center justify-center mb-4"
+      >
+        <motion.div
+          animate={isActive ? {
+            scale: phase === "inhale" ? 1.2 : phase === "hold" ? 1.2 : 0.8,
+          } : {}}
+          transition={{ duration: 4, ease: "easeInOut" }}
+          className="w-16 h-16 rounded-full bg-gradient-to-br from-[#00D4FF] to-[#AF52DE] flex items-center justify-center"
+        >
+          <Wind className="w-8 h-8 text-white" />
+        </motion.div>
+      </motion.div>
+      
+      {isActive ? (
+        <p className="text-white font-medium text-lg">
+          {phase === "inhale" ? "Breathe in..." : phase === "hold" ? "Hold..." : "Breathe out..."}
+        </p>
+      ) : (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={startBreathing}
+          className="px-6 py-3 rounded-xl bg-[#00D4FF]/20 text-[#00D4FF] font-semibold"
+        >
+          Start Breathing Exercise
+        </motion.button>
+      )}
+    </div>
+  );
+}
+
+function NavButton({ icon: Icon, label, href, active }: { 
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  href: string;
+  active?: boolean;
+}) {
+  return (
+    <Link href={href}>
+      <motion.div 
+        whileTap={{ scale: 0.9 }}
+        className={`flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl transition-all ${
+          active ? "bg-[#AF52DE]/20" : ""
+        }`}
+      >
+        <Icon className={`w-6 h-6 ${active ? "text-[#AF52DE]" : "text-[#636366]"}`} />
+        <span className={`text-xs font-bold ${active ? "text-[#AF52DE]" : "text-[#636366]"}`}>
+          {label}
+        </span>
+      </motion.div>
+    </Link>
+  );
+}
