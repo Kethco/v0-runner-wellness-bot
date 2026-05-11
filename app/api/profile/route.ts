@@ -40,6 +40,7 @@ export async function PATCH(request: NextRequest) {
   if (body.privacyMode !== undefined) updateData.privacy_mode = body.privacyMode;
   if (body.notificationMorning !== undefined) updateData.notification_morning = body.notificationMorning;
   if (body.notificationAfternoon !== undefined) updateData.notification_afternoon = body.notificationAfternoon;
+  if (body.weekly_goal !== undefined) updateData.weekly_goal = body.weekly_goal;
 
   const { data: profile, error } = await supabase
     .from("profiles")
