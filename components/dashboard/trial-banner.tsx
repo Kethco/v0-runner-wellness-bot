@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Clock, X, Sparkles } from "lucide-react";
+import { Clock, X, Sparkles, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function TrialBanner() {
   const { user } = useAuth();
@@ -14,14 +15,19 @@ export function TrialBanner() {
 
   useEffect(() => {
     setMounted(true);
+    // Check if dismissed recently (within this session)
+    const dismissedKey = `trial-banner-dismissed-${new Date().toDateString()}`;
+    if (sessionStorage.getItem(dismissedKey)) {
+      setDismissed(true);
+    }
   }, []);
 
   useEffect(() => {
     if (!user || !mounted) return;
 
-    // Check if user is on free trial
+    // Check if user is on any free trial (athlete or coach)
     const plan = user.user_metadata?.plan;
-    if (plan !== "free_trial") return;
+    if (plan !== "free_trial" && plan !== "coach_trial") return;
 
     // Calculate days left from account creation
     const createdAt = new Date(user.created_at);
@@ -35,90 +41,103 @@ export function TrialBanner() {
     setDaysLeft(Math.max(0, diffDays));
   }, [user, mounted]);
 
+  const handleDismiss = () => {
+    setDismissed(true);
+    const dismissedKey = `trial-banner-dismissed-${new Date().toDateString()}`;
+    sessionStorage.setItem(dismissedKey, "true");
+  };
+
   // Don't show if not on trial, dismissed, or not mounted
   if (!mounted || daysLeft === null || dismissed) return null;
+
+  const isCoachTrial = user?.user_metadata?.plan === "coach_trial";
+  const planName = isCoachTrial ? "Coach" : "Pro";
 
   // Trial expired
   if (daysLeft === 0) {
     return (
-      <div className="bg-destructive/20 border border-destructive/30 rounded-lg p-4 mb-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0">
-              <Clock className="w-5 h-5 text-destructive" />
+      <motion.div
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -100, opacity: 0 }}
+        className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg"
+      >
+        <div className="max-w-lg mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+              <div>
+                <p className="font-bold text-sm">Trial Ended</p>
+                <p className="text-xs opacity-90">Upgrade to keep your data</p>
+              </div>
             </div>
-            <div>
-              <p className="font-bold text-foreground">Your free trial has ended</p>
-              <p className="text-sm text-muted-foreground">Upgrade now to continue tracking your wellness</p>
-            </div>
+            <Link href="/pricing">
+              <Button size="sm" variant="secondary" className="gap-1.5 text-xs h-8 bg-white text-red-600 hover:bg-white/90">
+                <Sparkles className="w-3.5 h-3.5" />
+                Upgrade Now
+              </Button>
+            </Link>
           </div>
-          <Link href="/pricing">
-            <Button size="sm" className="gap-2 whitespace-nowrap">
-              <Sparkles className="w-4 h-4" />
-              Upgrade to Pro
-            </Button>
-          </Link>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
-  // Trial active - show countdown
-  const urgency = daysLeft <= 2 ? "high" : daysLeft <= 4 ? "medium" : "low";
+  // Urgency levels based on days left
+  const urgency = daysLeft <= 1 ? "critical" : daysLeft <= 2 ? "high" : daysLeft <= 4 ? "medium" : "low";
   
+  // Only show banner for urgent cases (4 days or less)
+  if (urgency === "low") return null;
+
+  const gradients = {
+    critical: "from-red-600 to-orange-500",
+    high: "from-orange-500 to-yellow-500",
+    medium: "from-yellow-500 to-amber-400",
+    low: "from-primary to-orange-500"
+  };
+
+  const messages = {
+    critical: "Last day! Upgrade now to keep your data",
+    high: `${daysLeft} days left - Don't lose your progress!`,
+    medium: `${daysLeft} days left in your ${planName} trial`,
+    low: `${daysLeft} days left in your free trial`
+  };
+
   return (
-    <div className={`rounded-lg p-4 mb-6 ${
-      urgency === "high" 
-        ? "bg-orange-500/20 border border-orange-500/30" 
-        : urgency === "medium"
-        ? "bg-yellow-500/20 border border-yellow-500/30"
-        : "bg-primary/10 border border-primary/20"
-    }`}>
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-            urgency === "high" 
-              ? "bg-orange-500/20" 
-              : urgency === "medium"
-              ? "bg-yellow-500/20"
-              : "bg-primary/20"
-          }`}>
-            <Clock className={`w-5 h-5 ${
-              urgency === "high" 
-                ? "text-orange-500" 
-                : urgency === "medium"
-                ? "text-yellow-500"
-                : "text-primary"
-            }`} />
-          </div>
-          <div>
-            <p className="font-bold text-foreground">
-              {daysLeft === 1 ? "1 day left" : `${daysLeft} days left`} in your free trial
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {urgency === "high" 
-                ? "Upgrade now to keep your data and streaks!" 
-                : "Upgrade anytime to unlock all Pro features"}
-            </p>
+    <AnimatePresence>
+      <motion.div
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -100, opacity: 0 }}
+        className={`fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r ${gradients[urgency]} text-white shadow-lg`}
+      >
+        <div className="max-w-lg mx-auto px-4 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Clock className="w-4 h-4 flex-shrink-0" />
+              <p className="font-semibold text-sm truncate">{messages[urgency]}</p>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <Link href="/pricing">
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  className="gap-1 text-xs h-7 px-2.5 bg-white/20 hover:bg-white/30 text-white border-0"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Upgrade
+                </Button>
+              </Link>
+              <button
+                onClick={handleDismiss}
+                className="p-1 hover:bg-white/20 rounded transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/pricing">
-            <Button size="sm" variant={urgency === "high" ? "default" : "outline"} className="gap-2 whitespace-nowrap">
-              <Sparkles className="w-4 h-4" />
-              Upgrade
-            </Button>
-          </Link>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            onClick={() => setDismissed(true)}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

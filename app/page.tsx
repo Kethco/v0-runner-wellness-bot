@@ -19,6 +19,13 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   
+  // Check if on trial (to adjust for fixed banner)
+  const plan = user?.user_metadata?.plan;
+  const isOnTrial = plan === "free_trial" || plan === "coach_trial";
+  const createdAt = user?.created_at ? new Date(user.created_at) : null;
+  const trialDaysLeft = createdAt ? Math.ceil((new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 7;
+  const showTrialBanner = isOnTrial && trialDaysLeft <= 4 && trialDaysLeft > 0;
+  
   const { data: checkinsData, mutate: mutateCheckins } = useSWR("/api/checkins?limit=7", fetcher);
   const { data: runsData, mutate: mutateRuns } = useSWR("/api/runs?days=7", fetcher);
   const { data: profileData } = useSWR("/api/profile", fetcher);
@@ -59,7 +66,7 @@ export default function Dashboard() {
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
 
   return (
-    <div className="min-h-screen bg-black text-white pb-28">
+    <div className={`min-h-screen bg-black text-white pb-28 ${showTrialBanner ? "pt-10" : ""}`}>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#2A2A2A]">
         <div className="px-5 py-4 flex items-center justify-between">
