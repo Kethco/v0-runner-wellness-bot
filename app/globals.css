@@ -4,92 +4,96 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Premium Dark theme - Deep black with vibrant neon accents */
-  --background: #0A0A0A;
+  /* Premium Sports App Theme - Strava/Nike Run inspired */
+  --background: #000000;
   --foreground: #FFFFFF;
-  --card: #141414;
+  --card: #111111;
   --card-foreground: #FFFFFF;
-  --popover: #141414;
+  --popover: #111111;
   --popover-foreground: #FFFFFF;
   
-  /* Primary - Vibrant red-pink gradient base */
-  --primary: #FF2D55;
+  /* Primary - Electric Orange (high visibility) */
+  --primary: #FF4500;
   --primary-foreground: #FFFFFF;
   
-  /* Secondary gradient colors */
-  --secondary: #1A1A1A;
+  /* Secondary - Elevated surface */
+  --secondary: #1C1C1E;
   --secondary-foreground: #FFFFFF;
   
-  /* Muted elements */
-  --muted: #1F1F1F;
-  --muted-foreground: #888888;
+  /* Muted - Softer backgrounds */
+  --muted: #2C2C2E;
+  --muted-foreground: #A1A1A6;
   
-  /* Accent - Orange glow */
-  --accent: #FF6B00;
-  --accent-foreground: #FFFFFF;
+  /* Accent - Bright cyan for highlights */
+  --accent: #00D4FF;
+  --accent-foreground: #000000;
+  
+  /* Success - Vibrant green */
+  --success: #30D158;
+  --success-foreground: #000000;
   
   /* Destructive */
-  --destructive: #FF3B30;
+  --destructive: #FF453A;
   --destructive-foreground: #FFFFFF;
   
   /* Borders and inputs */
-  --border: #2A2A2A;
-  --input: #1A1A1A;
-  --ring: #FF2D55;
+  --border: #3A3A3C;
+  --input: #1C1C1E;
+  --ring: #FF4500;
   
-  /* Chart colors - vibrant neon palette */
-  --chart-1: #FF2D55;   /* Primary red-pink */
-  --chart-2: #34C759;   /* Neon green */
-  --chart-3: #AF52DE;   /* Purple */
-  --chart-4: #FF6B00;   /* Orange */
+  /* Chart colors - Vibrant sports palette */
+  --chart-1: #FF4500;   /* Electric orange */
+  --chart-2: #30D158;   /* Vibrant green */
+  --chart-3: #BF5AF2;   /* Purple */
+  --chart-4: #FF9F0A;   /* Gold */
   --chart-5: #00D4FF;   /* Cyan */
   
   --radius: 1rem;
   
   /* Sidebar */
-  --sidebar: oklch(0.10 0.01 260);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.65 0.22 25);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.15 0.01 260);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.20 0.01 260);
-  --sidebar-ring: oklch(0.65 0.22 25);
+  --sidebar: #000000;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #FF4500;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1C1C1E;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: #3A3A3C;
+  --sidebar-ring: #FF4500;
 }
 
 .dark {
-  --background: #0A0A0A;
+  --background: #000000;
   --foreground: #FFFFFF;
-  --card: #141414;
+  --card: #111111;
   --card-foreground: #FFFFFF;
-  --popover: #141414;
+  --popover: #111111;
   --popover-foreground: #FFFFFF;
-  --primary: #FF2D55;
+  --primary: #FF4500;
   --primary-foreground: #FFFFFF;
-  --secondary: #1A1A1A;
+  --secondary: #1C1C1E;
   --secondary-foreground: #FFFFFF;
-  --muted: #1F1F1F;
-  --muted-foreground: #888888;
-  --accent: #FF6B00;
-  --accent-foreground: #FFFFFF;
-  --destructive: #FF3B30;
+  --muted: #2C2C2E;
+  --muted-foreground: #A1A1A6;
+  --accent: #00D4FF;
+  --accent-foreground: #000000;
+  --destructive: #FF453A;
   --destructive-foreground: #FFFFFF;
-  --border: #2A2A2A;
-  --input: #1A1A1A;
-  --ring: #FF2D55;
-  --chart-1: #FF2D55;
-  --chart-2: #34C759;
-  --chart-3: #AF52DE;
-  --chart-4: #FF6B00;
+  --border: #3A3A3C;
+  --input: #1C1C1E;
+  --ring: #FF4500;
+  --chart-1: #FF4500;
+  --chart-2: #30D158;
+  --chart-3: #BF5AF2;
+  --chart-4: #FF9F0A;
   --chart-5: #00D4FF;
-  --sidebar: #050505;
+  --sidebar: #000000;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #FF2D55;
+  --sidebar-primary: #FF4500;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #141414;
+  --sidebar-accent: #1C1C1E;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #2A2A2A;
-  --sidebar-ring: #FF2D55;
+  --sidebar-border: #3A3A3C;
+  --sidebar-ring: #FF4500;
 }
 
 @theme inline {
@@ -140,45 +144,72 @@
   body {
     @apply bg-background text-foreground;
   }
-  
-  /* Mobile-friendly typography - increase base sizes on small screens */
-  @media (max-width: 640px) {
-    html {
-      font-size: 17px; /* Slightly larger base for mobile readability */
-    }
-    
-    /* Minimum readable sizes for small text */
-    .text-xs {
-      font-size: 0.8125rem !important; /* 13px instead of 12px */
-      line-height: 1.4;
-    }
-    
-    .text-sm {
-      font-size: 0.9375rem !important; /* 15px instead of 14px */
-      line-height: 1.5;
-    }
-    
-    .text-muted-foreground {
-      opacity: 0.85; /* Slightly more visible on mobile */
-    }
-  }
+}
+
+/* Glow effects */
+.glow-orange {
+  box-shadow: 0 0 20px rgba(255, 69, 0, 0.5), 0 0 40px rgba(255, 69, 0, 0.3);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px rgba(48, 209, 88, 0.5), 0 0 40px rgba(48, 209, 88, 0.3);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+}
+
+/* Text glow */
+.text-glow-orange {
+  text-shadow: 0 0 10px rgba(255, 69, 0, 0.8), 0 0 20px rgba(255, 69, 0, 0.5);
+}
+
+.text-glow-white {
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Animated gradient border */
+@keyframes gradient-rotate {
+  0% { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+
+.animated-border {
+  background: linear-gradient(var(--gradient-angle, 0deg), #FF4500, #FF9F0A, #30D158, #00D4FF, #FF4500);
+  background-size: 400% 400%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Pulse animation */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: oklch(0.12 0.01 260);
+  background: #111111;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.25 0.01 260);
-  border-radius: 4px;
+  background: #3A3A3C;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.35 0.01 260);
+  background: #4A4A4C;
 }

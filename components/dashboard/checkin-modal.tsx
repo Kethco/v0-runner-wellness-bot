@@ -13,8 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 interface CheckInModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const STEPS = [
@@ -75,7 +77,12 @@ const STEPS = [
   },
 ];
 
-export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
+export function CheckInModal({ isOpen, onClose, open, onOpenChange }: CheckInModalProps) {
+  const isModalOpen = isOpen ?? open ?? false;
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) onClose?.();
+    onOpenChange?.(newOpen);
+  };
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState("");
@@ -164,8 +171,9 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
     }
   };
 
-  const handleClose = () => {
-    onOpenChange(false);
+const handleClose = () => {
+  handleOpenChange(false);
+  onClose?.();
     setCurrentStep(0);
     setAnswers({});
     setNotes("");
@@ -174,7 +182,7 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
 
   if (isComplete) {
     return (
-      <Dialog open={open} onOpenChange={handleClose}>
+      <Dialog open={isModalOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md bg-card border-border">
           <div className="flex flex-col items-center justify-center py-8">
             <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
@@ -197,7 +205,7 @@ export function CheckInModal({ open, onOpenChange }: CheckInModalProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={isModalOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>
           <div className="flex items-center justify-between">

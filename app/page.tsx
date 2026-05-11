@@ -1,27 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Activity } from "lucide-react";
+import { motion } from "framer-motion";
+import { Activity, Flame, Play, Target, Brain, User, TrendingUp, Moon, Battery, Heart, Gauge, ChevronRight, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import useSWR from "swr";
 import Link from "next/link";
-
-// Import dashboard components
-import { PremiumProgressRing } from "@/components/dashboard/premium-progress-ring";
-import { AnimatedWeeklyChart } from "@/components/dashboard/animated-weekly-chart";
-import { AITrainingCard } from "@/components/dashboard/ai-training-card";
-import { WellnessOrbs } from "@/components/dashboard/wellness-orbs";
-import { RecentRunsCarousel } from "@/components/dashboard/recent-runs-carousel";
-import { CheckInCard } from "@/components/dashboard/checkin-card";
 import { CheckInModal } from "@/components/dashboard/checkin-modal";
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
+import { LogRunModal } from "@/components/dashboard/log-run-modal";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -29,238 +15,387 @@ const fetcher = async (url: string) => {
   return res.json();
 };
 
-// Stagger animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15,
-    },
-  },
-};
-
 export default function Dashboard() {
   const { user } = useAuth();
-  const [greeting, setGreeting] = useState("Hello");
+  const [showCheckinModal, setShowCheckinModal] = useState(false);
   
-  // Fetch data
-  const { data: checkinsData } = useSWR("/api/checkins?limit=7", fetcher);
-  const { data: runsData } = useSWR("/api/runs?days=7", fetcher);
-  const { data: goalsData } = useSWR("/api/goals", fetcher);
+  const { data: checkinsData, mutate: mutateCheckins } = useSWR("/api/checkins?limit=7", fetcher);
+  const { data: runsData, mutate: mutateRuns } = useSWR("/api/runs?days=7", fetcher);
+  const { data: profileData } = useSWR("/api/profile", fetcher);
+  const { data: aiAdvice } = useSWR("/api/ai-advice", fetcher);
   
   const todayStr = new Date().toISOString().split("T")[0];
-  const hasCheckedInToday = checkinsData?.checkins?.some((c: { date: string }) => c.date === todayStr) ?? false;
-  const todayCheckin = checkinsData?.checkins?.find((c: { date: string }) => c.date === todayStr);
+  const runs = runsData?.runs || [];
+  const checkins = checkinsData?.checkins || [];
+  const hasCheckedInToday = checkins.some((c: { date: string }) => c.date === todayStr);
+  const todayCheckin = checkins.find((c: { date: string }) => c.date === todayStr);
+  const profile = profileData?.profile;
   
-  // Calculate streak
-  const calculateStreak = () => {
-    if (!checkinsData?.checkins?.length) return 0;
-    let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    for (let i = 0; i < checkinsData.checkins.length; i++) {
-      const checkinDate = new Date(checkinsData.checkins[i].date);
-      checkinDate.setHours(0, 0, 0, 0);
-      const expectedDate = new Date(today);
-      expectedDate.setDate(today.getDate() - i);
-      
-      if (checkinDate.getTime() === expectedDate.getTime()) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  };
-  
-  const currentStreak = calculateStreak();
-  
-  // Calculate weekly miles
-  const weeklyMiles = runsData?.runs?.reduce((sum: number, run: { miles: number }) => sum + run.miles, 0) || 0;
-  const goalMiles = goalsData?.goals?.[0]?.weekly_miles_target || 30;
-  const progressPercent = Math.min((weeklyMiles / goalMiles) * 100, 100);
-  
-  useEffect(() => {
-    setGreeting(getGreeting());
-  }, []);
-  
-  const userName = user?.user_metadata?.first_name || "Runner";
-  const userInitials = userName.substring(0, 2).toUpperCase();
+  const weeklyMiles = runs.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
+  const weeklyGoal = profile?.weekly_goal || 25;
+  const progressPercent = Math.min((weeklyMiles / weeklyGoal) * 100, 100);
+  const currentStreak = profile?.current_streak || checkins.length;
+
+  const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
+  const greeting = getGreeting();
+
+  // Chart data for last 7 days
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - i));
+    return date.toISOString().split("T")[0];
+  });
+
+  const chartData = last7Days.map(date => {
+    const dayRuns = runs.filter((r: { date: string }) => r.date === date);
+    const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
+    return { date, miles, day: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0) };
+  });
+
+  const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white overflow-x-hidden">
-      {/* Ambient glow effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#FF2D55]/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#FF6B00]/10 rounded-full blur-[120px]" />
-      </div>
-
+    <div className="min-h-screen bg-black text-white pb-28">
       {/* Header */}
-      <motion.header 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-50 backdrop-blur-xl bg-[#0A0A0A]/80 border-b border-white/5"
-      >
-        <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF2D55] to-[#FF6B00] flex items-center justify-center">
-              <Activity className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-sm tracking-tight">Runner Wellness</span>
-          </Link>
-          
-          {/* Right side */}
-          <div className="flex items-center gap-3">
-            <motion.button 
-              whileTap={{ scale: 0.95 }}
-              className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center relative"
-            >
-              <Bell className="w-4 h-4 text-white/70" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF2D55] rounded-full" />
-            </motion.button>
-            <Link href="/profile">
-              <motion.div 
-                whileTap={{ scale: 0.95 }}
-                className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF2D55] to-[#FF6B00] flex items-center justify-center text-xs font-bold"
-              >
-                {userInitials}
-              </motion.div>
-            </Link>
+      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#2A2A2A]">
+        <div className="px-5 py-4 flex items-center justify-between">
+          <div>
+            <p className="text-[#8E8E93] text-sm font-medium">{greeting}</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight">{userName}</h1>
           </div>
+          
+          {/* Streak Badge */}
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-4 py-2.5 rounded-full shadow-lg shadow-[#FF4500]/30"
+          >
+            <Flame className="w-5 h-5 text-white" />
+            <span className="text-white font-black text-lg">{currentStreak}</span>
+          </motion.div>
         </div>
-      </motion.header>
+      </header>
 
-      {/* Main Content */}
-      <motion.main 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="max-w-lg mx-auto px-4 py-6 space-y-6 relative z-10"
-      >
-        {/* Greeting */}
-        <motion.div variants={itemVariants} className="text-center">
-          <p className="text-white/50 text-sm uppercase tracking-widest mb-1">{greeting}</p>
-          <h1 className="text-2xl font-bold">{userName}</h1>
+      <main className="px-5 py-6 space-y-6">
+        {/* Hero Stats Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] p-6 border border-[#2A2A2A]"
+        >
+          {/* Glow effect */}
+          <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#FF4500] rounded-full blur-[100px] opacity-40" />
+          
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <p className="text-[#8E8E93] text-sm font-semibold uppercase tracking-wider">This Week</p>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <motion.span 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-6xl font-black text-white"
+                  >
+                    {weeklyMiles.toFixed(1)}
+                  </motion.span>
+                  <span className="text-[#8E8E93] text-xl font-semibold">/ {weeklyGoal} mi</span>
+                </div>
+              </div>
+              
+              {/* Progress Ring */}
+              <div className="relative w-24 h-24 flex-shrink-0">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" stroke="#2A2A2A" strokeWidth="10" fill="none" />
+                  <motion.circle
+                    cx="50" cy="50" r="40"
+                    stroke="url(#gradient)"
+                    strokeWidth="10"
+                    fill="none"
+                    strokeLinecap="round"
+                    initial={{ strokeDasharray: "0 251" }}
+                    animate={{ strokeDasharray: `${progressPercent * 2.51} 251` }}
+                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
+                  />
+                  <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#FF4500" />
+                      <stop offset="100%" stopColor="#FFD700" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl font-black text-white">{Math.round(progressPercent)}%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Mini Bar Chart */}
+            <div className="flex items-end justify-between h-16 gap-2">
+              {chartData.map((day, i) => (
+                <div key={day.date} className="flex-1 flex flex-col items-center gap-2">
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: day.miles > 0 ? `${(day.miles / maxMiles) * 100}%` : '4px' }}
+                    transition={{ delay: 0.5 + i * 0.08, duration: 0.6, ease: "easeOut" }}
+                    className={`w-full rounded-full min-h-[4px] ${
+                      day.date === todayStr 
+                        ? "bg-gradient-to-t from-[#FF4500] to-[#FFD700] shadow-lg shadow-[#FF4500]/50" 
+                        : day.miles > 0 
+                          ? "bg-[#3A3A3C]" 
+                          : "bg-[#2A2A2A]"
+                    }`}
+                  />
+                  <span className={`text-xs font-bold ${day.date === todayStr ? "text-[#FF4500]" : "text-[#636366]"}`}>
+                    {day.day}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </motion.div>
 
-        {/* Hero Progress Ring */}
-        <motion.div variants={itemVariants}>
-          <PremiumProgressRing 
-            currentMiles={weeklyMiles}
-            goalMiles={goalMiles}
-            progressPercent={progressPercent}
-            streak={currentStreak}
-          />
-        </motion.div>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-4">
+          <LogRunModal onRunLogged={() => mutateRuns()}>
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#FF4500] to-[#FF6B00] shadow-xl shadow-[#FF4500]/40"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
+                <Play className="w-7 h-7 text-white fill-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-white font-bold text-xl">Log Run</p>
+                <p className="text-white/80 text-sm font-medium">Record activity</p>
+              </div>
+            </motion.button>
+          </LogRunModal>
 
-        {/* Weekly Chart */}
-        <motion.div variants={itemVariants}>
-          <AnimatedWeeklyChart runs={runsData?.runs || []} />
-        </motion.div>
+          <motion.button
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => !hasCheckedInToday && setShowCheckinModal(true)}
+            className={`w-full flex items-center gap-4 p-5 rounded-2xl shadow-xl transition-all ${
+              hasCheckedInToday 
+                ? "bg-[#1C1C1E] border-2 border-[#30D158] shadow-[#30D158]/20" 
+                : "bg-gradient-to-br from-[#30D158] to-[#34C759] shadow-[#30D158]/40"
+            }`}
+          >
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+              hasCheckedInToday ? "bg-[#30D158]/20" : "bg-white/20 backdrop-blur"
+            }`}>
+              <Activity className={`w-7 h-7 ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`} />
+            </div>
+            <div className="text-left">
+              <p className={`font-bold text-xl ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`}>
+                {hasCheckedInToday ? "Done!" : "Check In"}
+              </p>
+              <p className={`text-sm font-medium ${hasCheckedInToday ? "text-[#8E8E93]" : "text-white/80"}`}>
+                {hasCheckedInToday ? "All set today" : "Daily wellness"}
+              </p>
+            </div>
+          </motion.button>
+        </div>
 
-        {/* AI Training Advice */}
-        <motion.div variants={itemVariants}>
-          <AITrainingCard />
-        </motion.div>
-
-        {/* Wellness Metrics Orbs */}
-        <motion.div variants={itemVariants}>
-          <WellnessOrbs checkin={todayCheckin} hasCheckedIn={hasCheckedInToday} />
-        </motion.div>
-
-        {/* Check-in Card (if not checked in) */}
-        {!hasCheckedInToday && (
-          <motion.div variants={itemVariants}>
-            <CheckInCard streak={currentStreak} hasCheckedInToday={hasCheckedInToday} />
+        {/* Wellness Metrics */}
+        {todayCheckin && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] p-5"
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-white font-bold text-lg">Today&apos;s Wellness</h3>
+              <span className="text-[#30D158] text-sm font-semibold px-3 py-1 bg-[#30D158]/10 rounded-full">Logged</span>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-4">
+              <MetricOrb icon={Moon} label="Sleep" value={todayCheckin.sleep_rating} color="#BF5AF2" />
+              <MetricOrb icon={Battery} label="Energy" value={todayCheckin.energy} color="#30D158" />
+              <MetricOrb icon={Heart} label="Sore" value={todayCheckin.soreness} color="#FF9F0A" />
+              <MetricOrb icon={Gauge} label="Ready" value={todayCheckin.readiness} color="#00D4FF" />
+            </div>
           </motion.div>
         )}
 
-        {/* Recent Runs Carousel */}
-        <motion.div variants={itemVariants}>
-          <RecentRunsCarousel runs={runsData?.runs || []} />
+        {/* AI Coach Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="relative overflow-hidden rounded-2xl bg-[#1C1C1E] border border-[#2A2A2A] p-5"
+        >
+          <div className="absolute -bottom-16 -right-16 w-40 h-40 bg-[#00D4FF] rounded-full blur-[80px] opacity-30" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00D4FF] to-[#0099CC] flex items-center justify-center shadow-lg shadow-[#00D4FF]/30">
+                <Brain className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg">AI Coach</h3>
+                <p className="text-[#8E8E93] text-sm font-medium">Your personal advisor</p>
+              </div>
+            </div>
+            
+            <p className="text-[#E5E5EA] text-base leading-relaxed line-clamp-2">
+              {aiAdvice?.advice || "Complete your daily check-in to receive personalized training insights."}
+            </p>
+            
+            <Link href="/coach">
+              <motion.div
+                whileHover={{ x: 4 }}
+                className="flex items-center gap-2 text-[#00D4FF] font-semibold text-sm mt-4"
+              >
+                Get full advice
+                <ChevronRight className="w-4 h-4" />
+              </motion.div>
+            </Link>
+          </div>
         </motion.div>
 
-        {/* Bottom spacing for mobile nav */}
-        <div className="h-20" />
-      </motion.main>
+        {/* Recent Runs */}
+        {runs.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-bold text-lg">Recent Runs</h3>
+              <Link href="/runs">
+                <motion.div whileHover={{ x: 4 }} className="flex items-center gap-1 text-[#FF4500] font-semibold text-sm">
+                  View all <ChevronRight className="w-4 h-4" />
+                </motion.div>
+              </Link>
+            </div>
+            
+            <div className="space-y-3">
+              {runs.slice(0, 3).map((run: { id: string; miles: number; date: string; run_type: string; pace?: string }, i: number) => (
+                <motion.div
+                  key={run.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  whileHover={{ scale: 1.01, x: 4 }}
+                  className="flex items-center justify-between p-4 rounded-xl bg-[#1C1C1E] border border-[#2A2A2A] hover:border-[#3A3A3C] transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getRunStyles(run.run_type).bg}`}>
+                      <Zap className={`w-6 h-6 ${getRunStyles(run.run_type).text}`} />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-lg">{run.miles} mi</p>
+                      <p className="text-[#8E8E93] text-sm font-medium capitalize">{run.run_type || "Run"}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white font-semibold">{run.pace || "--"}</p>
+                    <p className="text-[#636366] text-sm">
+                      {new Date(run.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </main>
 
-      {/* Bottom Navigation */}
-      <motion.nav 
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-xl border-t border-white/5"
-      >
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-around">
-          <NavItem href="/" icon="home" label="Home" active />
-          <NavItem href="/runs" icon="runs" label="Runs" />
-          <NavItem href="/goals" icon="target" label="Goals" />
-          <NavItem href="/profile" icon="profile" label="Profile" />
+      {/* Bottom Navigation - High Visibility */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t-2 border-[#2A2A2A]">
+        <div className="flex items-center justify-around py-4 px-6 max-w-lg mx-auto">
+          <NavButton icon={Activity} label="Home" href="/" active />
+          <NavButton icon={TrendingUp} label="Runs" href="/runs" />
+          <NavButton icon={Target} label="Goals" href="/goals" />
+          <NavButton icon={User} label="Profile" href="/profile" />
         </div>
-      </motion.nav>
+        {/* Safe area for notched phones */}
+        <div className="h-[env(safe-area-inset-bottom)]" />
+      </nav>
 
       {/* Check-in Modal */}
-      <CheckInModal />
+      {showCheckinModal && (
+        <CheckInModal 
+          isOpen={showCheckinModal} 
+          onClose={() => {
+            setShowCheckinModal(false);
+            mutateCheckins();
+          }} 
+        />
+      )}
     </div>
   );
 }
 
-function NavItem({ href, icon, label, active }: { href: string; icon: string; label: string; active?: boolean }) {
-  const icons: Record<string, React.ReactNode> = {
-    home: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-      </svg>
-    ),
-    runs: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-    target: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-    profile: (
-      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    ),
-  };
+function MetricOrb({ icon: Icon, label, value, color }: { 
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <motion.div 
+      whileHover={{ scale: 1.05 }}
+      className="flex flex-col items-center gap-2"
+    >
+      <div 
+        className="w-14 h-14 rounded-2xl flex items-center justify-center relative"
+        style={{ backgroundColor: `${color}20` }}
+      >
+        <Icon className="w-6 h-6" style={{ color }} />
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute inset-0 rounded-2xl"
+          style={{ boxShadow: `0 0 20px ${color}30` }}
+        />
+      </div>
+      <p className="text-white font-bold text-xl">{value}</p>
+      <p className="text-[#8E8E93] text-xs font-semibold uppercase">{label}</p>
+    </motion.div>
+  );
+}
 
+function NavButton({ icon: Icon, label, href, active }: { 
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  href: string;
+  active?: boolean;
+}) {
   return (
     <Link href={href}>
       <motion.div 
         whileTap={{ scale: 0.9 }}
-        className={`flex flex-col items-center gap-1 px-4 py-1 ${active ? 'text-[#FF2D55]' : 'text-white/40'}`}
+        className={`flex flex-col items-center gap-1.5 px-5 py-2 rounded-2xl transition-all ${
+          active ? "bg-[#FF4500]/20" : ""
+        }`}
       >
-        {icons[icon]}
-        <span className="text-[10px] font-medium">{label}</span>
-        {active && (
-          <motion.div 
-            layoutId="nav-indicator"
-            className="absolute -bottom-1 w-1 h-1 bg-[#FF2D55] rounded-full"
-          />
-        )}
+        <Icon className={`w-7 h-7 ${active ? "text-[#FF4500]" : "text-[#636366]"}`} />
+        <span className={`text-xs font-bold ${active ? "text-[#FF4500]" : "text-[#636366]"}`}>
+          {label}
+        </span>
       </motion.div>
     </Link>
   );
+}
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function getRunStyles(type: string) {
+  switch (type?.toLowerCase()) {
+    case "easy": return { bg: "bg-[#30D158]/20", text: "text-[#30D158]" };
+    case "tempo": return { bg: "bg-[#FF9F0A]/20", text: "text-[#FF9F0A]" };
+    case "interval": return { bg: "bg-[#FF453A]/20", text: "text-[#FF453A]" };
+    case "long": return { bg: "bg-[#BF5AF2]/20", text: "text-[#BF5AF2]" };
+    case "race": return { bg: "bg-[#FF4500]/20", text: "text-[#FF4500]" };
+    default: return { bg: "bg-[#00D4FF]/20", text: "text-[#00D4FF]" };
+  }
 }

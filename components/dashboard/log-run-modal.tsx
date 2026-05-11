@@ -23,9 +23,10 @@ import {
 
 interface LogRunModalProps {
   onRunLogged?: () => void;
+  children?: React.ReactNode;
 }
 
-export function LogRunModal({ onRunLogged }: LogRunModalProps) {
+export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,12 +89,14 @@ export function LogRunModal({ onRunLogged }: LogRunModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="gap-2 bg-gradient-to-r from-[#FF2D55] to-[#FF6B00] hover:opacity-90 text-white border-0 shadow-lg shadow-[#FF2D55]/20">
-          <Plus className="w-4 h-4" />
-          Log Run
-        </Button>
-      </DialogTrigger>
+<DialogTrigger asChild>
+  {children || (
+    <Button size="sm" className="gap-2 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] hover:opacity-90 text-white border-0 shadow-lg shadow-[#FF4500]/20">
+      <Plus className="w-4 h-4" />
+      Log Run
+    </Button>
+  )}
+  </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Log a Run</DialogTitle>
