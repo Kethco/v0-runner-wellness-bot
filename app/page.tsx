@@ -10,6 +10,7 @@ import { CheckInModal } from "@/components/dashboard/checkin-modal";
 import { LogRunModal } from "@/components/dashboard/log-run-modal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { BottomNav } from "@/components/bottom-nav";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -314,18 +315,8 @@ return (
         )}
       </main>
 
-      {/* Bottom Navigation - High Visibility */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t-2 border-[#3A3A3C]">
-        <div className="flex items-center justify-around py-4 px-4 max-w-lg mx-auto">
-          <NavButton icon={Activity} label="Home" href="/" active />
-          <NavButton icon={TrendingUp} label="Runs" href="/runs" />
-          <NavButton icon={Sparkles} label="Mind" href="/mind" />
-          <NavButton icon={Target} label="Goals" href="/goals" />
-          <NavButton icon={User} label="Profile" href="/profile" />
-        </div>
-        {/* Safe area for notched phones */}
-        <div className="h-[env(safe-area-inset-bottom)]" />
-      </nav>
+      {/* Bottom Navigation */}
+      <BottomNav />
 
       {/* Check-in Modal */}
       {showCheckinModal && (
@@ -474,29 +465,6 @@ function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: {
         <p className="text-[#AEAEB2] text-[10px] font-semibold uppercase tracking-wide">{label}</p>
       </div>
     </motion.div>
-  );
-}
-
-function NavButton({ icon: Icon, label, href, active }: { 
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  href: string;
-  active?: boolean;
-}) {
-  return (
-    <Link href={href}>
-      <motion.div 
-        whileTap={{ scale: 0.9 }}
-        className={`flex flex-col items-center gap-1.5 px-5 py-2 rounded-2xl transition-all ${
-          active ? "bg-[#FF4500]/20" : ""
-        }`}
-      >
-        <Icon className={`w-7 h-7 ${active ? "text-[#FF4500]" : "text-[#8E8E93]"}`} />
-        <span className={`text-xs font-bold ${active ? "text-[#FF4500]" : "text-[#8E8E93]"}`}>
-          {label}
-        </span>
-      </motion.div>
-    </Link>
   );
 }
 

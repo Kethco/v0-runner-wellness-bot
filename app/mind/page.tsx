@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { RunningBuddy } from "@/components/running-buddy";
+import { BottomNav } from "@/components/bottom-nav";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -78,16 +79,7 @@ return (
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t-2 border-[#3A3A3C]">
-        <div className="flex items-center justify-around py-4 px-4 max-w-lg mx-auto">
-          <NavButton icon={Activity} label="Home" href="/" />
-          <NavButton icon={TrendingUp} label="Runs" href="/runs" />
-          <NavButton icon={Sparkles} label="Mind" href="/mind" active />
-          <NavButton icon={Target} label="Goals" href="/goals" />
-          <NavButton icon={User} label="Profile" href="/profile" />
-        </div>
-        <div className="h-[env(safe-area-inset-bottom)]" />
-      </nav>
+      <BottomNav />
     </div>
   );
 }
@@ -687,28 +679,5 @@ function BreathingExercise() {
         </motion.button>
       )}
     </div>
-  );
-}
-
-function NavButton({ icon: Icon, label, href, active }: { 
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  href: string;
-  active?: boolean;
-}) {
-  return (
-    <Link href={href}>
-      <motion.div 
-        whileTap={{ scale: 0.9 }}
-        className={`flex flex-col items-center gap-1.5 px-4 py-2 rounded-2xl transition-all ${
-          active ? "bg-[#AF52DE]/20" : ""
-        }`}
-      >
-        <Icon className={`w-6 h-6 ${active ? "text-[#AF52DE]" : "text-[#8E8E93]"}`} />
-        <span className={`text-xs font-bold ${active ? "text-[#AF52DE]" : "text-[#8E8E93]"}`}>
-          {label}
-        </span>
-      </motion.div>
-    </Link>
   );
 }

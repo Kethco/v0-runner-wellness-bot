@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp } from "lucide-react";
+import { BottomNav } from "@/components/bottom-nav";
 
 interface Goal {
   id: string;
@@ -677,6 +678,7 @@ return (
           </>
         )}
       </main>
+      <BottomNav />
     </div>
   );
 }

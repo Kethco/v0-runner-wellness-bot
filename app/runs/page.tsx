@@ -8,6 +8,7 @@ import { LogRunModal } from "@/components/dashboard/log-run-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Flame, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { BottomNav } from "@/components/bottom-nav";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -192,6 +193,7 @@ return (
           )}
         </div>
 </main>
+      <BottomNav />
   </div>
   );
 }

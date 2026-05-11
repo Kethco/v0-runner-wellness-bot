@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BottomNav } from "@/components/bottom-nav";
 
 import {
   Dialog,
@@ -402,6 +403,7 @@ return (
           </div>
         </div>
       </main>
+      <BottomNav />
     </div>
   );
 }
