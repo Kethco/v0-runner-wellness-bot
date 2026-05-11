@@ -26,11 +26,19 @@ export function RunningBuddy({ userName, onClose, isFullPage = false }: RunningB
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { messages, sendMessage, status } = useChat({
+  const [rateLimitError, setRateLimitError] = useState<string | null>(null);
+
+  const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ api: "/api/buddy" }),
+    onError: (err) => {
+      if (err.message?.includes("429") || err.message?.includes("limit")) {
+        setRateLimitError("You've reached your message limit (20/hour). Take a breather and come back soon!");
+      }
+    },
   });
 
   const isLoading = status === "streaming" || status === "submitted";
+  const hasError = status === "error" || rateLimitError;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -169,6 +177,19 @@ export function RunningBuddy({ userName, onClose, isFullPage = false }: RunningB
         )}
         
         <div ref={messagesEndRef} />
+        
+        {/* Rate limit error */}
+        {(rateLimitError || (error && status === "error")) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-4 mb-2 p-3 rounded-xl bg-[#FF4500]/10 border border-[#FF4500]/30"
+          >
+            <p className="text-[#FF4500] text-sm text-center">
+              {rateLimitError || "Something went wrong. Try again in a moment."}
+            </p>
+          </motion.div>
+        )}
       </div>
 
       {/* Input */}
