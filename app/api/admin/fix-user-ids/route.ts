@@ -91,6 +91,35 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // Add weekly_goal column to profiles table
+  if (action === "add-weekly-goal-column") {
+    // Check if column exists first
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("weekly_goal")
+      .limit(1);
+    
+    if (existingProfile !== null) {
+      return NextResponse.json({ success: true, message: "Column already exists" });
+    }
+    
+    // Add the column using raw SQL via service role
+    const { error } = await supabase.rpc('exec_sql', {
+      sql: `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS weekly_goal INTEGER DEFAULT 25;`
+    });
+    
+    if (error) {
+      // If RPC doesn't exist, provide manual SQL
+      return NextResponse.json({ 
+        message: "Run this SQL in Supabase dashboard",
+        sql: "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS weekly_goal INTEGER DEFAULT 25;",
+        error: error.message
+      });
+    }
+    
+    return NextResponse.json({ success: true, message: "weekly_goal column added" });
+  }
+
   // Create reflections table for mental wellness feature
   if (action === "create-reflections-table") {
     const { error } = await supabase.rpc('exec_sql', {
