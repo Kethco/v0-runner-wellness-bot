@@ -15,10 +15,20 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "30");
   const offset = parseInt(searchParams.get("offset") || "0");
 
+  // Find the user's profile to get the correct user_id for SMS check-ins
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Use profile.id if exists, otherwise fall back to auth user.id
+  const userId = profile?.id || user.id;
+
   const { data: checkins, error } = await supabase
     .from("checkins")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .order("date", { ascending: false })
     .range(offset, offset + limit - 1);
 
