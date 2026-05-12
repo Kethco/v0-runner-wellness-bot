@@ -14,6 +14,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { celebrateMilestone, checkMilestone } from "@/lib/celebrations";
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
 import { toast } from "@/hooks/use-toast";
+import { TrialCountdown } from "@/components/trial-expired-blocker";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -114,27 +115,32 @@ return (
             <h1 className="text-2xl font-bold text-white tracking-tight">{userName}</h1>
           </div>
           
-          {/* Streak Badge */}
-          <motion.div 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-4 py-2.5 rounded-full shadow-lg shadow-[#FF4500]/30"
-          >
-            <motion.div
-              animate={{ 
-                scale: [1, 1.2, 1],
-                rotate: [0, -5, 5, 0],
-              }}
-              transition={{ 
-                duration: 1.5, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
-              }}
+          <div className="flex items-center gap-3">
+            {/* Trial Countdown */}
+            <TrialCountdown />
+            
+            {/* Streak Badge */}
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-4 py-2.5 rounded-full shadow-lg shadow-[#FF4500]/30"
             >
-              <Flame className="w-5 h-5 text-white drop-shadow-[0_0_8px_rgba(255,200,0,0.8)]" />
+              <motion.div
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  rotate: [0, -5, 5, 0],
+                }}
+                transition={{ 
+                  duration: 1.5, 
+                  repeat: Infinity, 
+                  ease: "easeInOut" 
+                }}
+              >
+                <Flame className="w-5 h-5 text-white drop-shadow-[0_0_8px_rgba(255,200,0,0.8)]" />
+              </motion.div>
+              <span className="text-white font-black text-lg">{currentStreak}</span>
             </motion.div>
-            <span className="text-white font-black text-lg">{currentStreak}</span>
-          </motion.div>
+          </div>
         </div>
       </header>
 

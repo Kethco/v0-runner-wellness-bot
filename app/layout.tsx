@@ -6,6 +6,7 @@ import { InstallPrompt } from '@/components/pwa/install-prompt'
 import { UpdateBanner } from '@/components/update-banner'
 import { TrialBanner } from '@/components/dashboard/trial-banner'
 import { Toaster } from '@/components/ui/toaster'
+import { TrialExpiredBlocker } from '@/components/trial-expired-blocker'
 import './globals.css'
 
 const inter = Inter({ 
@@ -54,6 +55,7 @@ export default function RootLayout({
           {children}
           <InstallPrompt />
           <Toaster />
+          <TrialExpiredBlocker />
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
