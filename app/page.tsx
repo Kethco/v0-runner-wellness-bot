@@ -27,6 +27,9 @@ export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [showCheckinModal, setShowCheckinModal] = useState(false);
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [newGoalValue, setNewGoalValue] = useState("");
+  const [localGoal, setLocalGoal] = useState<number | null>(null);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -43,9 +46,6 @@ export default function Dashboard() {
       </div>
     );
   }
-  const [showGoalModal, setShowGoalModal] = useState(false);
-  const [newGoalValue, setNewGoalValue] = useState("");
-  const [localGoal, setLocalGoal] = useState<number | null>(null);
   
   // Check if on trial (to adjust for fixed banner)
   const plan = user?.user_metadata?.plan;
