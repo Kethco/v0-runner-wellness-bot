@@ -29,7 +29,10 @@ export function RunningBuddy({ userName, onClose, isFullPage = false }: RunningB
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
 
   const { messages, sendMessage, status, error } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/buddy" }),
+    transport: new DefaultChatTransport({ 
+      api: "/api/buddy",
+      credentials: "include",
+    }),
     onError: (err) => {
       if (err.message?.includes("429") || err.message?.includes("limit")) {
         setRateLimitError("You've reached your message limit (20/hour). Take a breather and come back soon!");
@@ -51,17 +54,10 @@ export function RunningBuddy({ userName, onClose, isFullPage = false }: RunningB
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[v0] handleSubmit called, input:", input, "isLoading:", isLoading);
     if (!input.trim() || isLoading) return;
-    console.log("[v0] Sending message:", input);
     sendMessage({ text: input });
     setInput("");
   };
-  
-  // Debug logging
-  useEffect(() => {
-    console.log("[v0] Running Buddy - messages:", messages.length, "status:", status, "error:", error);
-  }, [messages, status, error]);
 
   const quickPrompts = [
     "How am I doing?",
