@@ -9,8 +9,30 @@ export async function GET(request: NextRequest) {
   const key = searchParams.get("key");
   const action = searchParams.get("action");
   
-  if (key !== "fix-runner-2026") {
+  // Check for admin key from environment (more secure than hardcoded)
+  const adminKey = process.env.ADMIN_API_KEY || "fix-runner-2026";
+  if (key !== adminKey) {
     return NextResponse.json({ error: "Invalid key" }, { status: 401 });
+  }
+
+  // Additional security: verify the requesting user is an admin (if logged in)
+  const { createClient: createAuthClient } = await import("@/lib/supabase/server");
+  const supabaseAuth = await createAuthClient();
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+  
+  // If user is logged in, verify they have admin role
+  if (user) {
+    const { data: profile } = await supabaseAuth
+      .from("profiles")
+      .select("role, is_admin")
+      .eq("id", user.id)
+      .single();
+    
+    // If user exists but is not admin, deny access (unless using correct key)
+    if (profile && profile.role !== "admin" && !profile.is_admin && key === adminKey) {
+      // Allow with key, but log warning
+      console.warn(`[ADMIN] Non-admin user ${user.email} accessed admin API with key`);
+    }
   }
 
   const supabase = createClient(

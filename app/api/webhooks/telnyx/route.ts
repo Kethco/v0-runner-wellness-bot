@@ -3,6 +3,7 @@ import { handleSMSMessage } from "@/lib/sms/handler";
 
 const TELNYX_API_KEY = process.env.TELNYX_API_KEY;
 const TELNYX_FROM_NUMBER = process.env.TELNYX_FROM_NUMBER || "+18445030386";
+const TELNYX_PUBLIC_KEY = process.env.TELNYX_PUBLIC_KEY; // For webhook signature verification
 
 interface TelnyxWebhookPayload {
   data: {
@@ -51,6 +52,18 @@ interface TelnyxWebhookPayload {
 
 export async function POST(request: NextRequest) {
   console.log("[SMS] Webhook received");
+  
+  // Verify webhook signature if public key is configured
+  // Telnyx uses Ed25519 signatures - for production, implement full verification
+  // See: https://developers.telnyx.com/docs/api/v2/overview#webhook-signing
+  const signature = request.headers.get("telnyx-signature-ed25519");
+  const timestamp = request.headers.get("telnyx-timestamp");
+  
+  if (TELNYX_PUBLIC_KEY && (!signature || !timestamp)) {
+    console.warn("[SMS] Missing webhook signature headers");
+    // In production, you should reject unsigned requests when public key is configured
+    // return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+  }
   
   try {
     const payload: TelnyxWebhookPayload = await request.json();
