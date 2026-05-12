@@ -252,6 +252,50 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, message: "Reflections table created" });
   }
 
+  // Debug AI advice for a specific user
+  if (action === "debug-advice") {
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabaseAuth = await createClient();
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    
+    const userId = user?.id || CORRECT_USER_ID;
+    const today = new Date().toISOString().split("T")[0];
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    
+    // Get all advice for this user in last 2 days
+    const { data: recentAdvice } = await supabase
+      .from("ai_advice")
+      .select("*")
+      .eq("user_id", userId)
+      .gte("created_at", yesterday)
+      .order("created_at", { ascending: false });
+    
+    // Get all checkins for this user in last 2 days
+    const { data: recentCheckins } = await supabase
+      .from("checkins")
+      .select("*")
+      .eq("user_id", userId)
+      .gte("date", yesterday)
+      .order("date", { ascending: false });
+    
+    // Get all advice regardless of user to see if there's a mismatch
+    const { data: allRecentAdvice } = await supabase
+      .from("ai_advice")
+      .select("*")
+      .gte("created_at", yesterday)
+      .order("created_at", { ascending: false });
+    
+    return NextResponse.json({
+      currentUserId: userId,
+      userEmail: user?.email,
+      today,
+      yesterday,
+      recentAdviceForUser: recentAdvice,
+      recentCheckinsForUser: recentCheckins,
+      allRecentAdvice: allRecentAdvice,
+    });
+  }
+
   // Check today's data
   if (action === "check-today") {
     const today = new Date().toISOString().split("T")[0];

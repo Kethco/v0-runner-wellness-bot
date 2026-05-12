@@ -10,30 +10,31 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get today's date in user's local timezone (use date string for comparison)
+  // Get today's date string (YYYY-MM-DD format)
   const todayStr = new Date().toISOString().split("T")[0];
+  
+  // Also get 24 hours ago for timezone-safe queries
+  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-  // Fetch the latest AI advice for today by created_at date range
-  const { data: advice, error } = await supabase
-    .from("ai_advice")
-    .select("*")
+  // Check if user has checked in today
+  const { data: todayCheckin } = await supabase
+    .from("checkins")
+    .select("id, sleep_rating, energy, soreness, readiness, created_at")
     .eq("user_id", user.id)
-    .gte("created_at", todayStr + "T00:00:00.000Z")
-    .lte("created_at", todayStr + "T23:59:59.999Z")
+    .eq("date", todayStr)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (error && error.code !== "PGRST116") {
-    console.error("[v0] AI advice fetch error:", error);
-  }
-
-  // Also check if user has checked in today
-  const { data: todayCheckin } = await supabase
-    .from("checkins")
-    .select("id, sleep_rating, energy, soreness, readiness")
+  // Find the most recent AI advice from the last 24 hours
+  // This handles timezone issues where "today" might be different on server vs client
+  const { data: advice } = await supabase
+    .from("ai_advice")
+    .select("*")
     .eq("user_id", user.id)
-    .eq("date", todayStr)
+    .gte("created_at", last24Hours)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   return NextResponse.json({ 
