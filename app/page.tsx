@@ -69,7 +69,13 @@ export default function Dashboard() {
   }, [progressPercent]);
 
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
-  const greeting = getGreeting();
+  
+  // Use state for greeting to avoid hydration mismatch (server/client time difference)
+  const [greeting, setGreeting] = useState({ text: "Welcome", gradient: "from-[#FF6B00] via-[#FF4500] to-[#FF2D00]" });
+  
+  useEffect(() => {
+    setGreeting(getGreeting());
+  }, []);
   
   // Show skeleton while initial data is loading
   const isLoading = !checkinsData && !runsData && !profileData;

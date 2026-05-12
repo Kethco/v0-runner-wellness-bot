@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { Activity, TrendingUp, Sparkles, Target, User } from "lucide-react";
 import { hapticLight } from "@/lib/haptics";
