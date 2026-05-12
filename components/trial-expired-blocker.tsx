@@ -48,8 +48,11 @@ export function TrialExpiredBlocker() {
     if (now > trialEndDate) {
       setTrialExpired(true);
     }
-  }, [user, isLoading, mounted]);
+  }, [user, isLoading, mounted, pathname]);
 
+  // Don't show on excluded routes
+  if (EXCLUDED_ROUTES.some(route => pathname?.startsWith(route))) return null;
+  
   if (!mounted || isLoading || !trialExpired) return null;
 
   const isCoachTrial = user?.user_metadata?.plan === "coach_trial";
