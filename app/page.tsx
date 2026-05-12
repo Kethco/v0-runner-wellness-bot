@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { BottomNav } from "@/components/bottom-nav";
 import { celebrateMilestone, checkMilestone } from "@/lib/celebrations";
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
-import { DashboardSkeleton } from "@/components/skeletons";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -77,17 +76,7 @@ export default function Dashboard() {
     setGreeting(getGreeting());
   }, []);
   
-  // Show skeleton while initial data is loading
-  const isLoading = !checkinsData && !runsData && !profileData;
   
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-black text-white">
-        <DashboardSkeleton />
-        <BottomNav />
-      </div>
-    );
-  }
 
   // Chart data for last 7 days using local timezone
   const last7Days = Array.from({ length: 7 }, (_, i) => {
