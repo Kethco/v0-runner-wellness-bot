@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BottomNav } from "@/components/bottom-nav";
 import { celebrateMilestone, checkMilestone } from "@/lib/celebrations";
+import { hapticLight, hapticSuccess } from "@/lib/haptics";
+import { DashboardSkeleton } from "@/components/skeletons";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -68,6 +70,18 @@ export default function Dashboard() {
 
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   const greeting = getGreeting();
+  
+  // Show skeleton while initial data is loading
+  const isLoading = !checkinsData && !runsData && !profileData;
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <DashboardSkeleton />
+        <BottomNav />
+      </div>
+    );
+  }
 
   // Chart data for last 7 days using local timezone
   const last7Days = Array.from({ length: 7 }, (_, i) => {
@@ -243,7 +257,10 @@ return (
             transition={{ delay: 0.25 }}
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => !hasCheckedInToday && setShowCheckinModal(true)}
+            onClick={() => {
+              hapticLight();
+              if (!hasCheckedInToday) setShowCheckinModal(true);
+            }}
             className={`w-full flex items-center gap-4 p-5 rounded-2xl shadow-xl transition-all ${
               hasCheckedInToday 
                 ? "bg-[#1C1C1E] border-2 border-[#30D158] shadow-[#30D158]/20" 

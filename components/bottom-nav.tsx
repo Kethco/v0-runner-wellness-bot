@@ -1,9 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Activity, TrendingUp, Sparkles, Target, User } from "lucide-react";
+import { hapticLight } from "@/lib/haptics";
 
 const navItems = [
   { icon: Activity, label: "Home", href: "/" },
@@ -15,12 +16,24 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   
   // Find active index for pill animation
   const activeIndex = navItems.findIndex(item => {
     if (item.href === "/") return pathname === "/";
     return pathname.startsWith(item.href);
   });
+
+  const handleNavClick = (href: string, isActive: boolean) => {
+    hapticLight();
+    
+    if (isActive) {
+      // Scroll to top if already on this page
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      router.push(href);
+    }
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-[#2A2A2A]">
@@ -48,7 +61,11 @@ export function BottomNav() {
           const isActive = activeIndex === index;
           
           return (
-            <Link key={item.href} href={item.href} className="flex-1 z-10">
+            <button 
+              key={item.href} 
+              onClick={() => handleNavClick(item.href, isActive)}
+              className="flex-1 z-10 bg-transparent border-none cursor-pointer"
+            >
               <motion.div
                 whileTap={{ scale: 0.92 }}
                 className="flex flex-col items-center gap-1 py-2"
@@ -78,7 +95,7 @@ export function BottomNav() {
                   {item.label}
                 </motion.span>
               </motion.div>
-            </Link>
+            </button>
           );
         })}
       </div>

@@ -1,5 +1,6 @@
 import confetti from "canvas-confetti";
 import { toast } from "@/hooks/use-toast";
+import { hapticSuccess, hapticHeavy, hapticMedium } from "@/lib/haptics";
 
 // Motivational messages for different actions
 const RUN_MESSAGES = [
@@ -73,6 +74,7 @@ export function fireConfettiCannon() {
 export function celebrateRun() {
   const message = RUN_MESSAGES[Math.floor(Math.random() * RUN_MESSAGES.length)];
   
+  hapticSuccess();
   fireConfetti("light");
   
   toast({
@@ -86,6 +88,7 @@ export function celebrateRun() {
 export function celebrateCheckin() {
   const message = CHECKIN_MESSAGES[Math.floor(Math.random() * CHECKIN_MESSAGES.length)];
   
+  hapticMedium();
   toast({
     title: message.title,
     description: message.description,
@@ -98,10 +101,13 @@ export function celebrateMilestone(milestone: 25 | 50 | 75 | 100) {
   const message = MILESTONE_MESSAGES[milestone];
   
   if (milestone === 100) {
+    hapticHeavy();
     fireConfettiCannon();
   } else if (milestone === 75) {
+    hapticSuccess();
     fireConfetti("medium");
   } else {
+    hapticMedium();
     fireConfetti("light");
   }
   
