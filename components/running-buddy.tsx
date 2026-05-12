@@ -31,7 +31,7 @@ export function RunningBuddy({ userName, onClose, isFullPage = false }: RunningB
   const { messages, sendMessage, status, error } = useChat({
     transport: new DefaultChatTransport({ 
       api: "/api/buddy",
-      credentials: "include",
+      fetch: (url, options) => fetch(url, { ...options, credentials: "include" }),
     }),
     onError: (err) => {
       if (err.message?.includes("429") || err.message?.includes("limit")) {
