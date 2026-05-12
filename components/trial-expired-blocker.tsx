@@ -21,6 +21,14 @@ export function TrialExpiredBlocker() {
 
     // Check if user is on a free trial plan
     const plan = user.user_metadata?.plan;
+    
+    // Athletes invited by coaches don't have trial expiration - coach pays
+    if (plan === "coach_athlete") return;
+    
+    // Paid plans don't expire
+    if (plan === "pro" || plan === "coach_pro") return;
+    
+    // Only check trial expiration for free trial plans
     if (plan !== "free_trial" && plan !== "coach_trial") return;
 
     // Calculate if trial has expired
@@ -110,6 +118,14 @@ export function TrialCountdown() {
 
     // Check if user is on a free trial plan
     const plan = user.user_metadata?.plan;
+    
+    // Athletes invited by coaches don't see countdown - coach pays
+    if (plan === "coach_athlete") return;
+    
+    // Paid plans don't show countdown
+    if (plan === "pro" || plan === "coach_pro") return;
+    
+    // Only show countdown for free trial plans
     if (plan !== "free_trial" && plan !== "coach_trial") return;
 
     const calculateTimeLeft = () => {

@@ -133,7 +133,9 @@ export default function JoinPage() {
           last_name: lastName,
           phone: formData.phone,
           user_type: "athlete",
-          plan: "free_trial", // Athletes get free plan since coach pays
+          role: "athlete",
+          plan: "coach_athlete", // Athletes invited by coach - coach pays, no trial expiration
+          coach_id: invite.coachId,
           invite_code: code,
         },
       },

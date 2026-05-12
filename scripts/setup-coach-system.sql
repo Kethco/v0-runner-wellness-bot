@@ -4,6 +4,15 @@
 -- Add role column to profiles if it doesn't exist
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'athlete' CHECK (role IN ('athlete', 'coach', 'admin'));
 
+-- Add coach_id column for athletes invited by a coach (links to their coach's subscription)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS coach_id UUID REFERENCES profiles(id) ON DELETE SET NULL;
+
+-- Update plan check to include coach_athlete (athletes covered by coach subscription)
+-- Plans: free_trial, coach_trial, pro, coach_pro, coach_athlete
+ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_plan_check;
+ALTER TABLE profiles ADD CONSTRAINT profiles_plan_check 
+  CHECK (plan IN ('free_trial', 'coach_trial', 'pro', 'coach_pro', 'coach_athlete'));
+
 -- Create athlete_invites table for tracking invitations
 CREATE TABLE IF NOT EXISTS athlete_invites (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -97,8 +106,13 @@ CREATE INDEX IF NOT EXISTS idx_coach_athletes_athlete ON coach_athletes(athlete_
 -- Update the profile trigger to set role from user metadata
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_coach_id UUID;
 BEGIN
-  INSERT INTO public.profiles (id, first_name, last_name, email, phone, role, plan, trial_ends_at, created_at)
+  -- Get coach_id from metadata if this is a coach-invited athlete
+  v_coach_id := (NEW.raw_user_meta_data ->> 'coach_id')::UUID;
+  
+  INSERT INTO public.profiles (id, first_name, last_name, email, phone, role, plan, coach_id, trial_ends_at, created_at)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data ->> 'first_name', ''),
@@ -107,11 +121,15 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data ->> 'phone', ''),
     COALESCE(NEW.raw_user_meta_data ->> 'role', NEW.raw_user_meta_data ->> 'user_type', 'athlete'),
     COALESCE(NEW.raw_user_meta_data ->> 'plan', 'free_trial'),
-    NOW() + INTERVAL '7 days',
+    v_coach_id,
+    -- Athletes invited by coach don't have trial expiration (coach pays)
+    CASE WHEN NEW.raw_user_meta_data ->> 'plan' = 'coach_athlete' THEN NULL ELSE NOW() + INTERVAL '7 days' END,
     NOW()
   )
   ON CONFLICT (id) DO UPDATE SET
     role = COALESCE(EXCLUDED.role, profiles.role),
+    plan = COALESCE(EXCLUDED.plan, profiles.plan),
+    coach_id = COALESCE(EXCLUDED.coach_id, profiles.coach_id),
     first_name = COALESCE(NULLIF(EXCLUDED.first_name, ''), profiles.first_name),
     last_name = COALESCE(NULLIF(EXCLUDED.last_name, ''), profiles.last_name),
     phone = COALESCE(NULLIF(EXCLUDED.phone, ''), profiles.phone);
