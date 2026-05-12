@@ -145,14 +145,13 @@ ${userContext}
 
 Keep your responses SHORT and conversational. This is a text chat, not a coaching session.`;
 
-  // Using claude-3-5-haiku for cost efficiency (~10x cheaper than Sonnet)
-  // Still great for conversational AI, just not as capable for complex reasoning
+  // Using GPT-5-mini for cost efficiency - fast and cheap
   try {
     const result = streamText({
-      model: "anthropic/claude-3-5-sonnet",
+      model: "openai/gpt-5-mini",
       system: systemPrompt,
       messages: await convertToModelMessages(messages),
-      maxOutputTokens: 300, // Keep responses concise to save tokens
+      maxOutputTokens: 250, // Keep responses concise to save tokens
       abortSignal: req.signal,
     });
 
