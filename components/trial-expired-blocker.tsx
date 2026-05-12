@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Lock, Sparkles, Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 
+// Routes that should never show the trial blocker
+const EXCLUDED_ROUTES = ["/pricing", "/login", "/signup", "/auth", "/join", "/terms", "/privacy", "/help"];
+
 export function TrialExpiredBlocker() {
   const { user, isLoading } = useAuth();
+  const pathname = usePathname();
   const [trialExpired, setTrialExpired] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -18,6 +23,9 @@ export function TrialExpiredBlocker() {
 
   useEffect(() => {
     if (!user || isLoading || !mounted) return;
+    
+    // Don't show blocker on excluded routes (pricing, login, etc.)
+    if (EXCLUDED_ROUTES.some(route => pathname?.startsWith(route))) return;
 
     // Check if user is on a free trial plan
     const plan = user.user_metadata?.plan;
