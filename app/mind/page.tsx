@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sparkles, Sun, Moon as MoonIcon, Heart, Wind, 
   ArrowLeft, Check, ChevronRight, Flame, 
-  CloudRain, Smile, Frown, Meh, Zap, Coffee,
-  Activity, TrendingUp, Target, User, MessageCircle
+  CloudRain, Smile, Frown, Meh, Zap, Coffee
 } from "lucide-react";
 import Link from "next/link";
-import { RunningBuddy } from "@/components/running-buddy";
 import { BottomNav } from "@/components/bottom-nav";
+import { DailyTips } from "@/components/daily-tips";
+import { GuidedBreathing } from "@/components/guided-breathing";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -19,7 +19,7 @@ const fetcher = async (url: string) => {
   return res.json();
 };
 
-type MindMode = "home" | "pre-run" | "post-run" | "burnout" | "buddy";
+type MindMode = "home" | "pre-run" | "post-run" | "burnout" | "breathe";
 
 export default function MindPage() {
   const [mode, setMode] = useState<MindMode>("home");
@@ -48,12 +48,13 @@ return (
               {mode === "home" ? "Mind & Soul" : 
                mode === "pre-run" ? "Pre-Run Mindset" :
                mode === "post-run" ? "Post-Run Reflection" : 
-               mode === "buddy" ? "Running Buddy" : "Motivation Support"}
+               mode === "breathe" ? "Guided Breathing" : "Motivation Support"}
             </h1>
             <p className="text-[#AEAEB2] text-sm">
               {mode === "home" ? "Your mental wellness toolkit" :
                mode === "pre-run" ? "Set your intention" :
-               mode === "post-run" ? "Celebrate the moment" : "You're not alone"}
+               mode === "post-run" ? "Celebrate the moment" :
+               mode === "breathe" ? "Find your calm" : "You're not alone"}
             </p>
           </div>
         </div>
@@ -65,14 +66,13 @@ return (
           {mode === "pre-run" && <PreRunView onComplete={() => setMode("home")} />}
           {mode === "post-run" && <PostRunView onComplete={() => { setMode("home"); mutate(); }} />}
 {mode === "burnout" && <BurnoutView />}
-{mode === "buddy" && (
+{mode === "breathe" && (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="h-[calc(100vh-200px)]"
   >
-    <RunningBuddy onClose={() => setMode("home")} isFullPage />
+    <GuidedBreathing />
   </motion.div>
 )}
 </AnimatePresence>
@@ -147,30 +147,38 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
         </div>
       </motion.div>
 
-{/* Running Buddy - Featured */}
-  <motion.button
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: 0.1 }}
-    whileHover={{ scale: 1.01 }}
-    whileTap={{ scale: 0.98 }}
-    onClick={() => onSelectMode("buddy")}
-    className="w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#AF52DE] via-[#BF5AF2] to-[#FF2D55] p-1"
-  >
-    <div className="relative bg-[#0A0A0A] rounded-[22px] p-5 flex items-center gap-4">
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#AF52DE] to-[#FF2D55] flex items-center justify-center shadow-lg shadow-[#AF52DE]/30">
-        <MessageCircle className="w-8 h-8 text-white" />
-      </div>
-      <div className="flex-1 text-left">
-        <div className="flex items-center gap-2 mb-1">
-          <p className="text-white font-bold text-lg">Running Buddy</p>
-          <span className="px-2 py-0.5 rounded-full bg-[#AF52DE]/20 text-[#AF52DE] text-xs font-bold">AI</span>
+{/* Daily Tips Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
+      >
+        <h3 className="text-white font-bold mb-4">Daily Tips</h3>
+        <DailyTips />
+      </motion.div>
+
+      {/* Guided Breathing Card */}
+      <motion.button
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => onSelectMode("breathe")}
+        className="w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#00D4FF] via-[#5AC8FA] to-[#AF52DE] p-1"
+      >
+        <div className="relative bg-[#0A0A0A] rounded-[22px] p-5 flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#00D4FF] to-[#AF52DE] flex items-center justify-center shadow-lg shadow-[#00D4FF]/30">
+            <Wind className="w-8 h-8 text-white" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Guided Breathing</p>
+            <p className="text-[#AEAEB2] text-sm">Calm your mind with breathing exercises</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#00D4FF]" />
         </div>
-        <p className="text-[#AEAEB2] text-sm">Your personal companion who knows your journey</p>
-      </div>
-      <ChevronRight className="w-5 h-5 text-[#AF52DE]" />
-    </div>
-  </motion.button>
+      </motion.button>
 
   {/* Main Actions */}
   <div className="space-y-4">
@@ -228,17 +236,7 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
         </motion.button>
       </div>
 
-      {/* Breathing Exercise Quick Access */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
-      >
-        <h3 className="text-white font-bold mb-4">Quick Calm</h3>
-        <BreathingExercise />
       </motion.div>
-    </motion.div>
   );
 }
 
@@ -614,70 +612,8 @@ function BurnoutView() {
       {/* Breathing Exercise */}
       <div className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5 mt-8">
         <h3 className="text-white font-bold mb-4">Take a breath</h3>
-        <BreathingExercise />
+        <GuidedBreathing />
       </div>
     </motion.div>
-  );
-}
-
-function BreathingExercise() {
-  const [isActive, setIsActive] = useState(false);
-  const [phase, setPhase] = useState<"inhale" | "hold" | "exhale">("inhale");
-  
-  const startBreathing = () => {
-    setIsActive(true);
-    setPhase("inhale");
-    
-    // Simple 4-4-4 breathing cycle
-    const cycle = () => {
-      setPhase("inhale");
-      setTimeout(() => setPhase("hold"), 4000);
-      setTimeout(() => setPhase("exhale"), 8000);
-    };
-    
-    cycle();
-    const interval = setInterval(cycle, 12000);
-    
-    setTimeout(() => {
-      clearInterval(interval);
-      setIsActive(false);
-    }, 36000); // 3 cycles
-  };
-
-  return (
-    <div className="flex flex-col items-center">
-      <motion.div
-        animate={isActive ? {
-          scale: phase === "inhale" ? 1.3 : phase === "hold" ? 1.3 : 1,
-        } : {}}
-        transition={{ duration: 4, ease: "easeInOut" }}
-        className="w-24 h-24 rounded-full bg-gradient-to-br from-[#00D4FF]/30 to-[#AF52DE]/30 flex items-center justify-center mb-4"
-      >
-        <motion.div
-          animate={isActive ? {
-            scale: phase === "inhale" ? 1.2 : phase === "hold" ? 1.2 : 0.8,
-          } : {}}
-          transition={{ duration: 4, ease: "easeInOut" }}
-          className="w-16 h-16 rounded-full bg-gradient-to-br from-[#00D4FF] to-[#AF52DE] flex items-center justify-center"
-        >
-          <Wind className="w-8 h-8 text-white" />
-        </motion.div>
-      </motion.div>
-      
-      {isActive ? (
-        <p className="text-white font-medium text-lg">
-          {phase === "inhale" ? "Breathe in..." : phase === "hold" ? "Hold..." : "Breathe out..."}
-        </p>
-      ) : (
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={startBreathing}
-          className="px-6 py-3 rounded-xl bg-[#00D4FF]/20 text-[#00D4FF] font-semibold"
-        >
-          Start Breathing Exercise
-        </motion.button>
-      )}
-    </div>
   );
 }
