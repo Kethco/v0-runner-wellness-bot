@@ -1,30 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Navbar } from "@/components/dashboard/navbar";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,245 +24,187 @@ import {
   MoreVertical,
   MessageSquare,
   TrendingUp,
-  Moon,
-  Zap,
-  Activity,
   Search,
-  Filter,
-  Send,
-  Settings,
+  Flame,
+  Copy,
+  Check,
+  Trash2,
+  X,
+  Activity,
 } from "lucide-react";
-import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
+import { BottomNav } from "@/components/bottom-nav";
+import { toast } from "@/hooks/use-toast";
 
-// Mock athlete data
-interface Athlete {
+const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(res => res.json());
+
+type Athlete = {
   id: string;
   name: string;
+  email: string;
   phone: string;
-  lastCheckin: string | null;
-  streak: number;
-  todayCheckin: {
-    sleep: string;
+  latestCheckin: {
+    date: string;
+    sleep_rating: number;
     energy: number;
-    soreness: string;
-    readiness: string;
+    soreness: number;
+    readiness: number;
   } | null;
-  status: "checked-in" | "pending" | "at-risk";
-  goalRace?: string;
-}
+  weeklyMiles: number;
+  streak: number;
+  riskLevel: "low" | "medium" | "high";
+  connectedAt: string;
+};
 
-const mockAthletes: Athlete[] = [
-  {
-    id: "1",
-    name: "Sarah Chen",
-    phone: "+1234567891",
-    lastCheckin: "2026-05-01T07:30:00Z",
-    streak: 14,
-    todayCheckin: { sleep: "Great", energy: 5, soreness: "None", readiness: "Yes" },
-    status: "checked-in",
-    goalRace: "Half Marathon - Sep 20",
-  },
-  {
-    id: "2",
-    name: "Marcus Johnson",
-    phone: "+1234567892",
-    lastCheckin: "2026-05-01T08:15:00Z",
-    streak: 7,
-    todayCheckin: { sleep: "OK", energy: 3, soreness: "Moderate", readiness: "Maybe" },
-    status: "at-risk",
-    goalRace: "10K - Jun 15",
-  },
-  {
-    id: "3",
-    name: "Emily Rodriguez",
-    phone: "+1234567893",
-    lastCheckin: "2026-04-30T07:45:00Z",
-    streak: 21,
-    todayCheckin: null,
-    status: "pending",
-    goalRace: "Marathon - Oct 12",
-  },
-  {
-    id: "4",
-    name: "James Kim",
-    phone: "+1234567894",
-    lastCheckin: "2026-05-01T06:50:00Z",
-    streak: 5,
-    todayCheckin: { sleep: "Good", energy: 4, soreness: "Mild", readiness: "Yes" },
-    status: "checked-in",
-  },
-  {
-    id: "5",
-    name: "Olivia Thompson",
-    phone: "+1234567895",
-    lastCheckin: "2026-05-01T09:00:00Z",
-    streak: 3,
-    todayCheckin: { sleep: "Poor", energy: 2, soreness: "High", readiness: "No" },
-    status: "at-risk",
-    goalRace: "5K - May 10",
-  },
-];
-
-function getStatusBadge(status: Athlete["status"]) {
-  switch (status) {
-    case "checked-in":
-      return <Badge variant="default" className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30">Checked In</Badge>;
-    case "pending":
-      return <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-500 border-yellow-500/30">Pending</Badge>;
-    case "at-risk":
-      return <Badge variant="destructive" className="bg-red-500/20 text-red-500 border-red-500/30">At Risk</Badge>;
-  }
-}
-
-function getSorenessBadge(soreness: string) {
-  const colors: Record<string, string> = {
-    "None": "bg-emerald-500/20 text-emerald-500",
-    "Mild": "bg-yellow-500/20 text-yellow-500",
-    "Moderate": "bg-orange-500/20 text-orange-500",
-    "High": "bg-red-500/20 text-red-500",
-  };
-  return <Badge className={colors[soreness] || ""}>{soreness}</Badge>;
-}
+type Invite = {
+  id: string;
+  athlete_name: string;
+  athlete_email: string | null;
+  invite_code: string;
+  inviteUrl: string;
+  status: "pending" | "accepted" | "expired";
+  created_at: string;
+};
 
 export default function CoachDashboard() {
-  const [athletes, setAthletes] = useState<Athlete[]>(mockAthletes);
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [invitePhone, setInvitePhone] = useState("");
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const checkedInCount = athletes.filter((a) => a.status === "checked-in").length;
-  const atRiskCount = athletes.filter((a) => a.status === "at-risk").length;
-  const pendingCount = athletes.filter((a) => a.status === "pending").length;
-
-  const filteredAthletes = athletes.filter((a) =>
-    a.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const { data: athletesData, mutate: mutateAthletes } = useSWR(
+    user ? "/api/coach/athletes" : null, 
+    fetcher
+  );
+  const { data: invitesData, mutate: mutateInvites } = useSWR(
+    user ? "/api/coach/invites" : null, 
+    fetcher
   );
 
-  const formatLastCheckin = (dateStr: string | null) => {
-    if (!dateStr) return "Never";
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffHours < 1) return "Just now";
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const athletes: Athlete[] = athletesData?.athletes || [];
+  const invites: Invite[] = invitesData?.invites || [];
+  const pendingInvites = invites.filter(i => i.status === "pending");
+
+  // Redirect non-authenticated users
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [authLoading, user, router]);
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#FF4500] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Filter athletes
+  const filteredAthletes = athletes.filter(athlete =>
+    athlete.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Stats
+  const checkedInToday = athletes.filter(a => {
+    if (!a.latestCheckin) return false;
+    const today = new Date().toISOString().split("T")[0];
+    return a.latestCheckin.date === today;
+  }).length;
+  const atRiskCount = athletes.filter(a => a.riskLevel === "high").length;
+  const pendingCount = athletes.filter(a => !a.latestCheckin || a.latestCheckin.date !== new Date().toISOString().split("T")[0]).length;
+
+  const copyInviteLink = (invite: Invite) => {
+    navigator.clipboard.writeText(invite.inviteUrl);
+    setCopiedId(invite.id);
+    toast({ title: "Link copied!", description: `Invite link for ${invite.athlete_name} copied.` });
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleInvite = () => {
-    // In real app, this would send an invite
-    setInvitePhone("");
-    setIsInviteOpen(false);
+  const deleteInvite = async (inviteId: string) => {
+    await fetch(`/api/coach/invites?inviteId=${inviteId}`, { method: "DELETE", credentials: "include" });
+    mutateInvites();
+    toast({ title: "Invite cancelled" });
+  };
+
+  const removeAthlete = async (athleteId: string, athleteName: string) => {
+    if (!confirm(`Remove ${athleteName} from your roster?`)) return;
+    await fetch(`/api/coach/athletes?athleteId=${athleteId}`, { method: "DELETE", credentials: "include" });
+    mutateAthletes();
+    toast({ title: "Athlete removed" });
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div className="min-h-screen bg-black text-white pb-24">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#3A3A3C]">
+        <div className="px-5 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Coach Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
-              Monitor your team&apos;s wellness and readiness
-            </p>
+            <p className="text-sm font-bold text-[#FF4500]">Coach Dashboard</p>
+            <h1 className="text-xl font-bold text-white">Your Team</h1>
           </div>
-          <div className="flex gap-2">
-            <Link href="/coach/team">
-              <Button variant="outline" className="gap-2">
-                <Settings className="w-4 h-4" />
-                Manage Teams
-              </Button>
-            </Link>
-            <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-                  <UserPlus className="w-4 h-4" />
-                  Invite Athlete
-                </Button>
-              </DialogTrigger>
-            <DialogContent className="bg-card border-border">
-              <DialogHeader>
-                <DialogTitle>Invite an Athlete</DialogTitle>
-                <DialogDescription>
-                  Send an invitation via SMS to add them to your team.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Input
-                    placeholder="Phone number (e.g. +1234567890)"
-                    value={invitePhone}
-                    onChange={(e) => setInvitePhone(e.target.value)}
-                    className="bg-secondary border-border"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleInvite} className="gap-2">
-                  <Send className="w-4 h-4" />
-                  Send Invite
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-            </Dialog>
-          </div>
+          <Button 
+            onClick={() => setShowInviteModal(true)}
+            className="bg-[#FF4500] hover:bg-[#FF6B00] text-white gap-2"
+          >
+            <UserPlus className="w-4 h-4" />
+            Add Athletes
+          </Button>
         </div>
+      </header>
 
+      <main className="px-5 py-6 space-y-6 max-w-4xl mx-auto">
         {/* Stats Overview */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Card className="border-border bg-card">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-[#1C1C1E] border-[#3A3A3C]">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-secondary rounded-lg">
-                  <Users className="w-5 h-5 text-muted-foreground" />
+                <div className="p-2 bg-[#FF4500]/20 rounded-lg">
+                  <Users className="w-5 h-5 text-[#FF4500]" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{athletes.length}</div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide">Total Athletes</div>
+                  <div className="text-2xl font-bold text-white">{athletes.length}</div>
+                  <div className="text-xs text-[#8E8E93] uppercase tracking-wide">Athletes</div>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-border bg-card">
+          <Card className="bg-[#1C1C1E] border-[#3A3A3C]">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500/20 rounded-lg">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                <div className="p-2 bg-[#30D158]/20 rounded-lg">
+                  <CheckCircle2 className="w-5 h-5 text-[#30D158]" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{checkedInCount}</div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide">Checked In Today</div>
+                  <div className="text-2xl font-bold text-white">{checkedInToday}</div>
+                  <div className="text-xs text-[#8E8E93] uppercase tracking-wide">Checked In</div>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-border bg-card">
+          <Card className="bg-[#1C1C1E] border-[#3A3A3C]">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-500/20 rounded-lg">
-                  <Clock className="w-5 h-5 text-yellow-500" />
+                <div className="p-2 bg-[#FF9500]/20 rounded-lg">
+                  <Clock className="w-5 h-5 text-[#FF9500]" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{pendingCount}</div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide">Pending</div>
+                  <div className="text-2xl font-bold text-white">{pendingCount}</div>
+                  <div className="text-xs text-[#8E8E93] uppercase tracking-wide">Pending</div>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="border-border bg-card">
+          <Card className="bg-[#1C1C1E] border-[#3A3A3C]">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-500/20 rounded-lg">
-                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                <div className="p-2 bg-[#FF3B30]/20 rounded-lg">
+                  <AlertTriangle className="w-5 h-5 text-[#FF3B30]" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{atRiskCount}</div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide">At Risk</div>
+                  <div className="text-2xl font-bold text-white">{atRiskCount}</div>
+                  <div className="text-xs text-[#8E8E93] uppercase tracking-wide">At Risk</div>
                 </div>
               </div>
             </CardContent>
@@ -286,212 +212,429 @@ export default function CoachDashboard() {
         </div>
 
         {/* Team Check-in Progress */}
-        <Card className="border-border bg-card mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Today&apos;s Check-in Progress</CardTitle>
-            <CardDescription>
-              {checkedInCount} of {athletes.length} athletes have checked in
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Progress value={(checkedInCount / athletes.length) * 100} className="h-3" />
-          </CardContent>
-        </Card>
-
-        {/* Athletes Table */}
-        <Card className="border-border bg-card">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <CardTitle className="text-lg">Team Roster</CardTitle>
-                <CardDescription>Today&apos;s wellness data from your athletes</CardDescription>
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search athletes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-full sm:w-[250px] bg-secondary border-border"
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border">
-                    <TableHead className="text-muted-foreground">Athlete</TableHead>
-                    <TableHead className="text-muted-foreground">Status</TableHead>
-                    <TableHead className="text-muted-foreground text-center">
-                      <Moon className="w-4 h-4 inline" />
-                    </TableHead>
-                    <TableHead className="text-muted-foreground text-center">
-                      <Zap className="w-4 h-4 inline" />
-                    </TableHead>
-                    <TableHead className="text-muted-foreground text-center">
-                      <Activity className="w-4 h-4 inline" />
-                    </TableHead>
-                    <TableHead className="text-muted-foreground">Ready</TableHead>
-                    <TableHead className="text-muted-foreground">Streak</TableHead>
-                    <TableHead className="text-muted-foreground">Goal</TableHead>
-                    <TableHead className="text-muted-foreground w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAthletes.map((athlete) => (
-                    <TableRow key={athlete.id} className="border-border">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-8 h-8">
-                            <AvatarFallback className="bg-primary/20 text-primary text-xs">
-                              {athlete.name.split(" ").map((n) => n[0]).join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium text-foreground">{athlete.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {formatLastCheckin(athlete.lastCheckin)}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(athlete.status)}</TableCell>
-                      <TableCell className="text-center">
-                        {athlete.todayCheckin ? (
-                          <span className="text-foreground">{athlete.todayCheckin.sleep}</span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {athlete.todayCheckin ? (
-                          <div className="flex justify-center gap-0.5">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <div
-                                key={i}
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  i < athlete.todayCheckin!.energy ? "bg-yellow-400" : "bg-secondary"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {athlete.todayCheckin ? (
-                          getSorenessBadge(athlete.todayCheckin.soreness)
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {athlete.todayCheckin ? (
-                          <span className={
-                            athlete.todayCheckin.readiness === "Yes" 
-                              ? "text-emerald-500" 
-                              : athlete.todayCheckin.readiness === "No"
-                              ? "text-red-500"
-                              : "text-yellow-500"
-                          }>
-                            {athlete.todayCheckin.readiness}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <span className="text-foreground font-medium">{athlete.streak}</span>
-                          <span className="text-xs text-muted-foreground">days</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {athlete.goalRace || "-"}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2">
-                              <TrendingUp className="w-4 h-4" />
-                              View Trends
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
-                              <MessageSquare className="w-4 h-4" />
-                              Send Message
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* At-Risk Alerts */}
-        {atRiskCount > 0 && (
-          <Card className="mt-6 border-red-500/30 bg-red-500/5">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2 text-red-500">
-                <AlertTriangle className="w-5 h-5" />
-                Athletes Needing Attention
-              </CardTitle>
-              <CardDescription>
-                These athletes may need rest or recovery guidance
+        {athletes.length > 0 && (
+          <Card className="bg-[#1C1C1E] border-[#3A3A3C]">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base text-white">Today&apos;s Check-in Progress</CardTitle>
+              <CardDescription className="text-[#8E8E93]">
+                {checkedInToday} of {athletes.length} athletes have checked in
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {athletes
-                  .filter((a) => a.status === "at-risk")
-                  .map((athlete) => (
-                    <div
-                      key={athlete.id}
-                      className="flex items-center justify-between p-3 bg-secondary rounded-lg"
+              <Progress 
+                value={athletes.length > 0 ? (checkedInToday / athletes.length) * 100 : 0} 
+                className="h-3 bg-[#3A3A3C]" 
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pending Invites */}
+        {pendingInvites.length > 0 && (
+          <Card className="bg-[#1C1C1E] border-[#3A3A3C]">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-[#FF4500]" />
+                Pending Invites ({pendingInvites.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {pendingInvites.map((invite) => (
+                <div 
+                  key={invite.id}
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#2C2C2E]"
+                >
+                  <div>
+                    <p className="font-medium text-white">{invite.athlete_name}</p>
+                    <p className="text-xs text-[#8E8E93]">Waiting to join</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyInviteLink(invite)}
+                      className="text-[#8E8E93] hover:text-white"
                     >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          <AvatarFallback className="bg-red-500/20 text-red-500 text-xs">
-                            {athlete.name.split(" ").map((n) => n[0]).join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium text-foreground">{athlete.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {athlete.todayCheckin && (
-                              <>
-                                Energy: {athlete.todayCheckin.energy}/5 | 
-                                Soreness: {athlete.todayCheckin.soreness} | 
-                                Ready: {athlete.todayCheckin.readiness}
-                              </>
-                            )}
-                          </div>
+                      {copiedId === invite.id ? (
+                        <Check className="w-4 h-4 text-[#30D158]" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteInvite(invite.id)}
+                      className="text-[#8E8E93] hover:text-[#FF3B30]"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
+          <Input
+            placeholder="Search athletes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-[#1C1C1E] border-[#3A3A3C] text-white"
+          />
+        </div>
+
+        {/* Athletes List */}
+        <div className="space-y-3">
+          {filteredAthletes.length === 0 && athletes.length === 0 ? (
+            <Card className="bg-[#1C1C1E] border-[#3A3A3C]">
+              <CardContent className="py-12 text-center">
+                <Users className="w-12 h-12 text-[#3A3A3C] mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">No athletes yet</h3>
+                <p className="text-[#8E8E93] mb-4">Add athletes to start tracking their wellness</p>
+                <Button 
+                  onClick={() => setShowInviteModal(true)}
+                  className="bg-[#FF4500] hover:bg-[#FF6B00]"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Athletes
+                </Button>
+              </CardContent>
+            </Card>
+          ) : filteredAthletes.length === 0 ? (
+            <Card className="bg-[#1C1C1E] border-[#3A3A3C]">
+              <CardContent className="py-8 text-center">
+                <p className="text-[#8E8E93]">No athletes match your search</p>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredAthletes.map((athlete) => (
+              <AthleteCard 
+                key={athlete.id} 
+                athlete={athlete} 
+                onRemove={() => removeAthlete(athlete.id, athlete.name)}
+              />
+            ))
+          )}
+        </div>
+
+        {/* At-Risk Alerts */}
+        {atRiskCount > 0 && (
+          <Card className="border-[#FF3B30]/30 bg-[#FF3B30]/5">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 text-[#FF3B30]">
+                <AlertTriangle className="w-5 h-5" />
+                Athletes Needing Attention
+              </CardTitle>
+              <CardDescription className="text-[#8E8E93]">
+                These athletes may need rest or recovery guidance
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {athletes
+                .filter((a) => a.riskLevel === "high")
+                .map((athlete) => (
+                  <div
+                    key={athlete.id}
+                    className="flex items-center justify-between p-3 bg-[#1C1C1E] rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#FF3B30]/20 flex items-center justify-center">
+                        <span className="text-sm font-bold text-[#FF3B30]">
+                          {athlete.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-medium text-white">{athlete.name}</div>
+                        <div className="text-xs text-[#8E8E93]">
+                          {athlete.latestCheckin && (
+                            <>
+                              Sleep: {athlete.latestCheckin.sleep_rating}/5 | 
+                              Energy: {athlete.latestCheckin.energy}/5 | 
+                              Soreness: {athlete.latestCheckin.soreness}/5
+                            </>
+                          )}
                         </div>
                       </div>
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <MessageSquare className="w-4 h-4" />
-                        Message
-                      </Button>
                     </div>
-                  ))}
-              </div>
+                    <Button variant="outline" size="sm" className="gap-2 border-[#3A3A3C] text-white">
+                      <MessageSquare className="w-4 h-4" />
+                      Message
+                    </Button>
+                  </div>
+                ))}
             </CardContent>
           </Card>
         )}
       </main>
+
+      {/* Add Athletes Modal */}
+      <AnimatePresence>
+        {showInviteModal && (
+          <BulkInviteModal 
+            onClose={() => setShowInviteModal(false)} 
+            onSuccess={() => {
+              mutateInvites();
+              setShowInviteModal(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      <BottomNav />
     </div>
+  );
+}
+
+function AthleteCard({ athlete, onRemove }: { athlete: Athlete; onRemove: () => void }) {
+  const riskColors = {
+    low: { bg: "bg-[#30D158]/20", text: "text-[#30D158]", label: "Good" },
+    medium: { bg: "bg-[#FF9500]/20", text: "text-[#FF9500]", label: "Monitor" },
+    high: { bg: "bg-[#FF3B30]/20", text: "text-[#FF3B30]", label: "At Risk" },
+  };
+  const risk = riskColors[athlete.riskLevel];
+
+  const today = new Date().toISOString().split("T")[0];
+  const checkedInToday = athlete.latestCheckin?.date === today;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-4"
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-[#2C2C2E] flex items-center justify-center">
+            <span className="text-lg font-bold text-white">
+              {athlete.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+            </span>
+          </div>
+          <div>
+            <h3 className="font-semibold text-white">{athlete.name}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${risk.bg} ${risk.text}`}>
+                {risk.label}
+              </span>
+              {checkedInToday ? (
+                <Badge className="bg-[#30D158]/20 text-[#30D158] border-0 text-xs">Checked In</Badge>
+              ) : (
+                <Badge className="bg-[#FF9500]/20 text-[#FF9500] border-0 text-xs">Pending</Badge>
+              )}
+              <span className="text-xs text-[#8E8E93] flex items-center gap-1">
+                <Flame className="w-3 h-3 text-[#FF9500]" />
+                {athlete.streak}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-[#8E8E93]">
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-[#2C2C2E] border-[#3A3A3C]">
+            <DropdownMenuItem className="text-white">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              View Trends
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-white">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Send Message
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onRemove} className="text-[#FF3B30]">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Remove
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Wellness Metrics */}
+      {athlete.latestCheckin && (
+        <div className="mt-4 grid grid-cols-4 gap-2">
+          <MetricBadge label="Sleep" value={athlete.latestCheckin.sleep_rating} />
+          <MetricBadge label="Energy" value={athlete.latestCheckin.energy} />
+          <MetricBadge label="Soreness" value={athlete.latestCheckin.soreness} inverted />
+          <MetricBadge label="Ready" value={athlete.latestCheckin.readiness} />
+        </div>
+      )}
+
+      <div className="mt-3 flex items-center justify-between text-xs text-[#8E8E93]">
+        <span>{athlete.weeklyMiles.toFixed(1)} mi this week</span>
+        <span>Last: {athlete.latestCheckin 
+          ? new Date(athlete.latestCheckin.date).toLocaleDateString() 
+          : "Never"}</span>
+      </div>
+    </motion.div>
+  );
+}
+
+function MetricBadge({ label, value, inverted }: { label: string; value: number; inverted?: boolean }) {
+  const score = inverted ? 6 - value : value;
+  const color = score >= 4 ? "text-[#30D158]" : score >= 3 ? "text-[#FF9500]" : "text-[#FF3B30]";
+  
+  return (
+    <div className="text-center p-2 rounded-lg bg-[#2C2C2E]">
+      <p className={`text-lg font-bold ${color}`}>{value}</p>
+      <p className="text-xs text-[#8E8E93]">{label}</p>
+    </div>
+  );
+}
+
+function BulkInviteModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const [athleteNames, setAthleteNames] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [createdInvites, setCreatedInvites] = useState<Invite[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    const names = athleteNames
+      .split("\n")
+      .map(n => n.trim())
+      .filter(n => n.length > 0);
+
+    if (names.length === 0) {
+      toast({ title: "Please enter at least one athlete name" });
+      return;
+    }
+
+    setIsLoading(true);
+    const response = await fetch("/api/coach/invites", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ athletes: names.map(name => ({ name })) }),
+    });
+
+    const data = await response.json();
+    setIsLoading(false);
+
+    if (data.error) {
+      toast({ title: "Error", description: data.error, variant: "destructive" });
+    } else {
+      setCreatedInvites(data.invites);
+      toast({ title: "Invites created!", description: `${data.invites.length} invite links generated.` });
+    }
+  };
+
+  const copyLink = (invite: Invite) => {
+    navigator.clipboard.writeText(invite.inviteUrl);
+    setCopiedId(invite.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const copyAllLinks = () => {
+    const allLinks = createdInvites
+      .map(i => `${i.athlete_name}: ${i.inviteUrl}`)
+      .join("\n");
+    navigator.clipboard.writeText(allLinks);
+    toast({ title: "All links copied!" });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="w-full max-w-lg bg-[#1C1C1E] rounded-2xl p-6 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-white">Add Athletes</h2>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="w-5 h-5 text-[#8E8E93]" />
+          </Button>
+        </div>
+
+        {createdInvites.length === 0 ? (
+          <>
+            <p className="text-[#8E8E93] mb-4">
+              Enter athlete names below (one per line). Each will get a unique invite link to join your team.
+            </p>
+            <textarea
+              value={athleteNames}
+              onChange={(e) => setAthleteNames(e.target.value)}
+              placeholder="John Smith&#10;Sarah Johnson&#10;Mike Williams&#10;Emily Davis"
+              className="w-full h-48 p-4 rounded-xl bg-[#2C2C2E] border border-[#3A3A3C] text-white placeholder:text-[#8E8E93] resize-none focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
+            />
+            <p className="text-xs text-[#8E8E93] mt-2">
+              {athleteNames.split("\n").filter(n => n.trim()).length} athletes entered
+            </p>
+            <div className="flex gap-3 mt-6">
+              <Button variant="outline" onClick={onClose} className="flex-1 border-[#3A3A3C] text-white">
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isLoading}
+                className="flex-1 bg-[#FF4500] hover:bg-[#FF6B00]"
+              >
+                {isLoading ? "Creating..." : "Generate Invite Links"}
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-[#8E8E93] mb-4">
+              Send these links to your athletes. Each link is unique and can only be used once.
+            </p>
+            <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
+              {createdInvites.map((invite) => (
+                <div 
+                  key={invite.id}
+                  className="flex items-center justify-between p-3 rounded-xl bg-[#2C2C2E]"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white">{invite.athlete_name}</p>
+                    <p className="text-xs text-[#8E8E93] truncate">{invite.inviteUrl}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyLink(invite)}
+                    className="ml-2 text-[#8E8E93] hover:text-white"
+                  >
+                    {copiedId === invite.id ? (
+                      <Check className="w-4 h-4 text-[#30D158]" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline" 
+                onClick={copyAllLinks}
+                className="flex-1 border-[#3A3A3C] text-white"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copy All Links
+              </Button>
+              <Button 
+                onClick={onSuccess}
+                className="flex-1 bg-[#FF4500] hover:bg-[#FF6B00]"
+              >
+                Done
+              </Button>
+            </div>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
   );
 }

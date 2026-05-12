@@ -154,6 +154,7 @@ export default function SignUpPage() {
             last_name: lastName,
             phone: formData.phone,
             user_type: userType,
+            role: userType, // 'athlete' or 'coach'
             plan: selectedPlan,
           },
         },
