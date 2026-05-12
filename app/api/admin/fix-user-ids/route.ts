@@ -91,6 +91,88 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  // Make a user an admin by email
+  if (action === "make-admin") {
+    const email = searchParams.get("email");
+    
+    // First ensure is_admin column exists
+    await supabase.rpc('exec_sql', {
+      sql: `ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;`
+    }).catch(() => {}); // Ignore if RPC doesn't exist
+    
+    // If no email provided, make the current logged-in user admin
+    if (!email) {
+      const { createClient } = await import("@/lib/supabase/server");
+      const supabaseAuth = await createClient();
+      const { data: { user } } = await supabaseAuth.auth.getUser();
+      
+      if (!user) {
+        return NextResponse.json({ error: "No user logged in and no email provided" }, { status: 400 });
+      }
+      
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_admin: true })
+        .eq("id", user.id);
+      
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+      
+      return NextResponse.json({ 
+        success: true, 
+        message: `Made ${user.email} an admin`,
+        adminLoginUrl: "/admin/login"
+      });
+    }
+    
+    // Find user by email and make them admin
+    const { data: users } = await supabase
+      .from("profiles")
+      .select("id, email")
+      .eq("email", email)
+      .limit(1);
+    
+    if (!users || users.length === 0) {
+      // Try to find in auth.users
+      const { data: authUser } = await supabase.auth.admin.getUserByEmail(email);
+      
+      if (authUser?.user) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ is_admin: true })
+          .eq("id", authUser.user.id);
+        
+        if (error) {
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+        
+        return NextResponse.json({ 
+          success: true, 
+          message: `Made ${email} an admin`,
+          adminLoginUrl: "/admin/login"
+        });
+      }
+      
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+    
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_admin: true })
+      .eq("id", users[0].id);
+    
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: `Made ${email} an admin`,
+      adminLoginUrl: "/admin/login"
+    });
+  }
+
   // Add weekly_goal column to profiles table
   if (action === "add-weekly-goal-column") {
     // Check if column exists first
