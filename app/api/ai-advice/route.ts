@@ -10,22 +10,36 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get today's date
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Get today's date in user's local timezone (use date string for comparison)
+  const todayStr = new Date().toISOString().split("T")[0];
 
-  // Fetch the latest AI advice for today
+  // Fetch the latest AI advice for today (check both created_at date and join with checkin)
   const { data: advice, error } = await supabase
     .from("ai_advice")
-    .select("*")
+    .select("*, checkins!inner(date)")
     .eq("user_id", user.id)
-    .gte("created_at", today.toISOString())
+    .eq("checkins.date", todayStr)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
+  
+  // If no advice found with join, try fetching by created_at date only
+  let finalAdvice = advice;
+  if (!advice) {
+    const { data: adviceByDate } = await supabase
+      .from("ai_advice")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("created_at", todayStr + "T00:00:00")
+      .lte("created_at", todayStr + "T23:59:59")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    finalAdvice = adviceByDate;
+  }
 
   if (error && error.code !== "PGRST116") {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[v0] AI advice fetch error:", error);
   }
 
   // Also check if user has checked in today
@@ -33,12 +47,12 @@ export async function GET() {
     .from("checkins")
     .select("id, sleep_rating, energy, soreness, readiness")
     .eq("user_id", user.id)
-    .eq("date", today.toISOString().split("T")[0])
-    .single();
+    .eq("date", todayStr)
+    .maybeSingle();
 
   return NextResponse.json({ 
-    advice: advice?.advice || null,
-    source: advice?.source || null,
+    advice: finalAdvice?.advice || null,
+    source: finalAdvice?.source || null,
     hasCheckedInToday: !!todayCheckin,
     todayCheckin: todayCheckin || null,
   });

@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { BottomNav } from "@/components/bottom-nav";
 import { celebrateMilestone, checkMilestone } from "@/lib/celebrations";
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
+import { toast } from "@/hooks/use-toast";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -262,7 +263,14 @@ return (
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               hapticLight();
-              if (!hasCheckedInToday) setShowCheckinModal(true);
+              if (hasCheckedInToday) {
+                toast({
+                  title: "Already checked in!",
+                  description: "You've already completed your wellness check-in today. Come back tomorrow!",
+                });
+              } else {
+                setShowCheckinModal(true);
+              }
             }}
             className={`w-full flex items-center gap-4 p-5 rounded-2xl shadow-xl transition-all ${
               hasCheckedInToday 
