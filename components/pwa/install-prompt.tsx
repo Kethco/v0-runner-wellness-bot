@@ -49,7 +49,7 @@ export function InstallPrompt() {
                 <Share className="w-4 h-4 text-primary" />
               </div>
               <p className="text-sm">
-                Tap <Share className="w-4 h-4 inline mx-1 text-primary" /> then <span className="font-medium">&quot;Add to Home Screen&quot;</span>
+                <span className="font-medium">Open in Safari</span> + tap <Share className="w-4 h-4 inline mx-1 text-primary" /> <span className="font-medium">Share on Homepage</span>
               </p>
             </>
           ) : (
