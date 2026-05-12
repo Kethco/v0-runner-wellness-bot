@@ -39,9 +39,23 @@ export default function Dashboard() {
   const { data: profileData, mutate: mutateProfile } = useSWR("/api/profile", fetcher);
   const { data: aiAdvice } = useSWR("/api/ai-advice", fetcher);
   
-  // Use local timezone for today's date
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  // Use state for date values to avoid hydration mismatch
+  const [todayStr, setTodayStr] = useState("2026-01-01");
+  const [last7Days, setLast7Days] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const today = new Date();
+    const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    setTodayStr(todayFormatted);
+    
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - i));
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    });
+    setLast7Days(days);
+  }, []);
+  
   const runs = runsData?.runs || [];
   const checkins = checkinsData?.checkins || [];
   const hasCheckedInToday = checkins.some((c: { date: string }) => c.date === todayStr);
@@ -78,13 +92,7 @@ export default function Dashboard() {
   
   
 
-  // Chart data for last 7 days using local timezone
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - (6 - i));
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  });
-
+// Chart data for last 7 days
   const chartData = last7Days.map(dateStr => {
     const dayRuns = runs.filter((r: { date: string }) => r.date === dateStr);
     const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);

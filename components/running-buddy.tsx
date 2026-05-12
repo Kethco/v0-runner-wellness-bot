@@ -51,10 +51,17 @@ export function RunningBuddy({ userName, onClose, isFullPage = false }: RunningB
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("[v0] handleSubmit called, input:", input, "isLoading:", isLoading);
     if (!input.trim() || isLoading) return;
+    console.log("[v0] Sending message:", input);
     sendMessage({ text: input });
     setInput("");
   };
+  
+  // Debug logging
+  useEffect(() => {
+    console.log("[v0] Running Buddy - messages:", messages.length, "status:", status, "error:", error);
+  }, [messages, status, error]);
 
   const quickPrompts = [
     "How am I doing?",
