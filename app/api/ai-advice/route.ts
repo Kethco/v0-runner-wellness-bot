@@ -13,30 +13,16 @@ export async function GET() {
   // Get today's date in user's local timezone (use date string for comparison)
   const todayStr = new Date().toISOString().split("T")[0];
 
-  // Fetch the latest AI advice for today (check both created_at date and join with checkin)
+  // Fetch the latest AI advice for today by created_at date range
   const { data: advice, error } = await supabase
     .from("ai_advice")
-    .select("*, checkins!inner(date)")
+    .select("*")
     .eq("user_id", user.id)
-    .eq("checkins.date", todayStr)
+    .gte("created_at", todayStr + "T00:00:00.000Z")
+    .lte("created_at", todayStr + "T23:59:59.999Z")
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  
-  // If no advice found with join, try fetching by created_at date only
-  let finalAdvice = advice;
-  if (!advice) {
-    const { data: adviceByDate } = await supabase
-      .from("ai_advice")
-      .select("*")
-      .eq("user_id", user.id)
-      .gte("created_at", todayStr + "T00:00:00")
-      .lte("created_at", todayStr + "T23:59:59")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    finalAdvice = adviceByDate;
-  }
 
   if (error && error.code !== "PGRST116") {
     console.error("[v0] AI advice fetch error:", error);
@@ -51,8 +37,8 @@ export async function GET() {
     .maybeSingle();
 
   return NextResponse.json({ 
-    advice: finalAdvice?.advice || null,
-    source: finalAdvice?.source || null,
+    advice: advice?.advice || null,
+    source: advice?.source || null,
     hasCheckedInToday: !!todayCheckin,
     todayCheckin: todayCheckin || null,
   });

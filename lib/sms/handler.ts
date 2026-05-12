@@ -204,8 +204,8 @@ async function handleCheckinStep(
   const nextStep = steps[currentStep as keyof typeof steps]?.nextStep;
 
   if (nextStep === "complete") {
-    // Save check-in to database
-    await saveCheckin(supabase, userId, sessionData);
+    // Save check-in to database and get the ID
+    const checkinId = await saveCheckin(supabase, userId, sessionData);
     
     // Clear session
     await supabase.from("sms_sessions").delete().eq("phone", session.phone);
@@ -271,9 +271,10 @@ async function handleCheckinStep(
       
       aiAdvice = `\n\nAI Coach: ${advice}`;
       
-      // Save AI advice to database so app can display it
+      // Save AI advice to database so app can display it (link to checkin_id)
       await supabase.from("ai_advice").insert({
         user_id: userId,
+        checkin_id: checkinId,
         advice: advice,
         source: "sms",
       });
@@ -351,7 +352,7 @@ async function saveCheckin(
   supabase: ReturnType<typeof createServiceClient>,
   userId: string,
   sessionData: CheckinSession
-) {
+): Promise<string | null> {
   const checkinData = {
     user_id: userId,
     date: new Date().toISOString().split("T")[0],
@@ -364,7 +365,8 @@ async function saveCheckin(
     is_afternoon_update: sessionData.isAfternoonUpdate || false,
   };
 
-  await supabase.from("checkins").insert(checkinData);
+  const { data } = await supabase.from("checkins").insert(checkinData).select("id").single();
+  return data?.id || null;
 }
 
 async function getTrends(
