@@ -26,10 +26,24 @@ const fetcher = async (url: string) => {
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  
+  // ALL HOOKS MUST BE AT THE TOP - before any conditional returns
   const [showCheckinModal, setShowCheckinModal] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [newGoalValue, setNewGoalValue] = useState("");
   const [localGoal, setLocalGoal] = useState<number | null>(null);
+  const [todayStr, setTodayStr] = useState("2026-01-01");
+  const [last7Days, setLast7Days] = useState<string[]>([]);
+  const [greeting, setGreeting] = useState({ text: "Welcome", gradient: "from-[#FF6B00] via-[#FF4500] to-[#FF2D00]" });
+  
+  // Data fetching hooks
+  const { data: checkinsData, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher);
+  const { data: runsData, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher);
+  const { data: profileData, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher);
+  const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher);
+  
+  // Ref for milestone tracking
+  const prevProgressRef = useRef<number>(0);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -38,31 +52,7 @@ export default function Dashboard() {
     }
   }, [authLoading, user, router]);
   
-  // Show nothing while checking auth or redirecting
-  if (authLoading || !user) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#FF4500] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-  
-  // Check if on trial (to adjust for fixed banner)
-  const plan = user?.user_metadata?.plan;
-  const isOnTrial = plan === "free_trial" || plan === "coach_trial";
-  const createdAt = user?.created_at ? new Date(user.created_at) : null;
-  const trialDaysLeft = createdAt ? Math.ceil((new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 7;
-  const showTrialBanner = isOnTrial && trialDaysLeft <= 4 && trialDaysLeft > 0;
-  
-  const { data: checkinsData, mutate: mutateCheckins } = useSWR("/api/checkins?limit=7", fetcher);
-  const { data: runsData, mutate: mutateRuns } = useSWR("/api/runs?days=7", fetcher);
-  const { data: profileData, mutate: mutateProfile } = useSWR("/api/profile", fetcher);
-  const { data: aiAdvice } = useSWR("/api/ai-advice", fetcher);
-  
-  // Use state for date values to avoid hydration mismatch
-  const [todayStr, setTodayStr] = useState("2026-01-01");
-  const [last7Days, setLast7Days] = useState<string[]>([]);
-  
+  // Set date values on client
   useEffect(() => {
     const today = new Date();
     const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -74,24 +64,29 @@ export default function Dashboard() {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     });
     setLast7Days(days);
+    setGreeting(getGreeting());
   }, []);
   
+  // Derived state (safe to compute after hooks)
   const runs = runsData?.runs || [];
   const checkins = checkinsData?.checkins || [];
+  const profile = profileData?.profile;
   const hasCheckedInToday = checkins.some((c: { date: string }) => c.date === todayStr);
   const todayCheckin = checkins.find((c: { date: string }) => c.date === todayStr);
-  const profile = profileData?.profile;
-  
   const weeklyMiles = runs.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
   const weeklyGoal = localGoal || profile?.weekly_goal || 25;
   const progressPercent = Math.min((weeklyMiles / weeklyGoal) * 100, 100);
   const currentStreak = profile?.current_streak || checkins.length;
   
-  // Track previous progress for milestone detection
-  const prevProgressRef = useRef<number>(0);
+  // Check if on trial
+  const plan = user?.user_metadata?.plan;
+  const isOnTrial = plan === "free_trial" || plan === "coach_trial";
+  const createdAt = user?.created_at ? new Date(user.created_at) : null;
+  const trialDaysLeft = createdAt ? Math.ceil((new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 7;
+  const showTrialBanner = isOnTrial && trialDaysLeft <= 4 && trialDaysLeft > 0;
   
+  // Milestone detection effect
   useEffect(() => {
-    // Check if we crossed a milestone (only after initial load)
     if (prevProgressRef.current > 0 || progressPercent === 0) {
       const milestone = checkMilestone(prevProgressRef.current, progressPercent);
       if (milestone) {
@@ -100,19 +95,19 @@ export default function Dashboard() {
     }
     prevProgressRef.current = progressPercent;
   }, [progressPercent]);
-
+  
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   
-  // Use state for greeting to avoid hydration mismatch (server/client time difference)
-  const [greeting, setGreeting] = useState({ text: "Welcome", gradient: "from-[#FF6B00] via-[#FF4500] to-[#FF2D00]" });
-  
-  useEffect(() => {
-    setGreeting(getGreeting());
-  }, []);
-  
-  
+  // Show loading state while checking auth or redirecting
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#FF4500] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-// Chart data for last 7 days
+  // Chart data for last 7 days
   const chartData = last7Days.map(dateStr => {
     const dayRuns = runs.filter((r: { date: string }) => r.date === dateStr);
     const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
