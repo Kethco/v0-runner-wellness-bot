@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { celebrateCheckin } from "@/lib/celebrations";
 
 interface CheckInModalProps {
   isOpen?: boolean;
@@ -125,8 +126,6 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange }: CheckInMod
         notes: notes || null,
       };
 
-      console.log("[v0] Submitting check-in:", checkinData);
-
       const response = await fetch("/api/checkins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -134,10 +133,8 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange }: CheckInMod
       });
 
       const data = await response.json();
-      console.log("[v0] Check-in response:", response.status, data);
 
       if (!response.ok) {
-        console.error("[v0] Check-in failed:", data);
         alert(`Check-in failed: ${data.error || "Unknown error"}`);
         setIsSubmitting(false);
         return;
@@ -146,6 +143,9 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange }: CheckInMod
       const receivedAdvice = data.aiAdvice || null;
       setAiAdvice(receivedAdvice);
       setIsComplete(true);
+      
+      // Celebrate the check-in
+      celebrateCheckin();
       
       setTimeout(() => {
         onOpenChange(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Activity, Flame, Play, Target, Brain, User, TrendingUp, Moon, Battery, Heart, Gauge, ChevronRight, Zap, Sparkles, Edit2, Check, X } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
@@ -11,6 +11,7 @@ import { LogRunModal } from "@/components/dashboard/log-run-modal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BottomNav } from "@/components/bottom-nav";
+import { celebrateMilestone, checkMilestone } from "@/lib/celebrations";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -50,6 +51,20 @@ export default function Dashboard() {
   const weeklyGoal = localGoal || profile?.weekly_goal || 25;
   const progressPercent = Math.min((weeklyMiles / weeklyGoal) * 100, 100);
   const currentStreak = profile?.current_streak || checkins.length;
+  
+  // Track previous progress for milestone detection
+  const prevProgressRef = useRef<number>(0);
+  
+  useEffect(() => {
+    // Check if we crossed a milestone (only after initial load)
+    if (prevProgressRef.current > 0 || progressPercent === 0) {
+      const milestone = checkMilestone(prevProgressRef.current, progressPercent);
+      if (milestone) {
+        setTimeout(() => celebrateMilestone(milestone), 500);
+      }
+    }
+    prevProgressRef.current = progressPercent;
+  }, [progressPercent]);
 
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   const greeting = getGreeting();

@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { celebrateRun } from "@/lib/celebrations";
 
 interface LogRunModalProps {
   onRunLogged?: () => void;
@@ -71,6 +72,10 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
           notes: "",
           date: new Date().toISOString().split("T")[0],
         });
+        
+        // Celebrate the logged run
+        setTimeout(() => celebrateRun(), 300);
+        
         onRunLogged?.();
       } else {
         const errorData = await response.json();

@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/auth-context'
 import { InstallPrompt } from '@/components/pwa/install-prompt'
 import { UpdateBanner } from '@/components/update-banner'
 import { TrialBanner } from '@/components/dashboard/trial-banner'
+import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
 const inter = Inter({ 
@@ -52,6 +53,7 @@ export default function RootLayout({
           <TrialBanner />
           {children}
           <InstallPrompt />
+          <Toaster />
         </AuthProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
