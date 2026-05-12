@@ -147,16 +147,24 @@ Keep your responses SHORT and conversational. This is a text chat, not a coachin
 
   // Using claude-3-5-haiku for cost efficiency (~10x cheaper than Sonnet)
   // Still great for conversational AI, just not as capable for complex reasoning
-  const result = streamText({
-    model: "anthropic/claude-3-5-haiku",
-    system: systemPrompt,
-    messages: await convertToModelMessages(messages),
-    maxOutputTokens: 300, // Keep responses concise to save tokens
-    abortSignal: req.signal,
-  });
+  try {
+    const result = streamText({
+      model: "anthropic/claude-3-5-sonnet",
+      system: systemPrompt,
+      messages: await convertToModelMessages(messages),
+      maxOutputTokens: 300, // Keep responses concise to save tokens
+      abortSignal: req.signal,
+    });
 
-  return result.toUIMessageStreamResponse({
-    originalMessages: messages,
-    consumeSseStream: consumeStream,
-  });
+    return result.toUIMessageStreamResponse({
+      originalMessages: messages,
+      consumeSseStream: consumeStream,
+    });
+  } catch (error) {
+    console.error("[v0] Buddy API error:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to generate response. Please try again." }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
 }
