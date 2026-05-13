@@ -2,6 +2,14 @@
   "crons": [
     {
       "path": "/api/cron/daily-reminder",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/daily-reminder",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/daily-reminder",
       "schedule": "0 14 * * *"
     },
     {

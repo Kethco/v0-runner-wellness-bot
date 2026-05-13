@@ -91,6 +91,80 @@ async function ensureDatabaseReady(): Promise<boolean> {
       CREATE INDEX IF NOT EXISTS idx_coach_athletes_coach ON coach_athletes(coach_id);
       CREATE INDEX IF NOT EXISTS idx_coach_athletes_athlete ON coach_athletes(athlete_id);
     `);
+    
+    // Step 3b: Create sms_sessions table for SMS check-in flow
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS sms_sessions (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        phone TEXT UNIQUE NOT NULL,
+        user_id UUID,
+        current_step TEXT,
+        session_data JSONB DEFAULT '{}',
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_sms_sessions_phone ON sms_sessions(phone);
+    `);
+    
+    // Step 3c: Create streaks table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS streaks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID UNIQUE NOT NULL,
+        current_streak INTEGER DEFAULT 0,
+        longest_streak INTEGER DEFAULT 0,
+        last_checkin_date DATE,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_streaks_user ON streaks(user_id);
+    `);
+    
+    // Step 3d: Create ai_advice table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS ai_advice (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL,
+        checkin_id UUID,
+        advice TEXT NOT NULL,
+        source TEXT DEFAULT 'app',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_ai_advice_user ON ai_advice(user_id);
+    `);
+    
+    // Step 3e: Create checkins table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS checkins (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL,
+        date DATE NOT NULL DEFAULT CURRENT_DATE,
+        sleep_rating INTEGER,
+        feeling TEXT,
+        energy INTEGER,
+        soreness INTEGER,
+        readiness INTEGER,
+        notes TEXT,
+        is_afternoon_update BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_checkins_user_date ON checkins(user_id, date);
+    `);
+    
+    // Step 3f: Create runs table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS runs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL,
+        date DATE NOT NULL DEFAULT CURRENT_DATE,
+        miles DECIMAL(5,2) NOT NULL,
+        pace TEXT,
+        duration_minutes INTEGER,
+        feeling TEXT,
+        source TEXT DEFAULT 'app',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_runs_user_date ON runs(user_id, date);
+    `);
 
     // Step 4: Drop and recreate trigger with a simple, safe function
     await pool.query(`

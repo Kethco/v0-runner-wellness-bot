@@ -80,11 +80,13 @@ export default function CoachDashboard() {
 
   const { data: athletesData, mutate: mutateAthletes } = useSWR(
     user ? "/api/coach/athletes" : null, 
-    fetcher
+    fetcher,
+    { refreshInterval: 30000 } // Auto-refresh every 30 seconds to catch new check-ins
   );
   const { data: invitesData, mutate: mutateInvites } = useSWR(
     user ? "/api/coach/invites" : null, 
-    fetcher
+    fetcher,
+    { refreshInterval: 60000 } // Refresh invites every minute
   );
 
   const athletes: Athlete[] = athletesData?.athletes || [];

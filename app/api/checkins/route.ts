@@ -81,6 +81,56 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // Update streak
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  
+  try {
+    // Get current streak
+    const { data: currentStreak } = await supabase
+      .from("streaks")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+    
+    if (currentStreak) {
+      // Check if this continues the streak
+      const lastDate = currentStreak.last_checkin_date;
+      let newStreak = 1;
+      
+      if (lastDate === yesterday) {
+        // Continuing streak
+        newStreak = currentStreak.current_streak + 1;
+      } else if (lastDate === today) {
+        // Already checked in today, keep current streak
+        newStreak = currentStreak.current_streak;
+      }
+      // else: streak broken, start at 1
+      
+      await supabase
+        .from("streaks")
+        .update({
+          current_streak: newStreak,
+          longest_streak: Math.max(newStreak, currentStreak.longest_streak),
+          last_checkin_date: today,
+        })
+        .eq("user_id", user.id);
+    } else {
+      // First check-in, create streak
+      await supabase
+        .from("streaks")
+        .insert({
+          user_id: user.id,
+          current_streak: 1,
+          longest_streak: 1,
+          last_checkin_date: today,
+        });
+    }
+  } catch (streakError) {
+    console.error("Streak update failed:", streakError);
+    // Don't fail the whole check-in if streak update fails
+  }
+
   // Generate AI coaching advice based on check-in
   let aiAdvice = null;
   try {
