@@ -61,7 +61,38 @@ async function ensureDatabaseReady(): Promise<boolean> {
       END $$;
     `);
     
-    // Step 2: Drop and recreate trigger with a simple, safe function
+    // Step 2: Create athlete_invites table if it doesn't exist
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS athlete_invites (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        coach_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+        athlete_name TEXT NOT NULL,
+        athlete_email TEXT,
+        invite_code TEXT UNIQUE NOT NULL,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        accepted_at TIMESTAMPTZ
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_athlete_invites_coach ON athlete_invites(coach_id);
+      CREATE INDEX IF NOT EXISTS idx_athlete_invites_code ON athlete_invites(invite_code);
+    `);
+    
+    // Step 3: Create coach_athletes relationship table if it doesn't exist
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS coach_athletes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        coach_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+        athlete_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+        connected_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(coach_id, athlete_id)
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_coach_athletes_coach ON coach_athletes(coach_id);
+      CREATE INDEX IF NOT EXISTS idx_coach_athletes_athlete ON coach_athletes(athlete_id);
+    `);
+
+    // Step 4: Drop and recreate trigger with a simple, safe function
     await pool.query(`
       DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
       

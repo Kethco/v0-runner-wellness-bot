@@ -31,6 +31,10 @@ import {
   Trash2,
   X,
   Activity,
+  Table,
+  LayoutGrid,
+  Upload,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { BottomNav } from "@/components/bottom-nav";
@@ -72,6 +76,7 @@ export default function CoachDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   const { data: athletesData, mutate: mutateAthletes } = useSWR(
     user ? "/api/coach/athletes" : null, 
@@ -276,15 +281,35 @@ export default function CoachDashboard() {
           </Card>
         )}
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
-          <Input
-            placeholder="Search athletes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-[#1C1C1E] border-[#3A3A3C] text-white"
-          />
+        {/* Search and View Controls */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
+            <Input
+              placeholder="Search athletes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-[#1C1C1E] border-[#3A3A3C] text-white"
+            />
+          </div>
+          <div className="flex items-center bg-[#1C1C1E] rounded-lg border border-[#3A3A3C] p-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("cards")}
+              className={`px-3 ${viewMode === "cards" ? "bg-[#2C2C2E] text-white" : "text-[#8E8E93]"}`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("table")}
+              className={`px-3 ${viewMode === "table" ? "bg-[#2C2C2E] text-white" : "text-[#8E8E93]"}`}
+            >
+              <Table className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Athletes List */}
@@ -310,7 +335,7 @@ export default function CoachDashboard() {
                 <p className="text-[#8E8E93]">No athletes match your search</p>
               </CardContent>
             </Card>
-          ) : (
+          ) : viewMode === "cards" ? (
             filteredAthletes.map((athlete) => (
               <AthleteCard 
                 key={athlete.id} 
@@ -318,6 +343,8 @@ export default function CoachDashboard() {
                 onRemove={() => removeAthlete(athlete.id, athlete.name)}
               />
             ))
+          ) : (
+            <AthleteTable athletes={filteredAthletes} onRemove={removeAthlete} />
           )}
         </div>
 
@@ -487,6 +514,145 @@ function MetricBadge({ label, value, inverted }: { label: string; value: number;
   );
 }
 
+function AthleteTable({ athletes, onRemove }: { athletes: Athlete[]; onRemove: (id: string, name: string) => void }) {
+  const riskColors = {
+    low: { bg: "bg-[#30D158]/20", text: "text-[#30D158]", label: "Good" },
+    medium: { bg: "bg-[#FF9500]/20", text: "text-[#FF9500]", label: "Monitor" },
+    high: { bg: "bg-[#FF3B30]/20", text: "text-[#FF3B30]", label: "At Risk" },
+  };
+  
+  const today = new Date().toISOString().split("T")[0];
+
+  return (
+    <div className="rounded-xl border border-[#3A3A3C] overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-[#1C1C1E]">
+            <tr className="border-b border-[#3A3A3C]">
+              <th className="text-left p-4 font-semibold text-white">Athlete</th>
+              <th className="text-center p-4 font-semibold text-white">Status</th>
+              <th className="text-center p-4 font-semibold text-white">Sleep</th>
+              <th className="text-center p-4 font-semibold text-white">Energy</th>
+              <th className="text-center p-4 font-semibold text-white">Soreness</th>
+              <th className="text-center p-4 font-semibold text-white">Ready</th>
+              <th className="text-center p-4 font-semibold text-white">Miles</th>
+              <th className="text-center p-4 font-semibold text-white">Streak</th>
+              <th className="text-right p-4 font-semibold text-white">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {athletes.map((athlete, index) => {
+              const risk = riskColors[athlete.riskLevel];
+              const checkedInToday = athlete.latestCheckin?.date === today;
+              
+              return (
+                <tr 
+                  key={athlete.id} 
+                  className={`border-b border-[#3A3A3C] ${index % 2 === 0 ? "bg-[#1C1C1E]" : "bg-[#2C2C2E]"}`}
+                >
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#3A3A3C] flex items-center justify-center">
+                        <span className="text-xs font-bold text-white">
+                          {athlete.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{athlete.name}</p>
+                        <p className="text-xs text-[#8E8E93]">{athlete.email || "No email"}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${risk.bg} ${risk.text}`}>
+                      {risk.label}
+                    </span>
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className={`font-semibold ${
+                      athlete.latestCheckin ? (
+                        athlete.latestCheckin.sleep_rating >= 4 ? "text-[#30D158]" :
+                        athlete.latestCheckin.sleep_rating >= 3 ? "text-[#FF9500]" : "text-[#FF3B30]"
+                      ) : "text-[#8E8E93]"
+                    }`}>
+                      {athlete.latestCheckin?.sleep_rating ?? "-"}
+                    </span>
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className={`font-semibold ${
+                      athlete.latestCheckin ? (
+                        athlete.latestCheckin.energy >= 4 ? "text-[#30D158]" :
+                        athlete.latestCheckin.energy >= 3 ? "text-[#FF9500]" : "text-[#FF3B30]"
+                      ) : "text-[#8E8E93]"
+                    }`}>
+                      {athlete.latestCheckin?.energy ?? "-"}
+                    </span>
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className={`font-semibold ${
+                      athlete.latestCheckin ? (
+                        athlete.latestCheckin.soreness <= 2 ? "text-[#30D158]" :
+                        athlete.latestCheckin.soreness <= 3 ? "text-[#FF9500]" : "text-[#FF3B30]"
+                      ) : "text-[#8E8E93]"
+                    }`}>
+                      {athlete.latestCheckin?.soreness ?? "-"}
+                    </span>
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className={`font-semibold ${
+                      athlete.latestCheckin ? (
+                        athlete.latestCheckin.readiness >= 4 ? "text-[#30D158]" :
+                        athlete.latestCheckin.readiness >= 3 ? "text-[#FF9500]" : "text-[#FF3B30]"
+                      ) : "text-[#8E8E93]"
+                    }`}>
+                      {athlete.latestCheckin?.readiness ?? "-"}
+                    </span>
+                  </td>
+                  <td className="p-4 text-center text-white">
+                    {athlete.weeklyMiles.toFixed(1)}
+                  </td>
+                  <td className="p-4 text-center">
+                    <span className="text-white flex items-center justify-center gap-1">
+                      <Flame className="w-3 h-3 text-[#FF9500]" />
+                      {athlete.streak}
+                    </span>
+                  </td>
+                  <td className="p-4 text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-[#8E8E93]">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-[#2C2C2E] border-[#3A3A3C]">
+                        <DropdownMenuItem className="text-white">
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          View Trends
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-white">
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Send Message
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => onRemove(athlete.id, athlete.name)} 
+                          className="text-[#FF3B30]"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function BulkInviteModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [athleteNames, setAthleteNames] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -562,13 +728,69 @@ function BulkInviteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
         {createdInvites.length === 0 ? (
           <>
             <p className="text-[#8E8E93] mb-4">
-              Enter athlete names below (one per line). Each will get a unique invite link to join your team.
+              Enter athlete names below (one per line) or import from a CSV file.
             </p>
+            
+            {/* CSV Import */}
+            <div className="mb-4">
+              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-[#3A3A3C] rounded-xl cursor-pointer hover:bg-[#2C2C2E] transition-colors">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <FileSpreadsheet className="w-8 h-8 text-[#8E8E93] mb-2" />
+                  <p className="text-sm text-[#8E8E93]">
+                    <span className="font-semibold text-[#FF4500]">Click to upload CSV</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-[#8E8E93]">CSV with names in first column</p>
+                </div>
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept=".csv,.txt"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const text = event.target?.result as string;
+                        // Parse CSV - take first column, skip header if it looks like one
+                        const lines = text.split(/\r?\n/).filter(line => line.trim());
+                        const names: string[] = [];
+                        lines.forEach((line, index) => {
+                          const firstCol = line.split(",")[0]?.trim().replace(/^["']|["']$/g, "");
+                          if (firstCol && firstCol.length > 0) {
+                            // Skip if it looks like a header
+                            if (index === 0 && /^(name|athlete|student|player)/i.test(firstCol)) return;
+                            names.push(firstCol);
+                          }
+                        });
+                        setAthleteNames(prev => {
+                          const existing = prev.split("\n").filter(n => n.trim());
+                          const combined = [...existing, ...names];
+                          return combined.join("\n");
+                        });
+                        toast({ title: "CSV imported!", description: `Added ${names.length} athletes.` });
+                      };
+                      reader.readAsText(file);
+                    }
+                    e.target.value = ""; // Reset input
+                  }}
+                />
+              </label>
+            </div>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-[#3A3A3C]" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-[#1C1C1E] px-2 text-[#8E8E93]">or type names</span>
+              </div>
+            </div>
+            
             <textarea
               value={athleteNames}
               onChange={(e) => setAthleteNames(e.target.value)}
               placeholder="John Smith&#10;Sarah Johnson&#10;Mike Williams&#10;Emily Davis"
-              className="w-full h-48 p-4 rounded-xl bg-[#2C2C2E] border border-[#3A3A3C] text-white placeholder:text-[#8E8E93] resize-none focus:outline-none focus:ring-2 focus:ring-[#FF4500]"
+              className="w-full h-36 p-4 rounded-xl bg-[#2C2C2E] border border-[#3A3A3C] text-white placeholder:text-[#8E8E93] resize-none focus:outline-none focus:ring-2 focus:ring-[#FF4500] mt-4"
             />
             <p className="text-xs text-[#8E8E93] mt-2">
               {athleteNames.split("\n").filter(n => n.trim()).length} athletes entered
