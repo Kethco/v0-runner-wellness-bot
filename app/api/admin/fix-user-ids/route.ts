@@ -40,6 +40,63 @@ export async function GET(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // Setup phone verification table
+  if (action === "setup-phone-verification") {
+    try {
+      // Create phone_verifications table
+      const { error } = await supabase.rpc('exec_sql', {
+        sql: `
+          CREATE TABLE IF NOT EXISTS phone_verifications (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            phone TEXT UNIQUE NOT NULL,
+            email TEXT,
+            otp_code TEXT NOT NULL,
+            expires_at TIMESTAMPTZ NOT NULL,
+            verified BOOLEAN DEFAULT FALSE,
+            attempts INTEGER DEFAULT 0,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          );
+          CREATE INDEX IF NOT EXISTS idx_phone_verifications_phone ON phone_verifications(phone);
+        `
+      });
+      
+      if (error) {
+        // Try direct query if RPC doesn't work
+        const { error: directError } = await supabase
+          .from('phone_verifications')
+          .select('id')
+          .limit(1);
+        
+        if (directError && directError.code === '42P01') {
+          return NextResponse.json({ 
+            success: false,
+            message: "Table doesn't exist. Please run the SQL manually in Supabase dashboard.",
+            sql: `CREATE TABLE IF NOT EXISTS phone_verifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone TEXT UNIQUE NOT NULL,
+  email TEXT,
+  otp_code TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  verified BOOLEAN DEFAULT FALSE,
+  attempts INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_phone_verifications_phone ON phone_verifications(phone);`
+          });
+        }
+        
+        return NextResponse.json({ success: true, message: "Table already exists" });
+      }
+      
+      return NextResponse.json({ success: true, message: "Phone verification table created" });
+    } catch (e) {
+      return NextResponse.json({ 
+        error: "Failed to create table",
+        details: String(e)
+      }, { status: 500 });
+    }
+  }
+
   // Fix notification settings for existing users
   if (action === "fix-notifications") {
     const { data, error } = await supabase

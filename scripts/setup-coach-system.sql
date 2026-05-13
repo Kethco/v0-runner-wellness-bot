@@ -149,3 +149,18 @@ CREATE TRIGGER on_auth_user_created
 UPDATE profiles 
 SET notification_morning = TRUE 
 WHERE notification_morning IS NULL AND phone IS NOT NULL;
+
+-- Phone Verification Table for OTP
+CREATE TABLE IF NOT EXISTS phone_verifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone TEXT UNIQUE NOT NULL,
+  email TEXT,
+  otp_code TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  verified BOOLEAN DEFAULT FALSE,
+  attempts INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_phone_verifications_phone ON phone_verifications(phone);

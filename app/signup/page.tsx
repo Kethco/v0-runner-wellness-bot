@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, Mail, Lock, User, Phone, ArrowRight, Check, Users, PersonStanding } from "lucide-react";
+import { Activity, Lock, User, Phone, ArrowRight, Check, Users, PersonStanding, Smartphone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -132,54 +132,123 @@ export default function SignUpPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpError, setOtpError] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
       setIsLoading(true);
-      const supabase = createClient();
+      setOtpError("");
       
-      // Extract first and last name
-      const nameParts = formData.name.trim().split(" ");
-      const firstName = nameParts[0];
-      const lastName = nameParts.slice(1).join(" ");
-      
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
-            `${window.location.origin}/auth/callback`,
-          data: {
-            first_name: firstName,
-            last_name: lastName,
+      // Send OTP to phone for verification
+      try {
+        const response = await fetch("/api/auth/phone-otp/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
             phone: formData.phone,
-            user_type: userType,
-            role: userType, // 'athlete' or 'coach'
-            plan: selectedPlan,
-          },
-        },
-      });
-      
-      if (error) {
-        setErrors({ email: error.message });
-        setIsLoading(false);
-      } else {
-        // For paid plans (not free trials), redirect to checkout page
-        if (selectedPlan !== "free_trial" && selectedPlan !== "coach_trial") {
-          // Store plan in localStorage for checkout page
-          localStorage.setItem("pending_plan", selectedPlan);
-          localStorage.setItem("pending_email", formData.email);
-          window.location.href = `/checkout?plan=${selectedPlan}`;
-        } else {
-          setStep("verify");
+            email: formData.email 
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          setErrors({ phone: data.error || "Failed to send verification code" });
+          setIsLoading(false);
+          return;
         }
+        
+        // Move to verification step
+        setStep("verify");
+        setIsLoading(false);
+      } catch {
+        setErrors({ phone: "Failed to send verification code. Please try again." });
         setIsLoading(false);
       }
     }
   };
 
-  const handleVerify = () => {
-    setStep("success");
+  const handleVerify = async () => {
+    if (!otpCode || otpCode.length !== 6) {
+      setOtpError("Please enter the 6-digit code");
+      return;
+    }
+    
+    setIsLoading(true);
+    setOtpError("");
+    
+    // Extract first and last name
+    const nameParts = formData.name.trim().split(" ");
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(" ");
+    
+    try {
+      const response = await fetch("/api/auth/phone-otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: formData.phone,
+          code: otpCode,
+          userData: {
+            email: formData.email,
+            password: formData.password,
+            first_name: firstName,
+            last_name: lastName,
+            user_type: userType,
+            plan: selectedPlan,
+          },
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setOtpError(data.error || "Verification failed");
+        setIsLoading(false);
+        return;
+      }
+      
+      // For paid plans, redirect to checkout
+      if (selectedPlan !== "free_trial" && selectedPlan !== "coach_trial") {
+        localStorage.setItem("pending_plan", selectedPlan);
+        localStorage.setItem("pending_email", formData.email);
+        window.location.href = `/checkout?plan=${selectedPlan}`;
+      } else {
+        setStep("success");
+      }
+      setIsLoading(false);
+    } catch {
+      setOtpError("Verification failed. Please try again.");
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setOtpSending(true);
+    setOtpError("");
+    
+    try {
+      const response = await fetch("/api/auth/phone-otp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          phone: formData.phone,
+          email: formData.email 
+        }),
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        setOtpError(data.error || "Failed to resend code");
+      }
+    } catch {
+      setOtpError("Failed to resend code");
+    }
+    
+    setOtpSending(false);
   };
 
   return (
@@ -490,28 +559,59 @@ export default function SignUpPage() {
             <Card className="border-border bg-card">
               <CardHeader className="space-y-1 text-center">
                 <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="w-8 h-8 text-primary" />
+                  <Smartphone className="w-8 h-8 text-primary" />
                 </div>
-                <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+                <CardTitle className="text-2xl font-bold">Verify your phone</CardTitle>
                 <CardDescription>
-                  We sent a verification link to<br />
-                  <span className="text-foreground font-medium">{formData.email}</span>
+                  We sent a 6-digit code to<br />
+                  <span className="text-foreground font-medium">{formData.phone}</span>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button onClick={handleVerify} className="w-full">
-                  I&apos;ve verified my email
+                <div className="space-y-2">
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    placeholder="Enter 6-digit code"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                    className="text-center text-2xl tracking-widest font-mono"
+                  />
+                  {otpError && (
+                    <p className="text-sm text-destructive text-center">{otpError}</p>
+                  )}
+                </div>
+                <Button 
+                  onClick={handleVerify} 
+                  className="w-full"
+                  disabled={isLoading || otpCode.length !== 6}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify & Create Account"
+                  )}
                 </Button>
-                <Button variant="outline" className="w-full">
-                  Resend verification email
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={handleResendOtp}
+                  disabled={otpSending}
+                >
+                  {otpSending ? "Sending..." : "Resend code"}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
-                  Did not receive the email? Check your spam folder or{" "}
+                  Wrong number?{" "}
                   <button 
-                    onClick={() => setStep("form")} 
+                    onClick={() => { setStep("form"); setOtpCode(""); setOtpError(""); }} 
                     className="text-primary hover:underline"
                   >
-                    try a different email
+                    Go back
                   </button>
                 </p>
               </CardContent>
