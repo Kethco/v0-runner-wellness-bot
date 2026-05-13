@@ -45,10 +45,18 @@ export default function Dashboard() {
   // Ref for milestone tracking
   const prevProgressRef = useRef<number>(0);
   
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated, or to coach dashboard if coach
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
+    }
+    
+    // Redirect coaches to coach dashboard
+    if (user) {
+      const userType = user.user_metadata?.user_type || user.user_metadata?.role;
+      if (userType === "coach") {
+        router.push("/coach");
+      }
     }
   }, [authLoading, user, router]);
   

@@ -322,7 +322,9 @@ export default function SignUpPage() {
               <div className="space-y-2">
                 <h1 className="text-2xl font-bold">Account Created!</h1>
                 <p className="text-muted-foreground">
-                  Your account is ready. Log in to get started.
+                  {userType === "coach" 
+                    ? "Your coach account is ready. Log in to set up your team."
+                    : "Your account is ready. Log in to get started."}
                 </p>
               </div>
               <Button onClick={() => router.push("/login")} className="w-full h-12">

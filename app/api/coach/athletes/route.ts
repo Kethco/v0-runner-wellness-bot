@@ -10,15 +10,20 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if user is a coach
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-    
-  if (profile?.role !== "coach") {
-    return NextResponse.json({ error: "Not a coach" }, { status: 403 });
+  // Check if user is a coach (check both profile and user_metadata)
+  const userMetadata = user.user_metadata;
+  const isCoach = userMetadata?.role === "coach" || userMetadata?.user_type === "coach";
+  
+  if (!isCoach) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+      
+    if (profile?.role !== "coach") {
+      return NextResponse.json({ error: "Not a coach" }, { status: 403 });
+    }
   }
 
   // Get all athletes connected to this coach via coach_athletes table
