@@ -40,6 +40,26 @@ export async function GET(request: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // Fix notification settings for existing users
+  if (action === "fix-notifications") {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ notification_morning: true })
+      .is("notification_morning", null)
+      .not("phone", "is", null)
+      .select("id, first_name, phone");
+    
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: `Fixed ${data?.length || 0} users - enabled morning notifications`,
+      usersFixed: data?.map(u => ({ name: u.first_name, phone: u.phone?.slice(-4) })) || []
+    });
+  }
+
   // Debug: check what user ID the session has
   if (action === "debug-session") {
     const { createClient } = await import("@/lib/supabase/server");
