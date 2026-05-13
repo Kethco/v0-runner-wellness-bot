@@ -408,11 +408,24 @@ return (
 function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string }; created_at?: string } | null }) {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [trialInfo, setTrialInfo] = useState({ daysLeft: 7, endDateStr: "" });
   
   const plan = user?.user_metadata?.plan || "free_trial";
-  const createdAt = user?.created_at ? new Date(user.created_at) : new Date();
-  const trialEndDate = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const daysLeft = Math.max(0, Math.ceil((trialEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  
+  // Calculate trial info on client only to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+    const createdAt = user?.created_at ? new Date(user.created_at) : new Date();
+    const trialEndDate = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const daysLeft = Math.max(0, Math.ceil((trialEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+    setTrialInfo({
+      daysLeft,
+      endDateStr: trialEndDate.toLocaleDateString(),
+    });
+  }, [user?.created_at]);
+  
+  const { daysLeft, endDateStr } = trialInfo;
   
   const planNames: Record<string, string> = {
     free_trial: "Free Trial",
@@ -479,7 +492,7 @@ function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string };
           <div>
             <div className="flex items-center gap-2">
               <h4 className="font-medium text-foreground">{planNames[plan] || plan}</h4>
-              {isTrialPlan && daysLeft > 0 && (
+              {mounted && isTrialPlan && daysLeft > 0 && (
                 <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
                   {daysLeft} days left
                 </Badge>
@@ -503,13 +516,13 @@ function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string };
         </div>
         
         {/* Trial Info */}
-        {isTrialPlan && daysLeft > 0 && (
+        {mounted && isTrialPlan && daysLeft > 0 && (
           <div className="flex items-start gap-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
             <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="font-medium text-foreground">Trial Period</h4>
               <p className="text-sm text-muted-foreground">
-                Your free trial ends on {trialEndDate.toLocaleDateString()}. Upgrade to keep your data and continue using all features.
+                Your free trial ends on {endDateStr || "soon"}. Upgrade to keep your data and continue using all features.
               </p>
             </div>
           </div>
