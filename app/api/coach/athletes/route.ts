@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-// Admin client bypasses RLS policies (fixes infinite recursion in teams policy)
+// Admin client bypasses RLS policies
 const supabaseAdmin = createAdminClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// GET - Fetch all athletes for a coach's team
+// GET - Fetch all athletes linked to this coach via coach_id in profiles
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -17,41 +17,20 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get coach's team with members (use admin to bypass RLS)
-  const { data: team, error: teamError } = await supabaseAdmin
-    .from("teams")
-    .select("id, name, invite_code")
-    .eq("coach_id", user.id)
-    .single();
+  // Get all athletes where coach_id matches this coach
+  const { data: athletes, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id, first_name, last_name, email, phone, created_at")
+    .eq("coach_id", user.id);
 
-  if (teamError || !team) {
-    // No team yet - return empty
-    return NextResponse.json({ athletes: [], team: null });
+  if (error) {
+    console.error("Error fetching athletes:", error);
+    return NextResponse.json({ athletes: [] });
   }
 
-  // Get all team members (athletes) - use admin to bypass RLS
-  const { data: members, error: membersError } = await supabaseAdmin
-    .from("team_members")
-    .select("id, user_id, joined_at")
-    .eq("team_id", team.id);
-
-  if (membersError) {
-    console.error("Error fetching members:", membersError);
-    return NextResponse.json({ athletes: [], team });
-  }
-
-  // For each member, get their profile and wellness data
+  // For each athlete, get their wellness data
   const athletesWithData = await Promise.all(
-    (members || []).map(async (member) => {
-      // Get athlete profile (use admin)
-      const { data: athlete } = await supabaseAdmin
-        .from("profiles")
-        .select("id, first_name, last_name, email, phone")
-        .eq("id", member.user_id)
-        .single();
-
-      if (!athlete) return null;
-
+    (athletes || []).map(async (athlete) => {
       // Get latest checkin
       const { data: latestCheckin } = await supabaseAdmin
         .from("checkins")
@@ -100,18 +79,15 @@ export async function GET() {
         weeklyMiles: weeklyRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0,
         streak: streak?.current_streak || 0,
         riskLevel,
-        connectedAt: member.joined_at,
+        connectedAt: athlete.created_at,
       };
     })
   );
 
-  return NextResponse.json({ 
-    athletes: athletesWithData.filter(Boolean),
-    team 
-  });
+  return NextResponse.json({ athletes: athletesWithData });
 }
 
-// DELETE - Remove an athlete from coach's team
+// DELETE - Remove athlete from coach (clear their coach_id)
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -127,22 +103,12 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Athlete ID required" }, { status: 400 });
   }
 
-  // Get coach's team (use admin)
-  const { data: team } = await supabaseAdmin
-    .from("teams")
-    .select("id")
-    .eq("coach_id", user.id)
-    .single();
-
-  if (!team) {
-    return NextResponse.json({ error: "No team found" }, { status: 404 });
-  }
-
+  // Clear the coach_id for this athlete (only if they belong to this coach)
   const { error } = await supabaseAdmin
-    .from("team_members")
-    .delete()
-    .eq("team_id", team.id)
-    .eq("user_id", athleteId);
+    .from("profiles")
+    .update({ coach_id: null })
+    .eq("id", athleteId)
+    .eq("coach_id", user.id);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

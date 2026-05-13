@@ -178,7 +178,7 @@ async function ensureDatabaseReady(): Promise<boolean> {
       AS $$
       BEGIN
         INSERT INTO public.profiles (
-          id, first_name, last_name, email, phone, role, plan, created_at
+          id, first_name, last_name, email, phone, role, plan, coach_id, created_at
         )
         VALUES (
           NEW.id,
@@ -188,6 +188,7 @@ async function ensureDatabaseReady(): Promise<boolean> {
           COALESCE(NEW.raw_user_meta_data ->> 'phone', ''),
           COALESCE(NEW.raw_user_meta_data ->> 'role', 'athlete'),
           COALESCE(NEW.raw_user_meta_data ->> 'plan', 'free_trial'),
+          (NEW.raw_user_meta_data ->> 'coach_id')::uuid,
           NOW()
         )
         ON CONFLICT (id) DO NOTHING;
@@ -213,7 +214,7 @@ async function ensureDatabaseReady(): Promise<boolean> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, first_name, last_name, phone, user_type, plan, program_name } = body;
+    const { email, password, first_name, last_name, phone, user_type, plan, program_name, coach_id, invite_code } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
@@ -255,6 +256,8 @@ export async function POST(request: NextRequest) {
         role: user_type || "athlete",
         plan: plan || "free_trial",
         ...(program_name && { program_name }),
+        ...(coach_id && { coach_id }),
+        ...(invite_code && { invite_code }),
       },
     });
 

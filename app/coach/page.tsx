@@ -407,8 +407,8 @@ export default function CoachDashboard() {
             onClose={() => setShowInviteModal(false)} 
             onSuccess={() => {
               mutateInvites();
-              setShowInviteModal(false);
             }}
+            coachId={user?.id || ""}
           />
         )}
       </AnimatePresence>
@@ -655,13 +655,13 @@ function AthleteTable({ athletes, onRemove }: { athletes: Athlete[]; onRemove: (
   );
 }
 
-function BulkInviteModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+function BulkInviteModal({ onClose, onSuccess, coachId }: { onClose: () => void; onSuccess: () => void; coachId: string }) {
   const [athleteNames, setAthleteNames] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [createdInvites, setCreatedInvites] = useState<Invite[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     const names = athleteNames
       .split("\n")
       .map(n => n.trim())
@@ -672,23 +672,30 @@ function BulkInviteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
       return;
     }
 
-    setIsLoading(true);
-    const response = await fetch("/api/coach/invites", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ athletes: names.map(name => ({ name })) }),
+    // Generate invite links client-side - no database needed!
+    // The link encodes the coach ID + athlete name
+    const baseUrl = window.location.origin;
+    const invites: Invite[] = names.map((name, index) => {
+      // Create a simple invite code: base64(coachId:athleteName:timestamp)
+      const inviteData = `${coachId}:${name}:${Date.now() + index}`;
+      const inviteCode = btoa(inviteData).replace(/[+/=]/g, (c) => 
+        c === '+' ? '-' : c === '/' ? '_' : ''
+      );
+      
+      return {
+        id: `invite-${index}`,
+        athlete_name: name,
+        athlete_email: null,
+        invite_code: inviteCode,
+        inviteUrl: `${baseUrl}/join/${inviteCode}`,
+        status: "pending" as const,
+        created_at: new Date().toISOString(),
+      };
     });
 
-    const data = await response.json();
-    setIsLoading(false);
-
-    if (data.error) {
-      toast({ title: "Error", description: data.error, variant: "destructive" });
-    } else {
-      setCreatedInvites(data.invites);
-      toast({ title: "Invites created!", description: `${data.invites.length} invite links generated.` });
-    }
+    setCreatedInvites(invites);
+    toast({ title: "Invites created!", description: `${invites.length} invite links generated.` });
+    onSuccess();
   };
 
   const copyLink = (invite: Invite) => {

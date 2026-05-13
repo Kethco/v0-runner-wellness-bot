@@ -4,31 +4,48 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Activity, Mail, Lock, User, Phone, ArrowRight, Check, Users, AlertCircle } from "lucide-react";
+import { Activity, Mail, Lock, Phone, ArrowRight, Check, Users, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/contexts/auth-context";
 
 type InviteData = {
-  id: string;
-  athleteName: string;
-  coachName: string;
   coachId: string;
+  athleteName: string;
+  timestamp: number;
 };
+
+// Decode invite code client-side - no database needed!
+function decodeInvite(code: string): InviteData | null {
+  try {
+    // Reverse the URL-safe encoding
+    let base64 = code.replace(/-/g, '+').replace(/_/g, '/');
+    // Add padding if needed
+    while (base64.length % 4) base64 += '=';
+    const decoded = atob(base64);
+    const [coachId, athleteName, timestamp] = decoded.split(':');
+    
+    if (!coachId || !athleteName) return null;
+    
+    return {
+      coachId,
+      athleteName,
+      timestamp: parseInt(timestamp) || Date.now(),
+    };
+  } catch {
+    return null;
+  }
+}
 
 export default function JoinPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
   const code = params.code as string;
 
   const [invite, setInvite] = useState<InviteData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [step, setStep] = useState<"loading" | "signup" | "verify" | "accepting" | "success" | "error">("loading");
+  const [step, setStep] = useState<"loading" | "signup" | "success" | "error">("loading");
+  const [error, setError] = useState("");
   
   const [formData, setFormData] = useState({
     email: "",
@@ -39,52 +56,18 @@ export default function JoinPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch invite details
+  // Decode invite on mount
   useEffect(() => {
-    async function fetchInvite() {
-      const response = await fetch(`/api/invite/${code}`);
-      const data = await response.json();
-      
-      if (data.error) {
-        setError(data.error);
-        setStep("error");
-      } else {
-        setInvite(data.invite);
-        setStep("signup");
-      }
-      setIsLoading(false);
-    }
-    
     if (code) {
-      fetchInvite();
+      const data = decodeInvite(code);
+      if (data) {
+        setInvite(data);
+        setStep("signup");
+      } else {
+        setStep("error");
+      }
     }
   }, [code]);
-
-  // If user is already logged in, accept the invite automatically
-  useEffect(() => {
-    async function acceptInvite() {
-      if (user && invite && step === "signup") {
-        setStep("accepting");
-        const response = await fetch(`/api/invite/${code}`, {
-          method: "POST",
-          credentials: "include",
-        });
-        const data = await response.json();
-        
-        if (data.error) {
-          setError(data.error);
-          setStep("error");
-        } else {
-          setStep("success");
-          setTimeout(() => router.push("/"), 2000);
-        }
-      }
-    }
-    
-    if (!authLoading && user && invite) {
-      acceptInvite();
-    }
-  }, [authLoading, user, invite, code, step, router]);
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -94,13 +77,10 @@ export default function JoinPage() {
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = "Please enter a valid email";
     }
-    if (!formData.phone.trim()) {
-      errors.phone = "Phone is required for SMS check-ins";
-    }
     if (!formData.password) {
       errors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      errors.password = "Password must be at least 8 characters";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
     }
     if (formData.password !== formData.confirmPassword) {
       errors.confirmPassword = "Passwords do not match";
@@ -115,43 +95,47 @@ export default function JoinPage() {
     if (!validateForm() || !invite) return;
     
     setIsSubmitting(true);
-    const supabase = createClient();
+    setError("");
     
-    // Parse athlete name from invite
+    // Parse athlete name
     const nameParts = invite.athleteName.trim().split(" ");
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(" ");
     
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ??
-          `${window.location.origin}/auth/callback?invite=${code}`,
-        data: {
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
           first_name: firstName,
           last_name: lastName,
           phone: formData.phone,
           user_type: "athlete",
-          role: "athlete",
-          plan: "coach_athlete", // Athletes invited by coach - coach pays, no trial expiration
+          plan: "coach_athlete",
           coach_id: invite.coachId,
           invite_code: code,
-        },
-      },
-    });
-    
-    if (signUpError) {
-      setFormErrors({ email: signUpError.message });
-      setIsSubmitting(false);
-    } else {
-      setStep("verify");
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setError(data.error || "Failed to create account");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      setStep("success");
+    } catch {
+      setError("Something went wrong. Please try again.");
       setIsSubmitting(false);
     }
   };
 
   // Loading state
-  if (isLoading || step === "loading") {
+  if (step === "loading") {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#FF4500] border-t-transparent rounded-full animate-spin" />
@@ -168,28 +152,13 @@ export default function JoinPage() {
             <div className="w-16 h-16 rounded-full bg-[#FF3B30]/20 flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8 text-[#FF3B30]" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Invalid Invite</h2>
-            <p className="text-[#8E8E93] mb-6">{error || "This invite link is invalid or has expired."}</p>
-            <Link href="/login">
+            <h2 className="text-xl font-bold text-white mb-2">Invalid Invite Link</h2>
+            <p className="text-[#8E8E93] mb-6">This invite link is invalid or has expired. Please ask your coach for a new link.</p>
+            <Link href="/">
               <Button className="bg-[#FF4500] hover:bg-[#FF6B00]">
-                Go to Login
+                Go to Homepage
               </Button>
             </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Accepting state (for logged-in users)
-  if (step === "accepting") {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <Card className="w-full max-w-md bg-[#1C1C1E] border-[#3A3A3C]">
-          <CardContent className="pt-8 pb-8 text-center">
-            <div className="w-8 h-8 border-2 border-[#FF4500] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Joining Team...</h2>
-            <p className="text-[#8E8E93]">Connecting you with {invite?.coachName}</p>
           </CardContent>
         </Card>
       </div>
@@ -209,36 +178,19 @@ export default function JoinPage() {
               <div className="w-16 h-16 rounded-full bg-[#30D158]/20 flex items-center justify-center mx-auto mb-4">
                 <Check className="w-8 h-8 text-[#30D158]" />
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">You&apos;re In!</h2>
-              <p className="text-[#8E8E93] mb-2">
-                You&apos;ve joined {invite?.coachName}&apos;s team.
+              <h2 className="text-xl font-bold text-white mb-2">Account Created!</h2>
+              <p className="text-[#8E8E93] mb-4">
+                Welcome, {invite?.athleteName}! Your account is ready.
               </p>
-              <p className="text-sm text-[#8E8E93]">Redirecting to dashboard...</p>
+              <Button 
+                onClick={() => router.push("/login")} 
+                className="bg-[#FF4500] hover:bg-[#FF6B00]"
+              >
+                Log In to Get Started
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
-      </div>
-    );
-  }
-
-  // Verify email state
-  if (step === "verify") {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <Card className="w-full max-w-md bg-[#1C1C1E] border-[#3A3A3C]">
-          <CardContent className="pt-8 pb-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#0A84FF]/20 flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-8 h-8 text-[#0A84FF]" />
-            </div>
-            <h2 className="text-xl font-bold text-white mb-2">Check Your Email</h2>
-            <p className="text-[#8E8E93] mb-4">
-              We sent a confirmation link to <span className="text-white">{formData.email}</span>
-            </p>
-            <p className="text-sm text-[#8E8E93]">
-              Click the link in your email to complete signup and join {invite?.coachName}&apos;s team.
-            </p>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -267,8 +219,8 @@ export default function JoinPage() {
               </div>
               <div>
                 <p className="text-sm text-[#FF9500]">You&apos;ve been invited!</p>
-                <h2 className="text-lg font-bold text-white">{invite?.coachName}</h2>
-                <p className="text-sm text-[#8E8E93]">wants you to join their team</p>
+                <h2 className="text-lg font-bold text-white">{invite?.athleteName}</h2>
+                <p className="text-sm text-[#8E8E93]">Join your coach&apos;s team</p>
               </div>
             </div>
           </CardContent>
@@ -279,7 +231,7 @@ export default function JoinPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-xl font-bold text-white">Create Your Account</CardTitle>
             <CardDescription className="text-[#8E8E93]">
-              Sign up as <span className="text-white font-medium">{invite?.athleteName}</span> to start tracking your wellness
+              Set up your account to start tracking your wellness
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -301,7 +253,7 @@ export default function JoinPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-[#8E8E93]">Phone (for SMS check-ins)</Label>
+                <Label htmlFor="phone" className="text-[#8E8E93]">Phone (optional, for SMS reminders)</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
                   <Input
@@ -313,7 +265,6 @@ export default function JoinPage() {
                     className="pl-10 bg-[#2C2C2E] border-[#3A3A3C] text-white"
                   />
                 </div>
-                {formErrors.phone && <p className="text-xs text-[#FF3B30]">{formErrors.phone}</p>}
               </div>
 
               <div className="space-y-2">
@@ -323,7 +274,7 @@ export default function JoinPage() {
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Min 8 characters"
+                    placeholder="Min 6 characters"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="pl-10 bg-[#2C2C2E] border-[#3A3A3C] text-white"
@@ -348,12 +299,18 @@ export default function JoinPage() {
                 {formErrors.confirmPassword && <p className="text-xs text-[#FF3B30]">{formErrors.confirmPassword}</p>}
               </div>
 
+              {error && (
+                <div className="p-3 bg-[#FF3B30]/10 border border-[#FF3B30]/20 rounded-lg">
+                  <p className="text-sm text-[#FF3B30] text-center">{error}</p>
+                </div>
+              )}
+
               <Button 
                 type="submit" 
                 className="w-full bg-[#FF4500] hover:bg-[#FF6B00] text-white gap-2" 
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Creating Account..." : "Join Team"}
+                {isSubmitting ? "Creating Account..." : "Create Account"}
                 {!isSubmitting && <ArrowRight className="w-4 h-4" />}
               </Button>
             </form>
