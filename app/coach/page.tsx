@@ -672,14 +672,11 @@ function BulkInviteModal({ onClose, onSuccess, coachId }: { onClose: () => void;
       return;
     }
 
-    // Generate simple invite links with query parameters
-    const baseUrl = window.location.origin;
-    console.log("[v0] Generating invites with coachId:", coachId, "baseUrl:", baseUrl);
+    // Generate simple invite links with production domain
+    const baseUrl = "https://www.runnerwellnessapp.com";
     
     const invites: Invite[] = names.map((name, index) => {
-      // Simple URL with query params - no encoding tricks
       const inviteUrl = `${baseUrl}/join?c=${coachId}&n=${encodeURIComponent(name)}`;
-      console.log("[v0] Generated invite URL:", inviteUrl);
       
       return {
         id: `invite-${index}`,
