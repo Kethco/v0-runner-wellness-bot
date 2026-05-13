@@ -7,27 +7,64 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Track if trigger has been fixed this session
-let triggerFixed = false;
+// Track if database has been fixed
+let dbFixed = false;
 
-async function fixDatabaseTrigger(): Promise<boolean> {
-  if (triggerFixed) return true;
+async function ensureDatabaseReady(): Promise<boolean> {
+  if (dbFixed) return true;
   
   const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.DATABASE_URL;
   if (!connectionString) {
-    console.log("No DATABASE_URL available, cannot fix trigger");
+    console.log("No direct database connection available");
     return false;
   }
   
   try {
     const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
     
-    // Drop the problematic trigger and create a simpler one that only uses existing columns
+    // Step 1: Add all potentially missing columns to profiles table
     await pool.query(`
-      -- First, drop the existing trigger
+      DO $$ 
+      BEGIN
+        -- Add columns if they don't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'notification_morning') THEN
+          ALTER TABLE profiles ADD COLUMN notification_morning BOOLEAN DEFAULT TRUE;
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'trial_ends_at') THEN
+          ALTER TABLE profiles ADD COLUMN trial_ends_at TIMESTAMPTZ;
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'coach_id') THEN
+          ALTER TABLE profiles ADD COLUMN coach_id UUID;
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'role') THEN
+          ALTER TABLE profiles ADD COLUMN role TEXT DEFAULT 'athlete';
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'plan') THEN
+          ALTER TABLE profiles ADD COLUMN plan TEXT DEFAULT 'free_trial';
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'first_name') THEN
+          ALTER TABLE profiles ADD COLUMN first_name TEXT DEFAULT '';
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'last_name') THEN
+          ALTER TABLE profiles ADD COLUMN last_name TEXT DEFAULT '';
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'phone') THEN
+          ALTER TABLE profiles ADD COLUMN phone TEXT DEFAULT '';
+        END IF;
+      END $$;
+    `);
+    
+    // Step 2: Drop and recreate trigger with a simple, safe function
+    await pool.query(`
       DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
       
-      -- Create a simpler function that only uses columns that exist
       CREATE OR REPLACE FUNCTION public.handle_new_user()
       RETURNS TRIGGER
       LANGUAGE plpgsql
@@ -35,14 +72,16 @@ async function fixDatabaseTrigger(): Promise<boolean> {
       SET search_path = public
       AS $$
       BEGIN
-        INSERT INTO public.profiles (id, first_name, last_name, email, phone, role, plan, created_at)
+        INSERT INTO public.profiles (
+          id, first_name, last_name, email, phone, role, plan, created_at
+        )
         VALUES (
           NEW.id,
           COALESCE(NEW.raw_user_meta_data ->> 'first_name', ''),
           COALESCE(NEW.raw_user_meta_data ->> 'last_name', ''),
           NEW.email,
           COALESCE(NEW.raw_user_meta_data ->> 'phone', ''),
-          COALESCE(NEW.raw_user_meta_data ->> 'role', NEW.raw_user_meta_data ->> 'user_type', 'athlete'),
+          COALESCE(NEW.raw_user_meta_data ->> 'role', 'athlete'),
           COALESCE(NEW.raw_user_meta_data ->> 'plan', 'free_trial'),
           NOW()
         )
@@ -51,47 +90,58 @@ async function fixDatabaseTrigger(): Promise<boolean> {
       END;
       $$;
       
-      -- Recreate the trigger
       CREATE TRIGGER on_auth_user_created
         AFTER INSERT ON auth.users
         FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
     `);
     
     await pool.end();
-    triggerFixed = true;
-    console.log("Database trigger fixed successfully!");
+    dbFixed = true;
+    console.log("Database ready!");
     return true;
   } catch (error) {
-    console.error("Failed to fix trigger:", error);
+    console.error("Database setup error:", error);
     return false;
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, first_name, last_name, phone, user_type, plan, program_name } = await request.json();
+    const body = await request.json();
+    const { email, password, first_name, last_name, phone, user_type, plan, program_name } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
 
-    // Normalize phone number
+    if (password.length < 6) {
+      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+    }
+
+    // Normalize phone
     const normalizedPhone = phone?.replace(/\D/g, "") || "";
     const formattedPhone = normalizedPhone 
       ? (normalizedPhone.startsWith("1") ? `+${normalizedPhone}` : `+1${normalizedPhone}`)
       : "";
 
-    // Fix the database trigger before creating user
-    await fixDatabaseTrigger();
+    // Ensure database is ready before creating user
+    await ensureDatabaseReady();
 
-    // Create user directly with Supabase Admin API
-    // email_confirm: true skips email verification
+    // Check if user exists
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    if (existingUsers?.users?.some(u => u.email?.toLowerCase() === email.toLowerCase())) {
+      return NextResponse.json({ 
+        error: "An account with this email already exists",
+      }, { status: 400 });
+    }
+
+    // Create user
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Skip email verification
+      email_confirm: true,
       phone: formattedPhone || undefined,
-      phone_confirm: true, // Skip phone verification
+      phone_confirm: true,
       user_metadata: {
         first_name: first_name || "",
         last_name: last_name || "",
@@ -106,23 +156,12 @@ export async function POST(request: NextRequest) {
     if (authError) {
       console.error("Auth error:", authError);
       
-      // Check if user already exists
-      if (authError.message?.includes("already") || authError.message?.includes("exists")) {
-        return NextResponse.json({ 
-          error: "An account with this email already exists. Please log in instead.",
-        }, { status: 400 });
-      }
-      
-      // If database trigger fails, fix it and retry
+      // If database error, reset and retry once
       if (authError.message?.includes("Database error")) {
-        console.log("Database error detected, fixing trigger and retrying...");
-        
-        // Reset flag and fix trigger
-        triggerFixed = false;
-        const fixed = await fixDatabaseTrigger();
+        dbFixed = false;
+        const fixed = await ensureDatabaseReady();
         
         if (fixed) {
-          // Retry user creation
           const { data: retryData, error: retryError } = await supabase.auth.admin.createUser({
             email,
             password,
@@ -141,40 +180,16 @@ export async function POST(request: NextRequest) {
           });
           
           if (!retryError && retryData?.user) {
-            await createProfile(retryData.user.id, {
-              first_name, last_name, email, phone: formattedPhone, user_type, plan, program_name
-            });
-            
             return NextResponse.json({ 
               success: true, 
-              message: "Account created successfully",
               userId: retryData.user.id,
               userType: user_type || "athlete",
             });
           }
-          
-          console.error("Retry also failed:", retryError);
-        }
-        
-        // Check if user was created despite error
-        const { data: users } = await supabase.auth.admin.listUsers();
-        const existingUser = users?.users?.find(u => u.email === email);
-        
-        if (existingUser) {
-          await createProfile(existingUser.id, {
-            first_name, last_name, email, phone: formattedPhone, user_type, plan, program_name
-          });
-          
-          return NextResponse.json({ 
-            success: true, 
-            message: "Account created successfully",
-            userId: existingUser.id,
-            userType: user_type || "athlete",
-          });
         }
         
         return NextResponse.json({ 
-          error: "Database setup issue. Please contact support.",
+          error: "Unable to create account right now. Please try again.",
         }, { status: 500 });
       }
       
@@ -183,50 +198,16 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Create profile manually (in case trigger doesn't work)
-    if (authData?.user) {
-      await createProfile(authData.user.id, {
-        first_name, last_name, email, phone: formattedPhone, user_type, plan, program_name
-      });
-    }
-
     return NextResponse.json({ 
       success: true, 
-      message: "Account created successfully",
       userId: authData?.user?.id,
       userType: user_type || "athlete",
     });
-
+    
   } catch (error) {
     console.error("Signup error:", error);
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
-  }
-}
-
-async function createProfile(userId: string, data: {
-  first_name?: string;
-  last_name?: string;
-  email: string;
-  phone: string;
-  user_type?: string;
-  plan?: string;
-  program_name?: string;
-}) {
-  const trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  
-  const { error } = await supabase.from("profiles").upsert({
-    id: userId,
-    first_name: data.first_name || "",
-    last_name: data.last_name || "",
-    email: data.email,
-    phone: data.phone,
-    role: data.user_type || "athlete",
-    plan: data.plan || "free_trial",
-    trial_ends_at: data.plan === "coach_athlete" ? null : trialEndsAt,
-    created_at: new Date().toISOString(),
-  }, { onConflict: "id" });
-  
-  if (error) {
-    console.error("Profile creation error (non-fatal):", error);
+    return NextResponse.json({ 
+      error: "Something went wrong. Please try again.",
+    }, { status: 500 });
   }
 }
