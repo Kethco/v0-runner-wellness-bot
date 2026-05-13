@@ -380,36 +380,7 @@ return (
                     Permanently delete your account and all data
                   </p>
                 </div>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      Delete Account
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-card border-border">
-                    <DialogHeader>
-                      <DialogTitle>Are you sure?</DialogTitle>
-                      <DialogDescription>
-                        This action cannot be undone. All your check-ins, runs, and account data will be permanently deleted.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button variant="outline">Cancel</Button>
-                      <Button variant="destructive" onClick={async () => {
-                        try {
-                          const res = await fetch("/api/account/delete", { method: "DELETE" });
-                          if (res.ok) {
-                            window.location.href = "/login";
-                          } else {
-                            toast({ title: "Error", description: "Failed to delete account", variant: "destructive" });
-                          }
-                        } catch {
-                          toast({ title: "Error", description: "Failed to delete account", variant: "destructive" });
-                        }
-                      }}>Delete Everything</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <DeleteAccountDialog />
               </div>
             </CardContent>
           </Card>
@@ -646,5 +617,65 @@ function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string };
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// Delete Account Dialog Component
+function DeleteAccountDialog() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
+  const handleDelete = async () => {
+    if (isDeleting) return; // Prevent double-clicks
+    
+    setIsDeleting(true);
+    try {
+      const res = await fetch("/api/account/delete", { method: "DELETE" });
+      if (res.ok) {
+        toast({ title: "Account Deleted", description: "Your account has been permanently deleted." });
+        // Small delay to show toast before redirect
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 500);
+      } else {
+        const data = await res.json();
+        toast({ title: "Error", description: data.error || "Failed to delete account", variant: "destructive" });
+        setIsDeleting(false);
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to delete account", variant: "destructive" });
+      setIsDeleting(false);
+    }
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="destructive" size="sm">
+          Delete Account
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="bg-card border-border">
+        <DialogHeader>
+          <DialogTitle>Are you sure?</DialogTitle>
+          <DialogDescription>
+            This action cannot be undone. All your check-ins, runs, and account data will be permanently deleted.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button 
+            variant="destructive" 
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {isDeleting ? "Deleting..." : "Delete Everything"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
