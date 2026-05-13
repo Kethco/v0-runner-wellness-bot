@@ -1,8 +1,51 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { Pool } from "pg";
+
+// Ensure required tables exist
+async function ensureTablesExist() {
+  const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
+  if (!connectionString) return;
+  
+  try {
+    const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS athlete_invites (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        coach_id UUID NOT NULL,
+        athlete_name TEXT NOT NULL,
+        athlete_email TEXT,
+        invite_code TEXT UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(6), 'hex'),
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        accepted_at TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS idx_athlete_invites_coach ON athlete_invites(coach_id);
+      CREATE INDEX IF NOT EXISTS idx_athlete_invites_code ON athlete_invites(invite_code);
+    `);
+    
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS coach_athletes (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        coach_id UUID NOT NULL,
+        athlete_id UUID NOT NULL,
+        connected_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(coach_id, athlete_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_coach_athletes_coach ON coach_athletes(coach_id);
+      CREATE INDEX IF NOT EXISTS idx_coach_athletes_athlete ON coach_athletes(athlete_id);
+    `);
+    
+    await pool.end();
+  } catch (error) {
+    console.error("Table creation error:", error);
+  }
+}
 
 // GET - Fetch all pending invites for a coach
 export async function GET() {
+  await ensureTablesExist();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -32,6 +75,9 @@ export async function GET() {
 
 // POST - Create new invites (bulk)
 export async function POST(request: Request) {
+  // Ensure tables exist before any operations
+  await ensureTablesExist();
+  
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   
