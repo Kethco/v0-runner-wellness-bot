@@ -39,14 +39,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if user is a coach
+  // Check if user is a coach (check both role column and user_metadata)
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
+  
+  const userMetadata = user.user_metadata;
+  const isCoach = profile?.role === "coach" || 
+                  userMetadata?.role === "coach" || 
+                  userMetadata?.user_type === "coach";
     
-  if (profile?.role !== "coach") {
+  if (!isCoach) {
     return NextResponse.json({ error: "Not a coach" }, { status: 403 });
   }
 

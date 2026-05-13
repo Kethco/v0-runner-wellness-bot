@@ -710,14 +710,14 @@ function BulkInviteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/80 flex items-start justify-center p-4 pt-8 pb-24 overflow-y-auto"
       onClick={onClose}
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="w-full max-w-lg bg-[#1C1C1E] rounded-2xl p-6 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg bg-[#1C1C1E] rounded-2xl p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
