@@ -32,11 +32,13 @@ export async function GET(request: NextRequest) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Get users with phones who have morning notifications enabled (or not explicitly disabled)
+    // Default to sending if notification_morning is null (new users)
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, first_name, phone")
+      .select("id, first_name, phone, notification_morning")
       .not("phone", "is", null)
-      .eq("notification_morning", true);
+      .or("notification_morning.is.null,notification_morning.eq.true");
 
     if (profilesError) {
       console.error("[Cron] Error fetching profiles:", profilesError);

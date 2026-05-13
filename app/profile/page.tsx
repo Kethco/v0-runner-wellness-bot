@@ -73,14 +73,21 @@ export default function ProfilePage() {
   // Initialize edited profile when data loads
   useEffect(() => {
     if (profileData?.profile) {
+      // Combine first_name and last_name from profile, or fall back to signup metadata
+      const fullName = profileData.profile.first_name && profileData.profile.last_name 
+        ? `${profileData.profile.first_name} ${profileData.profile.last_name}`.trim()
+        : profileData.profile.name || `${user?.user_metadata?.first_name || ""} ${user?.user_metadata?.last_name || ""}`.trim();
+      
       setEditedProfile({
-        name: profileData.profile.name || user?.user_metadata?.name || "",
+        name: fullName || user?.user_metadata?.name || user?.email?.split("@")[0] || "",
         gender: profileData.profile.gender || "",
         birthYear: profileData.profile.birth_year?.toString() || "",
       });
     } else if (user) {
+      // Use signup metadata for new users
+      const fullName = `${user.user_metadata?.first_name || ""} ${user.user_metadata?.last_name || ""}`.trim();
       setEditedProfile({
-        name: user.user_metadata?.name || user.email?.split("@")[0] || "",
+        name: fullName || user.user_metadata?.name || user.email?.split("@")[0] || "",
         gender: "",
         birthYear: "",
       });

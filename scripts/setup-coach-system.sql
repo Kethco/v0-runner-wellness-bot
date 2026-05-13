@@ -112,7 +112,7 @@ BEGIN
   -- Get coach_id from metadata if this is a coach-invited athlete
   v_coach_id := (NEW.raw_user_meta_data ->> 'coach_id')::UUID;
   
-  INSERT INTO public.profiles (id, first_name, last_name, email, phone, role, plan, coach_id, trial_ends_at, created_at)
+  INSERT INTO public.profiles (id, first_name, last_name, email, phone, role, plan, coach_id, notification_morning, trial_ends_at, created_at)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data ->> 'first_name', ''),
@@ -122,6 +122,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data ->> 'role', NEW.raw_user_meta_data ->> 'user_type', 'athlete'),
     COALESCE(NEW.raw_user_meta_data ->> 'plan', 'free_trial'),
     v_coach_id,
+    TRUE, -- Enable morning SMS by default for new users
     -- Athletes invited by coach don't have trial expiration (coach pays)
     CASE WHEN NEW.raw_user_meta_data ->> 'plan' = 'coach_athlete' THEN NULL ELSE NOW() + INTERVAL '7 days' END,
     NOW()
@@ -142,3 +143,9 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Fix existing users: enable morning notifications if not explicitly set
+-- This ensures all existing users with phones will receive SMS reminders
+UPDATE profiles 
+SET notification_morning = TRUE 
+WHERE notification_morning IS NULL AND phone IS NOT NULL;
