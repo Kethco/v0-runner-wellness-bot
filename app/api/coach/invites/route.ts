@@ -1,65 +1,59 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { Pool } from "pg";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-// Get direct Postgres connection (bypasses Supabase schema cache issues)
-function getPool() {
-  const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
-  if (!connectionString) throw new Error("No database connection string");
-  return new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+// Admin client with service role for bypassing RLS
+const supabaseAdmin = createAdminClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+// Generate a random invite code
+function generateInviteCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
 }
 
-// Ensure required tables exist
-async function ensureTablesExist(pool: Pool) {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS athlete_invites (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      coach_id UUID NOT NULL,
-      athlete_name TEXT NOT NULL,
-      athlete_email TEXT,
-      invite_code TEXT UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(6), 'hex'),
-      status TEXT DEFAULT 'pending',
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      accepted_at TIMESTAMPTZ
-    );
-    CREATE INDEX IF NOT EXISTS idx_athlete_invites_coach ON athlete_invites(coach_id);
-    CREATE INDEX IF NOT EXISTS idx_athlete_invites_code ON athlete_invites(invite_code);
-  `);
-  
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS coach_athletes (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      coach_id UUID NOT NULL,
-      athlete_id UUID NOT NULL,
-      connected_at TIMESTAMPTZ DEFAULT NOW(),
-      UNIQUE(coach_id, athlete_id)
-    );
-    CREATE INDEX IF NOT EXISTS idx_coach_athletes_coach ON coach_athletes(coach_id);
-    CREATE INDEX IF NOT EXISTS idx_coach_athletes_athlete ON coach_athletes(athlete_id);
-  `);
+// Check if user is a coach
+function isCoach(user: { user_metadata?: { role?: string; user_type?: string } }): boolean {
+  return user.user_metadata?.role === "coach" || user.user_metadata?.user_type === "coach";
 }
 
 // GET - Fetch all pending invites for a coach
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const pool = getPool();
-  
+  if (!isCoach(user)) {
+    return NextResponse.json({ error: "Not a coach" }, { status: 403 });
+  }
+
   try {
-    await ensureTablesExist(pool);
-    
-    const result = await pool.query(
-      `SELECT * FROM athlete_invites WHERE coach_id = $1 ORDER BY created_at DESC`,
-      [user.id]
-    );
-    
+    const { data: invites, error } = await supabaseAdmin
+      .from("athlete_invites")
+      .select("*")
+      .eq("coach_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      // Table doesn't exist - return empty array
+      if (error.code === "42P01" || error.message?.includes("does not exist") || error.code === "PGRST204") {
+        return NextResponse.json({ invites: [], tableNotExists: true });
+      }
+      console.error("Error fetching invites:", error);
+      return NextResponse.json({ invites: [] });
+    }
+
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.runnerwellnessapp.com";
-    const invitesWithUrls = result.rows.map(invite => ({
+    const invitesWithUrls = (invites || []).map(invite => ({
       ...invite,
       inviteUrl: `${baseUrl}/join/${invite.invite_code}`,
     }));
@@ -67,9 +61,7 @@ export async function GET() {
     return NextResponse.json({ invites: invitesWithUrls });
   } catch (error) {
     console.error("Error fetching invites:", error);
-    return NextResponse.json({ error: "Failed to fetch invites" }, { status: 500 });
-  } finally {
-    await pool.end();
+    return NextResponse.json({ invites: [] });
   }
 }
 
@@ -77,72 +69,52 @@ export async function GET() {
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if user is a coach
-  const userMetadata = user.user_metadata;
-  const isCoach = userMetadata?.role === "coach" || userMetadata?.user_type === "coach";
-    
-  if (!isCoach) {
-    // Also check profile table
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    
-    if (profile?.role !== "coach") {
-      return NextResponse.json({ error: "Not a coach" }, { status: 403 });
-    }
+  if (!isCoach(user)) {
+    return NextResponse.json({ error: "Not a coach" }, { status: 403 });
   }
 
-  const { athletes } = await request.json();
-  
-  if (!athletes || !Array.isArray(athletes) || athletes.length === 0) {
-    return NextResponse.json({ error: "Athletes array required" }, { status: 400 });
-  }
-
-  const pool = getPool();
-  
   try {
-    await ensureTablesExist(pool);
-    
-    // Check athlete limit
-    const countResult = await pool.query(
-      `SELECT 
-        (SELECT COUNT(*) FROM coach_athletes WHERE coach_id = $1) as connected,
-        (SELECT COUNT(*) FROM athlete_invites WHERE coach_id = $1 AND status = 'pending') as pending`,
-      [user.id]
-    );
-    
-    const existingCount = parseInt(countResult.rows[0]?.connected || 0);
-    const pendingCount = parseInt(countResult.rows[0]?.pending || 0);
-    const totalAthletes = existingCount + pendingCount + athletes.length;
-    
-    const athleteLimit = 30;
-    if (totalAthletes > athleteLimit) {
-      return NextResponse.json({ 
-        error: `Athlete limit exceeded. You can have up to ${athleteLimit} athletes.` 
-      }, { status: 400 });
+    const { athletes } = await request.json();
+
+    if (!athletes || !Array.isArray(athletes) || athletes.length === 0) {
+      return NextResponse.json({ error: "No athletes provided" }, { status: 400 });
     }
 
-    // Create invites
-    const createdInvites = [];
-    for (const athlete of athletes) {
-      const result = await pool.query(
-        `INSERT INTO athlete_invites (coach_id, athlete_name, athlete_email, status)
-         VALUES ($1, $2, $3, 'pending')
-         RETURNING *`,
-        [user.id, athlete.name.trim(), athlete.email?.trim() || null]
-      );
-      createdInvites.push(result.rows[0]);
+    // Create invite records with generated codes
+    const inviteRecords = athletes.map((athlete: { name: string; email?: string }) => ({
+      coach_id: user.id,
+      athlete_name: athlete.name.trim(),
+      athlete_email: athlete.email?.trim() || null,
+      invite_code: generateInviteCode(),
+      status: "pending",
+    }));
+
+    const { data: createdInvites, error } = await supabaseAdmin
+      .from("athlete_invites")
+      .insert(inviteRecords)
+      .select();
+
+    if (error) {
+      console.error("Insert error:", error);
+      
+      // If table doesn't exist, provide helpful message
+      if (error.code === "42P01" || error.message?.includes("does not exist")) {
+        return NextResponse.json({ 
+          error: "Database setup required. Please run the setup script.",
+          setupRequired: true 
+        }, { status: 500 });
+      }
+      
+      return NextResponse.json({ error: "Failed to create invites" }, { status: 500 });
     }
-    
+
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.runnerwellnessapp.com";
-    const invitesWithUrls = createdInvites.map(invite => ({
+    const invitesWithUrls = (createdInvites || []).map(invite => ({
       ...invite,
       inviteUrl: `${baseUrl}/join/${invite.invite_code}`,
     }));
@@ -151,8 +123,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error creating invites:", error);
     return NextResponse.json({ error: "Failed to create invites" }, { status: 500 });
-  } finally {
-    await pool.end();
   }
 }
 
@@ -160,7 +130,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -172,19 +142,18 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Invite ID required" }, { status: 400 });
   }
 
-  const pool = getPool();
-  
   try {
-    await pool.query(
-      `DELETE FROM athlete_invites WHERE id = $1 AND coach_id = $2`,
-      [inviteId, user.id]
-    );
+    const { error } = await supabaseAdmin
+      .from("athlete_invites")
+      .delete()
+      .eq("id", inviteId)
+      .eq("coach_id", user.id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting invite:", error);
     return NextResponse.json({ error: "Failed to delete invite" }, { status: 500 });
-  } finally {
-    await pool.end();
   }
 }

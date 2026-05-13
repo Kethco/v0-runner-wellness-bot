@@ -33,6 +33,10 @@ export async function GET() {
     .eq("coach_id", user.id);
 
   if (error) {
+    // Table doesn't exist - return empty array
+    if (error.code === "42P01" || error.message?.includes("does not exist") || error.code === "PGRST204") {
+      return NextResponse.json({ athletes: [], tableNotExists: true });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

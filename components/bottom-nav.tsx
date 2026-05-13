@@ -17,6 +17,11 @@ export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   
+  // Don't show bottom nav on coach pages
+  if (pathname.startsWith("/coach")) {
+    return null;
+  }
+  
   // Find active index for pill animation
   const activeIndex = navItems.findIndex(item => {
     if (item.href === "/") return pathname === "/";
