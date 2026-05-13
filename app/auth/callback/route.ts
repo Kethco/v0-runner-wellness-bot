@@ -65,8 +65,8 @@ export async function GET(request: NextRequest) {
       }
       
       // Redirect based on user type (coach goes to /coach, athlete goes to /)
-      const userType = data.user.user_metadata?.user_type || data.user.user_metadata?.role || 'athlete'
-      const redirectPath = next !== '/' ? next : (userType === 'coach' ? '/coach' : '/')
+      const redirectUserType = data.user.user_metadata?.user_type || data.user.user_metadata?.role || 'athlete'
+      const redirectPath = next !== '/' ? next : (redirectUserType === 'coach' ? '/coach' : '/')
       
       return NextResponse.redirect(`${origin}${redirectPath}`)
     }
