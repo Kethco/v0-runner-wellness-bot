@@ -21,6 +21,16 @@ const MOTIVATIONAL_QUOTES = [
   "Believe in the run.",
 ];
 
+// Cool, calm color palette for LED effect
+const LED_COLORS = [
+  { color: "#00d4ff", glow: "rgba(0, 212, 255, 0.6)" },    // Cyan
+  { color: "#00E5A0", glow: "rgba(0, 229, 160, 0.6)" },    // Mint
+  { color: "#A78BFA", glow: "rgba(167, 139, 250, 0.6)" },  // Purple
+  { color: "#F472B6", glow: "rgba(244, 114, 182, 0.6)" },  // Pink
+  { color: "#38BDF8", glow: "rgba(56, 189, 248, 0.6)" },   // Sky blue
+  { color: "#2DD4BF", glow: "rgba(45, 212, 191, 0.6)" },   // Teal
+];
+
 interface LEDTickerProps {
   streak?: number;
   weeklyMiles?: number;
@@ -72,10 +82,19 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
 
   if (messages.length === 0) return null;
 
+  // Get current color based on message index
+  const currentColor = LED_COLORS[currentIndex % LED_COLORS.length];
+
   return (
-    <div className="relative w-full h-7 overflow-hidden bg-gradient-to-r from-[#0a1520] via-[#0d1a28] to-[#0a1520] border-y border-[#00d4ff]/20">
-      {/* LED glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00d4ff]/5 to-transparent" />
+    <div className="relative w-full h-7 overflow-hidden bg-gradient-to-r from-[#0a1520] via-[#0d1a28] to-[#0a1520] border-y border-white/10">
+      {/* LED glow effect - changes with color */}
+      <motion.div 
+        className="absolute inset-0"
+        animate={{ 
+          background: `linear-gradient(to right, transparent, ${currentColor.color}10, transparent)` 
+        }}
+        transition={{ duration: 0.3 }}
+      />
       
       {/* Scanline effect */}
       <motion.div
@@ -86,9 +105,9 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
       
       {/* LED dots pattern overlay */}
       <div 
-        className="absolute inset-0 opacity-15"
+        className="absolute inset-0 opacity-10"
         style={{
-          backgroundImage: `radial-gradient(circle, #00d4ff 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
           backgroundSize: '4px 4px',
         }}
       />
@@ -102,9 +121,10 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="text-xs font-bold text-[#00d4ff] tracking-wide text-center truncate"
+            className="text-xs font-bold tracking-wide text-center truncate"
             style={{
-              textShadow: '0 0 10px rgba(0, 212, 255, 0.6), 0 0 20px rgba(0, 180, 220, 0.3)',
+              color: currentColor.color,
+              textShadow: `0 0 10px ${currentColor.glow}, 0 0 20px ${currentColor.glow}`,
             }}
           >
             {messages[currentIndex]}
