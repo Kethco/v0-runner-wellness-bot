@@ -1,29 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-// Admin client with service role for bypassing RLS
-const supabaseAdmin = createAdminClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// Generate a random invite code
+// Generate a random 6-character invite code
 function generateInviteCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
   for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
 }
 
-// Check if user is a coach
-function isCoach(user: { user_metadata?: { role?: string; user_type?: string } }): boolean {
-  return user.user_metadata?.role === "coach" || user.user_metadata?.user_type === "coach";
-}
-
-// GET - Fetch all pending invites for a coach
+// GET - Fetch pending invites for the coach's team
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -32,40 +20,40 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!isCoach(user)) {
-    return NextResponse.json({ error: "Not a coach" }, { status: 403 });
+  // Get coach's team
+  const { data: team } = await supabase
+    .from("teams")
+    .select("id, name, invite_code")
+    .eq("coach_id", user.id)
+    .single();
+
+  if (!team) {
+    return NextResponse.json({ invites: [], team: null });
   }
 
-  try {
-    const { data: invites, error } = await supabaseAdmin
-      .from("athlete_invites")
-      .select("*")
-      .eq("coach_id", user.id)
-      .order("created_at", { ascending: false });
+  // Get pending invites for this team
+  const { data: invites, error } = await supabase
+    .from("team_invites")
+    .select("*")
+    .eq("team_id", team.id)
+    .order("created_at", { ascending: false });
 
-    if (error) {
-      // Table doesn't exist - return empty array
-      if (error.code === "42P01" || error.message?.includes("does not exist") || error.code === "PGRST204") {
-        return NextResponse.json({ invites: [], tableNotExists: true });
-      }
-      console.error("Error fetching invites:", error);
-      return NextResponse.json({ invites: [] });
-    }
-
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.runnerwellnessapp.com";
-    const invitesWithUrls = (invites || []).map(invite => ({
-      ...invite,
-      inviteUrl: `${baseUrl}/join/${invite.invite_code}`,
-    }));
-
-    return NextResponse.json({ invites: invitesWithUrls });
-  } catch (error) {
+  if (error) {
     console.error("Error fetching invites:", error);
-    return NextResponse.json({ invites: [] });
+    return NextResponse.json({ invites: [], team });
   }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.runnerwellnessapp.com";
+  const invitesWithUrls = (invites || []).map(invite => ({
+    ...invite,
+    invite_code: team.invite_code,
+    inviteUrl: `${baseUrl}/join?code=${team.invite_code}`,
+  }));
+
+  return NextResponse.json({ invites: invitesWithUrls, team });
 }
 
-// POST - Create new invites (bulk)
+// POST - Create new invites (bulk) for athletes
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -74,59 +62,81 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!isCoach(user)) {
-    return NextResponse.json({ error: "Not a coach" }, { status: 403 });
+  const { athletes } = await request.json();
+
+  if (!athletes || !Array.isArray(athletes) || athletes.length === 0) {
+    return NextResponse.json({ error: "Athlete names are required" }, { status: 400 });
   }
 
-  try {
-    const { athletes } = await request.json();
+  // Get or create coach's team
+  let { data: team } = await supabase
+    .from("teams")
+    .select("id, name, invite_code")
+    .eq("coach_id", user.id)
+    .single();
 
-    if (!athletes || !Array.isArray(athletes) || athletes.length === 0) {
-      return NextResponse.json({ error: "No athletes provided" }, { status: 400 });
+  if (!team) {
+    // Create a default team for the coach
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, last_name")
+      .eq("id", user.id)
+      .single();
+
+    const teamName = profile?.last_name 
+      ? `${profile.last_name}'s Team` 
+      : "My Team";
+
+    const { data: newTeam, error: createError } = await supabase
+      .from("teams")
+      .insert({
+        coach_id: user.id,
+        name: teamName,
+        invite_code: generateInviteCode(),
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error("Error creating team:", createError);
+      return NextResponse.json({ error: "Failed to create team" }, { status: 500 });
     }
 
-    // Create invite records with generated codes
-    const inviteRecords = athletes.map((athlete: { name: string; email?: string }) => ({
-      coach_id: user.id,
-      athlete_name: athlete.name.trim(),
-      athlete_email: athlete.email?.trim() || null,
-      invite_code: generateInviteCode(),
-      status: "pending",
-    }));
+    team = newTeam;
+  }
 
-    const { data: createdInvites, error } = await supabaseAdmin
-      .from("athlete_invites")
-      .insert(inviteRecords)
-      .select();
+  // Create invite records for each athlete
+  const inviteRecords = athletes.map((athlete: { name: string; email?: string }) => ({
+    team_id: team!.id,
+    athlete_name: athlete.name.trim(),
+    email: athlete.email?.trim() || null,
+    status: "pending",
+  }));
 
-    if (error) {
-      console.error("Insert error:", error);
-      
-      // If table doesn't exist, provide helpful message
-      if (error.code === "42P01" || error.message?.includes("does not exist")) {
-        return NextResponse.json({ 
-          error: "Database setup required. Please run the setup script.",
-          setupRequired: true 
-        }, { status: 500 });
-      }
-      
-      return NextResponse.json({ error: "Failed to create invites" }, { status: 500 });
-    }
+  const { data: createdInvites, error: insertError } = await supabase
+    .from("team_invites")
+    .insert(inviteRecords)
+    .select();
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.runnerwellnessapp.com";
-    const invitesWithUrls = (createdInvites || []).map(invite => ({
-      ...invite,
-      inviteUrl: `${baseUrl}/join/${invite.invite_code}`,
-    }));
-
-    return NextResponse.json({ invites: invitesWithUrls });
-  } catch (error) {
-    console.error("Error creating invites:", error);
+  if (insertError) {
+    console.error("Insert error:", insertError);
     return NextResponse.json({ error: "Failed to create invites" }, { status: 500 });
   }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://www.runnerwellnessapp.com";
+  const invitesWithUrls = (createdInvites || []).map(invite => ({
+    ...invite,
+    invite_code: team!.invite_code,
+    inviteUrl: `${baseUrl}/join?code=${team!.invite_code}`,
+  }));
+
+  return NextResponse.json({ 
+    invites: invitesWithUrls,
+    team,
+  });
 }
 
-// DELETE - Cancel an invite
+// DELETE - Remove an invite
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -136,24 +146,33 @@ export async function DELETE(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const inviteId = searchParams.get("inviteId");
+  const inviteId = searchParams.get("id") || searchParams.get("inviteId");
 
   if (!inviteId) {
     return NextResponse.json({ error: "Invite ID required" }, { status: 400 });
   }
 
-  try {
-    const { error } = await supabaseAdmin
-      .from("athlete_invites")
-      .delete()
-      .eq("id", inviteId)
-      .eq("coach_id", user.id);
+  // Verify the invite belongs to coach's team
+  const { data: team } = await supabase
+    .from("teams")
+    .select("id")
+    .eq("coach_id", user.id)
+    .single();
 
-    if (error) throw error;
+  if (!team) {
+    return NextResponse.json({ error: "No team found" }, { status: 404 });
+  }
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting invite:", error);
+  const { error } = await supabase
+    .from("team_invites")
+    .delete()
+    .eq("id", inviteId)
+    .eq("team_id", team.id);
+
+  if (error) {
+    console.error("Delete error:", error);
     return NextResponse.json({ error: "Failed to delete invite" }, { status: 500 });
   }
+
+  return NextResponse.json({ success: true });
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// GET - Fetch all athletes for a coach
+// GET - Fetch all athletes for a coach's team
 export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -10,44 +10,37 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if user is a coach (check both profile and user_metadata)
-  const userMetadata = user.user_metadata;
-  const isCoach = userMetadata?.role === "coach" || userMetadata?.user_type === "coach";
-  
-  if (!isCoach) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-      
-    if (profile?.role !== "coach") {
-      return NextResponse.json({ error: "Not a coach" }, { status: 403 });
-    }
+  // Get coach's team with members
+  const { data: team, error: teamError } = await supabase
+    .from("teams")
+    .select("id, name, invite_code")
+    .eq("coach_id", user.id)
+    .single();
+
+  if (teamError || !team) {
+    // No team yet - return empty
+    return NextResponse.json({ athletes: [], team: null });
   }
 
-  // Get all athletes connected to this coach via coach_athletes table
-  const { data: connections, error } = await supabase
-    .from("coach_athletes")
-    .select("id, created_at, athlete_id")
-    .eq("coach_id", user.id);
+  // Get all team members (athletes)
+  const { data: members, error: membersError } = await supabase
+    .from("team_members")
+    .select("id, user_id, joined_at")
+    .eq("team_id", team.id);
 
-  if (error) {
-    // Table doesn't exist - return empty array
-    if (error.code === "42P01" || error.message?.includes("does not exist") || error.code === "PGRST204") {
-      return NextResponse.json({ athletes: [], tableNotExists: true });
-    }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (membersError) {
+    console.error("Error fetching members:", membersError);
+    return NextResponse.json({ athletes: [], team });
   }
 
-  // For each athlete, get their profile and wellness data
+  // For each member, get their profile and wellness data
   const athletesWithData = await Promise.all(
-    (connections || []).map(async (conn) => {
+    (members || []).map(async (member) => {
       // Get athlete profile
       const { data: athlete } = await supabase
         .from("profiles")
         .select("id, first_name, last_name, email, phone")
-        .eq("id", conn.athlete_id)
+        .eq("id", member.user_id)
         .single();
 
       if (!athlete) return null;
@@ -100,15 +93,18 @@ export async function GET() {
         weeklyMiles: weeklyRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0,
         streak: streak?.current_streak || 0,
         riskLevel,
-        connectedAt: conn.created_at,
+        connectedAt: member.joined_at,
       };
     })
   );
 
-  return NextResponse.json({ athletes: athletesWithData.filter(Boolean) });
+  return NextResponse.json({ 
+    athletes: athletesWithData.filter(Boolean),
+    team 
+  });
 }
 
-// DELETE - Remove an athlete from coach's roster
+// DELETE - Remove an athlete from coach's team
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -124,11 +120,22 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Athlete ID required" }, { status: 400 });
   }
 
-  const { error } = await supabase
-    .from("coach_athletes")
-    .delete()
+  // Get coach's team
+  const { data: team } = await supabase
+    .from("teams")
+    .select("id")
     .eq("coach_id", user.id)
-    .eq("athlete_id", athleteId);
+    .single();
+
+  if (!team) {
+    return NextResponse.json({ error: "No team found" }, { status: 404 });
+  }
+
+  const { error } = await supabase
+    .from("team_members")
+    .delete()
+    .eq("team_id", team.id)
+    .eq("user_id", athleteId);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
