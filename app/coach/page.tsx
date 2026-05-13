@@ -35,6 +35,8 @@ import {
   LayoutGrid,
   Upload,
   FileSpreadsheet,
+  LogOut,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { BottomNav } from "@/components/bottom-nav";
@@ -71,7 +73,7 @@ type Invite = {
 };
 
 export default function CoachDashboard() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, signOut } = useAuth();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -155,13 +157,31 @@ export default function CoachDashboard() {
               Coach {user?.user_metadata?.last_name || user?.user_metadata?.first_name || ""}
             </h1>
           </div>
-          <Button 
-            onClick={() => setShowInviteModal(true)}
-            className="bg-[#FF4500] hover:bg-[#FF6B00] text-white gap-2"
-          >
-            <UserPlus className="w-4 h-4" />
-            Add Athletes
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => setShowInviteModal(true)}
+              className="bg-[#FF4500] hover:bg-[#FF6B00] text-white gap-2"
+            >
+              <UserPlus className="w-4 h-4" />
+              Add Athletes
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-[#8E8E93] hover:text-white">
+                  <Settings className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-[#2C2C2E] border-[#3A3A3C]">
+                <DropdownMenuItem 
+                  onClick={() => signOut()}
+                  className="text-[#FF3B30] focus:text-[#FF3B30]"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </header>
 
