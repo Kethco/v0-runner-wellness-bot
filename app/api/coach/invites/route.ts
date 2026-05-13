@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
+// Admin client bypasses RLS policies (fixes infinite recursion in teams policy)
+const supabaseAdmin = createAdminClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // Generate a random 6-character invite code
 function generateInviteCode(): string {
@@ -20,8 +27,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get coach's team
-  const { data: team } = await supabase
+  // Get coach's team (use admin to bypass RLS)
+  const { data: team } = await supabaseAdmin
     .from("teams")
     .select("id, name, invite_code")
     .eq("coach_id", user.id)
@@ -32,7 +39,7 @@ export async function GET() {
   }
 
   // Get pending invites for this team
-  const { data: invites, error } = await supabase
+  const { data: invites, error } = await supabaseAdmin
     .from("team_invites")
     .select("*")
     .eq("team_id", team.id)
@@ -68,8 +75,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Athlete names are required" }, { status: 400 });
   }
 
-  // Get or create coach's team
-  let { data: team } = await supabase
+  // Get or create coach's team (use admin to bypass RLS)
+  let { data: team } = await supabaseAdmin
     .from("teams")
     .select("id, name, invite_code")
     .eq("coach_id", user.id)
@@ -77,7 +84,7 @@ export async function POST(request: Request) {
 
   if (!team) {
     // Create a default team for the coach
-    const { data: profile } = await supabase
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("first_name, last_name")
       .eq("id", user.id)
@@ -87,7 +94,7 @@ export async function POST(request: Request) {
       ? `${profile.last_name}'s Team` 
       : "My Team";
 
-    const { data: newTeam, error: createError } = await supabase
+    const { data: newTeam, error: createError } = await supabaseAdmin
       .from("teams")
       .insert({
         coach_id: user.id,
@@ -113,7 +120,7 @@ export async function POST(request: Request) {
     status: "pending",
   }));
 
-  const { data: createdInvites, error: insertError } = await supabase
+  const { data: createdInvites, error: insertError } = await supabaseAdmin
     .from("team_invites")
     .insert(inviteRecords)
     .select();
@@ -152,8 +159,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Invite ID required" }, { status: 400 });
   }
 
-  // Verify the invite belongs to coach's team
-  const { data: team } = await supabase
+  // Verify the invite belongs to coach's team (use admin to bypass RLS)
+  const { data: team } = await supabaseAdmin
     .from("teams")
     .select("id")
     .eq("coach_id", user.id)
@@ -163,7 +170,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "No team found" }, { status: 404 });
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("team_invites")
     .delete()
     .eq("id", inviteId)

@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+
+// Admin client bypasses RLS policies (fixes infinite recursion in teams policy)
+const supabaseAdmin = createAdminClient(
+  process.env.SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // GET - Fetch all athletes for a coach's team
 export async function GET() {
@@ -10,8 +17,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get coach's team with members
-  const { data: team, error: teamError } = await supabase
+  // Get coach's team with members (use admin to bypass RLS)
+  const { data: team, error: teamError } = await supabaseAdmin
     .from("teams")
     .select("id, name, invite_code")
     .eq("coach_id", user.id)
@@ -22,8 +29,8 @@ export async function GET() {
     return NextResponse.json({ athletes: [], team: null });
   }
 
-  // Get all team members (athletes)
-  const { data: members, error: membersError } = await supabase
+  // Get all team members (athletes) - use admin to bypass RLS
+  const { data: members, error: membersError } = await supabaseAdmin
     .from("team_members")
     .select("id, user_id, joined_at")
     .eq("team_id", team.id);
@@ -36,8 +43,8 @@ export async function GET() {
   // For each member, get their profile and wellness data
   const athletesWithData = await Promise.all(
     (members || []).map(async (member) => {
-      // Get athlete profile
-      const { data: athlete } = await supabase
+      // Get athlete profile (use admin)
+      const { data: athlete } = await supabaseAdmin
         .from("profiles")
         .select("id, first_name, last_name, email, phone")
         .eq("id", member.user_id)
@@ -46,7 +53,7 @@ export async function GET() {
       if (!athlete) return null;
 
       // Get latest checkin
-      const { data: latestCheckin } = await supabase
+      const { data: latestCheckin } = await supabaseAdmin
         .from("checkins")
         .select("*")
         .eq("user_id", athlete.id)
@@ -57,14 +64,14 @@ export async function GET() {
       // Get this week's runs
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      const { data: weeklyRuns } = await supabase
+      const { data: weeklyRuns } = await supabaseAdmin
         .from("runs")
         .select("miles")
         .eq("user_id", athlete.id)
         .gte("date", weekAgo.toISOString().split("T")[0]);
 
       // Get streak
-      const { data: streak } = await supabase
+      const { data: streak } = await supabaseAdmin
         .from("streaks")
         .select("current_streak")
         .eq("user_id", athlete.id)
@@ -120,8 +127,8 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Athlete ID required" }, { status: 400 });
   }
 
-  // Get coach's team
-  const { data: team } = await supabase
+  // Get coach's team (use admin)
+  const { data: team } = await supabaseAdmin
     .from("teams")
     .select("id")
     .eq("coach_id", user.id)
@@ -131,7 +138,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "No team found" }, { status: 404 });
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseAdmin
     .from("team_members")
     .delete()
     .eq("team_id", team.id)
