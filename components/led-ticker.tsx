@@ -73,9 +73,9 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
   if (messages.length === 0) return null;
 
   return (
-    <div className="relative w-full h-7 overflow-hidden bg-gradient-to-r from-[#1a0a00] via-[#2a0f00] to-[#1a0a00] border-y border-[#FF4500]/30">
+    <div className="relative w-full h-7 overflow-hidden bg-gradient-to-r from-[#0a1520] via-[#0d1a28] to-[#0a1520] border-y border-[#00d4ff]/20">
       {/* LED glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF4500]/10 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00d4ff]/5 to-transparent" />
       
       {/* Scanline effect */}
       <motion.div
@@ -86,9 +86,9 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
       
       {/* LED dots pattern overlay */}
       <div 
-        className="absolute inset-0 opacity-20"
+        className="absolute inset-0 opacity-15"
         style={{
-          backgroundImage: `radial-gradient(circle, #FF4500 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(circle, #00d4ff 1px, transparent 1px)`,
           backgroundSize: '4px 4px',
         }}
       />
@@ -102,9 +102,9 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="text-xs font-bold text-[#FF6B00] tracking-wide text-center truncate"
+            className="text-xs font-bold text-[#00d4ff] tracking-wide text-center truncate"
             style={{
-              textShadow: '0 0 10px rgba(255, 107, 0, 0.8), 0 0 20px rgba(255, 69, 0, 0.5)',
+              textShadow: '0 0 10px rgba(0, 212, 255, 0.6), 0 0 20px rgba(0, 180, 220, 0.3)',
             }}
           >
             {messages[currentIndex]}
@@ -113,8 +113,8 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
       </div>
       
       {/* Edge glow */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#1a0a00] to-transparent" />
-      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#1a0a00] to-transparent" />
+      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0a1520] to-transparent" />
+      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0a1520] to-transparent" />
     </div>
   );
 }
