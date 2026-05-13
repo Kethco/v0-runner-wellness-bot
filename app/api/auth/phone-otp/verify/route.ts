@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // If userData is provided, create the user account
     if (userData) {
-      const { email, password, first_name, last_name, user_type, plan } = userData;
+      const { email, password, first_name, last_name, user_type, plan, program_name } = userData;
       
       // Create user with Supabase auth (using email but marking phone as verified)
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
           role: user_type,
           plan,
           phone_verified: true,
+          ...(program_name && { program_name }), // Include program name for coaches
         },
       });
 

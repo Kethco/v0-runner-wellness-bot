@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, Lock, User, Phone, ArrowRight, Check, Users, PersonStanding, Smartphone, Loader2 } from "lucide-react";
+import { Activity, Lock, User, Phone, ArrowRight, Check, Users, PersonStanding, Smartphone, Loader2, Mail, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,6 +101,7 @@ export default function SignUpPage() {
     phone: "",
     password: "",
     confirmPassword: "",
+    programName: "", // For coaches: school/program name
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -110,6 +111,9 @@ export default function SignUpPage() {
     
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
+    }
+    if (userType === "coach" && !formData.programName.trim()) {
+      newErrors.programName = "Program or school name is required";
     }
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -199,6 +203,7 @@ export default function SignUpPage() {
             last_name: lastName,
             user_type: userType,
             plan: selectedPlan,
+            program_name: userType === "coach" ? formData.programName : undefined,
           },
         }),
       });
@@ -456,7 +461,7 @@ export default function SignUpPage() {
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="name"
-                        placeholder="Jordan Runner"
+                        placeholder={userType === "coach" ? "Coach Smith" : "Jordan Runner"}
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         className="pl-10 bg-secondary border-border"
@@ -464,6 +469,23 @@ export default function SignUpPage() {
                     </div>
                     {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
                   </div>
+
+                  {userType === "coach" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="programName">Program / School Name</Label>
+                      <div className="relative">
+                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="programName"
+                          placeholder="Lincoln High School Track & Field"
+                          value={formData.programName}
+                          onChange={(e) => setFormData({ ...formData, programName: e.target.value })}
+                          className="pl-10 bg-secondary border-border"
+                        />
+                      </div>
+                      {errors.programName && <p className="text-xs text-destructive">{errors.programName}</p>}
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
