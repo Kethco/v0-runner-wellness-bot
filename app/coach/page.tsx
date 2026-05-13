@@ -148,8 +148,12 @@ export default function CoachDashboard() {
       <header className="sticky top-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center justify-between">
           <div>
-            <p className="text-sm font-bold text-[#FF4500]">Coach Dashboard</p>
-            <h1 className="text-xl font-bold text-white">Your Team</h1>
+            <p className="text-sm font-medium text-[#FF4500]">
+              {user?.user_metadata?.program_name || "Coach Dashboard"}
+            </p>
+            <h1 className="text-xl font-bold text-white">
+              Coach {user?.user_metadata?.last_name || user?.user_metadata?.first_name || ""}
+            </h1>
           </div>
           <Button 
             onClick={() => setShowInviteModal(true)}
