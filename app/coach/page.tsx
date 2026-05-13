@@ -672,22 +672,18 @@ function BulkInviteModal({ onClose, onSuccess, coachId }: { onClose: () => void;
       return;
     }
 
-    // Generate invite links client-side - no database needed!
-    // The link encodes the coach ID + athlete name
+    // Generate simple invite links with query parameters
     const baseUrl = window.location.origin;
     const invites: Invite[] = names.map((name, index) => {
-      // Create a simple invite code using URL-safe encoding
-      // Format: coachId|athleteName|timestamp
-      const inviteData = `${coachId}|${name}|${Date.now() + index}`;
-      // Use encodeURIComponent for URL-safe encoding
-      const inviteCode = encodeURIComponent(btoa(unescape(encodeURIComponent(inviteData))));
+      // Simple URL with query params - no encoding tricks
+      const inviteUrl = `${baseUrl}/join?c=${coachId}&n=${encodeURIComponent(name)}`;
       
       return {
         id: `invite-${index}`,
         athlete_name: name,
         athlete_email: null,
-        invite_code: inviteCode,
-        inviteUrl: `${baseUrl}/join/${inviteCode}`,
+        invite_code: coachId,
+        inviteUrl,
         status: "pending" as const,
         created_at: new Date().toISOString(),
       };
