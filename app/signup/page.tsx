@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, Lock, User, Phone, ArrowRight, Check, Users, PersonStanding, Smartphone, Loader2, Mail, Building2 } from "lucide-react";
+import { Activity, Lock, User, Phone, ArrowRight, Check, Users, PersonStanding, Mail, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,134 +136,58 @@ export default function SignUpPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const [otpCode, setOtpCode] = useState("");
-  const [otpToken, setOtpToken] = useState(""); // Signed token from server
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpError, setOtpError] = useState("");
+  const [signupError, setSignupError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
       setIsLoading(true);
-      setOtpError("");
+      setSignupError("");
       
-      // Send OTP to phone for verification
+      // Extract first and last name
+      const nameParts = formData.name.trim().split(" ");
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(" ");
+      
+      // Create account directly without verification
       try {
-        const response = await fetch("/api/auth/phone-otp/send", {
+        const response = await fetch("/api/auth/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
+            email: formData.email,
+            password: formData.password,
+            first_name: firstName,
+            last_name: lastName,
             phone: formData.phone,
-            email: formData.email 
+            user_type: userType,
+            plan: selectedPlan,
+            program_name: userType === "coach" ? formData.programName : undefined,
           }),
         });
         
         const data = await response.json();
         
         if (!response.ok) {
-          setErrors({ phone: data.error || "Failed to send verification code" });
+          setSignupError(data.error || "Failed to create account");
           setIsLoading(false);
           return;
         }
         
-        // Store the signed token for verification
-        setOtpToken(data.otpToken);
-        
-        // Move to verification step
-        setStep("verify");
+        // For paid plans, redirect to checkout
+        if (selectedPlan !== "free_trial" && selectedPlan !== "coach_trial") {
+          localStorage.setItem("pending_plan", selectedPlan);
+          localStorage.setItem("pending_email", formData.email);
+          window.location.href = `/checkout?plan=${selectedPlan}`;
+        } else {
+          setStep("success");
+        }
         setIsLoading(false);
       } catch {
-        setErrors({ phone: "Failed to send verification code. Please try again." });
+        setSignupError("Something went wrong. Please try again.");
         setIsLoading(false);
       }
     }
-  };
-
-  const handleVerify = async () => {
-    if (!otpCode || otpCode.length !== 6) {
-      setOtpError("Please enter the 6-digit code");
-      return;
-    }
-    
-    setIsLoading(true);
-    setOtpError("");
-    
-    // Extract first and last name
-    const nameParts = formData.name.trim().split(" ");
-    const firstName = nameParts[0];
-    const lastName = nameParts.slice(1).join(" ");
-    
-    try {
-      const response = await fetch("/api/auth/phone-otp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: formData.phone,
-          code: otpCode,
-          otpToken, // Include the signed token for verification
-          userData: {
-            email: formData.email,
-            password: formData.password,
-            first_name: firstName,
-            last_name: lastName,
-            user_type: userType,
-            plan: selectedPlan,
-            program_name: userType === "coach" ? formData.programName : undefined,
-          },
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        setOtpError(data.error || "Verification failed");
-        setIsLoading(false);
-        return;
-      }
-      
-      // For paid plans, redirect to checkout
-      if (selectedPlan !== "free_trial" && selectedPlan !== "coach_trial") {
-        localStorage.setItem("pending_plan", selectedPlan);
-        localStorage.setItem("pending_email", formData.email);
-        window.location.href = `/checkout?plan=${selectedPlan}`;
-      } else {
-        setStep("success");
-      }
-      setIsLoading(false);
-    } catch {
-      setOtpError("Verification failed. Please try again.");
-      setIsLoading(false);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    setOtpSending(true);
-    setOtpError("");
-    
-    try {
-      const response = await fetch("/api/auth/phone-otp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          phone: formData.phone,
-          email: formData.email 
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        setOtpError(data.error || "Failed to resend code");
-      } else {
-        // Store the new token
-        setOtpToken(data.otpToken);
-        setOtpCode(""); // Clear old code
-      }
-    } catch {
-      setOtpError("Failed to resend code");
-    }
-    
-    setOtpSending(false);
   };
 
   return (
@@ -561,6 +485,12 @@ export default function SignUpPage() {
                     {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
                   </div>
 
+                  {signupError && (
+                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                      <p className="text-sm text-destructive text-center">{signupError}</p>
+                    </div>
+                  )}
+
                   <Button type="submit" className="w-full gap-2" disabled={isLoading}>
                     {isLoading ? "Creating Account..." : "Create Account"}
                     {!isLoading && <ArrowRight className="w-4 h-4" />}
@@ -582,69 +512,6 @@ export default function SignUpPage() {
                   <Link href="/terms" className="underline">Terms of Service</Link>
                   {" "}and{" "}
                   <Link href="/privacy" className="underline">Privacy Policy</Link>
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {step === "verify" && (
-            <Card className="border-border bg-card">
-              <CardHeader className="space-y-1 text-center">
-                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Smartphone className="w-8 h-8 text-primary" />
-                </div>
-                <CardTitle className="text-2xl font-bold">Verify your phone</CardTitle>
-                <CardDescription>
-                  We sent a 6-digit code to<br />
-                  <span className="text-foreground font-medium">{formData.phone}</span>
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={6}
-                    placeholder="Enter 6-digit code"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                    className="text-center text-2xl tracking-widest font-mono"
-                  />
-                  {otpError && (
-                    <p className="text-sm text-destructive text-center">{otpError}</p>
-                  )}
-                </div>
-                <Button 
-                  onClick={handleVerify} 
-                  className="w-full"
-                  disabled={isLoading || otpCode.length !== 6}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    "Verify & Create Account"
-                  )}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={handleResendOtp}
-                  disabled={otpSending}
-                >
-                  {otpSending ? "Sending..." : "Resend code"}
-                </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  Wrong number?{" "}
-                  <button 
-                    onClick={() => { setStep("form"); setOtpCode(""); setOtpError(""); }} 
-                    className="text-primary hover:underline"
-                  >
-                    Go back
-                  </button>
                 </p>
               </CardContent>
             </Card>
