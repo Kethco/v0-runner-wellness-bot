@@ -1,11 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyOtpToken } from "../send/route";
+import { Pool } from "pg";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// Direct Postgres connection to fix trigger issues
+let triggerFixed = false;
+async function ensureTriggerFixed() {
+  if (triggerFixed) return true;
+  
+  const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.log("No DATABASE_URL, cannot fix trigger");
+    return false;
+  }
+  
+  try {
+    const pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
+    
+    // Drop the problematic trigger and create a simpler one
+    await pool.query(`
+      DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+      
+      CREATE OR REPLACE FUNCTION public.handle_new_user()
+      RETURNS TRIGGER
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      SET search_path = public
+      AS $$
+      BEGIN
+        INSERT INTO public.profiles (id, first_name, last_name, email, phone, role, plan, created_at)
+        VALUES (
+          NEW.id,
+          COALESCE(NEW.raw_user_meta_data ->> 'first_name', ''),
+          COALESCE(NEW.raw_user_meta_data ->> 'last_name', ''),
+          NEW.email,
+          COALESCE(NEW.raw_user_meta_data ->> 'phone', ''),
+          COALESCE(NEW.raw_user_meta_data ->> 'role', NEW.raw_user_meta_data ->> 'user_type', 'athlete'),
+          COALESCE(NEW.raw_user_meta_data ->> 'plan', 'free_trial'),
+          NOW()
+        )
+        ON CONFLICT (id) DO NOTHING;
+        RETURN NEW;
+      END;
+      $$;
+      
+      CREATE TRIGGER on_auth_user_created
+        AFTER INSERT ON auth.users
+        FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+    `);
+    
+    await pool.end();
+    triggerFixed = true;
+    console.log("Trigger fixed successfully!");
+    return true;
+  } catch (error) {
+    console.error("Failed to fix trigger:", error);
+    return false;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,14 +93,8 @@ export async function POST(request: NextRequest) {
     if (userData) {
       const { email, password, first_name, last_name, user_type, plan, program_name } = userData;
       
-      // Try to disable trigger first via raw SQL (this may or may not work)
-      try {
-        await supabase.rpc('exec', { 
-          query: 'DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users' 
-        });
-      } catch {
-        // Ignore - RPC might not exist
-      }
+      // Fix the database trigger before creating user
+      await ensureTriggerFixed();
       
       // Strategy: Create user with minimal data, then update profile manually
       // This avoids trigger issues by not relying on the trigger at all
@@ -69,19 +120,53 @@ export async function POST(request: NextRequest) {
       if (authError) {
         console.error("Failed to create user:", authError);
         
-        // Check if it's a trigger error - provide helpful message
-        if (String(authError).includes("Database error")) {
-          return NextResponse.json({ 
-            error: "Database setup required. Please visit /api/admin/fix-trigger?key=fix-runner-2026 for instructions.",
-            triggerError: true,
-          }, { status: 500 });
-        }
-        
         // Check if user already exists
         if (String(authError).includes("already") || String(authError).includes("exists")) {
           return NextResponse.json({ 
             error: "An account with this email already exists. Please log in instead.",
           }, { status: 400 });
+        }
+        
+        // Check if it's a trigger error - try to fix it
+        if (String(authError).includes("Database error")) {
+          // Reset the flag and try again
+          triggerFixed = false;
+          const fixed = await ensureTriggerFixed();
+          
+          if (fixed) {
+            // Retry user creation
+            const { data: retryData, error: retryError } = await supabase.auth.admin.createUser({
+              email,
+              password,
+              email_confirm: true,
+              phone: formattedPhone,
+              phone_confirm: true,
+              user_metadata: {
+                first_name,
+                last_name,
+                phone: formattedPhone,
+                user_type,
+                role: user_type,
+                plan,
+                phone_verified: true,
+                ...(program_name && { program_name }),
+              },
+            });
+            
+            if (!retryError && retryData?.user) {
+              return NextResponse.json({ 
+                success: true, 
+                message: "Account created successfully",
+                userId: retryData.user.id,
+                userType: user_type,
+              });
+            }
+          }
+          
+          return NextResponse.json({ 
+            error: "Database configuration issue. Please ensure DATABASE_URL is set in environment variables.",
+            triggerError: true,
+          }, { status: 500 });
         }
         
         return NextResponse.json({ 
