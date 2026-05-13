@@ -697,17 +697,37 @@ function BulkInviteModal({ onClose, onSuccess, coachId }: { onClose: () => void;
     onSuccess();
   };
 
+  const copyToClipboard = (text: string): boolean => {
+    // Fallback for when Clipboard API is blocked
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      return true;
+    } catch {
+      // Show the text so user can manually copy
+      prompt("Copy this link:", text);
+      return false;
+    }
+  };
+
   const copyLink = (invite: Invite) => {
-    navigator.clipboard.writeText(invite.inviteUrl);
+    copyToClipboard(invite.inviteUrl);
     setCopiedId(invite.id);
     setTimeout(() => setCopiedId(null), 2000);
+    toast({ title: "Link copied!", description: invite.inviteUrl });
   };
 
   const copyAllLinks = () => {
     const allLinks = createdInvites
       .map(i => `${i.athlete_name}: ${i.inviteUrl}`)
       .join("\n");
-    navigator.clipboard.writeText(allLinks);
+    copyToClipboard(allLinks);
     toast({ title: "All links copied!" });
   };
 
