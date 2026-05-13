@@ -19,12 +19,12 @@ type InviteData = {
 // Decode invite code client-side - no database needed!
 function decodeInvite(code: string): InviteData | null {
   try {
-    // Reverse the URL-safe encoding
-    let base64 = code.replace(/-/g, '+').replace(/_/g, '/');
-    // Add padding if needed
-    while (base64.length % 4) base64 += '=';
-    const decoded = atob(base64);
-    const [coachId, athleteName, timestamp] = decoded.split(':');
+    // First decode the URL encoding
+    const base64 = decodeURIComponent(code);
+    // Then decode base64 and handle UTF-8
+    const decoded = decodeURIComponent(escape(atob(base64)));
+    // Split by pipe (|) - the format is coachId|athleteName|timestamp
+    const [coachId, athleteName, timestamp] = decoded.split('|');
     
     if (!coachId || !athleteName) return null;
     
@@ -33,7 +33,8 @@ function decodeInvite(code: string): InviteData | null {
       athleteName,
       timestamp: parseInt(timestamp) || Date.now(),
     };
-  } catch {
+  } catch (e) {
+    console.error("Failed to decode invite:", e);
     return null;
   }
 }

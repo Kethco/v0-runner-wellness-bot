@@ -676,11 +676,11 @@ function BulkInviteModal({ onClose, onSuccess, coachId }: { onClose: () => void;
     // The link encodes the coach ID + athlete name
     const baseUrl = window.location.origin;
     const invites: Invite[] = names.map((name, index) => {
-      // Create a simple invite code: base64(coachId:athleteName:timestamp)
-      const inviteData = `${coachId}:${name}:${Date.now() + index}`;
-      const inviteCode = btoa(inviteData).replace(/[+/=]/g, (c) => 
-        c === '+' ? '-' : c === '/' ? '_' : ''
-      );
+      // Create a simple invite code using URL-safe encoding
+      // Format: coachId|athleteName|timestamp
+      const inviteData = `${coachId}|${name}|${Date.now() + index}`;
+      // Use encodeURIComponent for URL-safe encoding
+      const inviteCode = encodeURIComponent(btoa(unescape(encodeURIComponent(inviteData))));
       
       return {
         id: `invite-${index}`,
