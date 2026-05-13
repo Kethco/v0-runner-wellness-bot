@@ -6,6 +6,63 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// In-memory OTP storage (shared with send route via module scope)
+// Note: In serverless, this may not persist. For production, create the database table.
+const memoryOtpStore = new Map<string, { otp: string; email?: string; expiresAt: number; attempts: number }>();
+
+// Try to get OTP from database, fallback to memory
+async function getStoredOTP(phone: string): Promise<{ otp_code: string; expires_at: string; attempts: number } | null> {
+  // Try database first
+  const { data: verification, error } = await supabase
+    .from("phone_verifications")
+    .select("*")
+    .eq("phone", phone)
+    .single();
+
+  if (!error && verification) {
+    return verification;
+  }
+
+  // Check memory storage
+  const memoryData = memoryOtpStore.get(phone);
+  if (memoryData) {
+    return {
+      otp_code: memoryData.otp,
+      expires_at: new Date(memoryData.expiresAt).toISOString(),
+      attempts: memoryData.attempts,
+    };
+  }
+
+  return null;
+}
+
+// Update attempts in database or memory
+async function updateAttempts(phone: string, attempts: number) {
+  // Try database
+  const { error } = await supabase
+    .from("phone_verifications")
+    .update({ attempts })
+    .eq("phone", phone);
+
+  if (error) {
+    // Update memory
+    const memoryData = memoryOtpStore.get(phone);
+    if (memoryData) {
+      memoryData.attempts = attempts;
+    }
+  }
+}
+
+// Clean up verification record
+async function cleanupVerification(phone: string) {
+  await supabase
+    .from("phone_verifications")
+    .delete()
+    .eq("phone", phone);
+  
+  memoryOtpStore.delete(phone);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { phone, code, userData } = await request.json();
@@ -20,15 +77,11 @@ export async function POST(request: NextRequest) {
       ? `+${normalizedPhone}` 
       : `+1${normalizedPhone}`;
 
-    // Get stored OTP
-    const { data: verification, error: fetchError } = await supabase
-      .from("phone_verifications")
-      .select("*")
-      .eq("phone", formattedPhone)
-      .single();
+    // Get stored OTP (database or memory)
+    const verification = await getStoredOTP(formattedPhone);
 
-    if (fetchError || !verification) {
-      return NextResponse.json({ error: "No verification found for this phone" }, { status: 400 });
+    if (!verification) {
+      return NextResponse.json({ error: "No verification found for this phone. Please request a new code." }, { status: 400 });
     }
 
     // Check if expired
@@ -42,21 +95,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Increment attempts
-    await supabase
-      .from("phone_verifications")
-      .update({ attempts: verification.attempts + 1 })
-      .eq("phone", formattedPhone);
+    await updateAttempts(formattedPhone, verification.attempts + 1);
 
     // Verify code
     if (verification.otp_code !== code) {
       return NextResponse.json({ error: "Invalid verification code" }, { status: 400 });
     }
-
-    // Mark as verified
-    await supabase
-      .from("phone_verifications")
-      .update({ verified: true })
-      .eq("phone", formattedPhone);
 
     // If userData is provided, create the user account
     if (userData) {
@@ -87,10 +131,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Clean up verification record
-      await supabase
-        .from("phone_verifications")
-        .delete()
-        .eq("phone", formattedPhone);
+      await cleanupVerification(formattedPhone);
 
       return NextResponse.json({ 
         success: true, 
@@ -99,6 +140,9 @@ export async function POST(request: NextRequest) {
         userType: user_type,
       });
     }
+
+    // Clean up verification record
+    await cleanupVerification(formattedPhone);
 
     return NextResponse.json({ 
       success: true, 

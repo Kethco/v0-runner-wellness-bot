@@ -9,10 +9,54 @@ const supabase = createClient(
 const TELNYX_API_KEY = process.env.TELNYX_API_KEY;
 const TELNYX_FROM_NUMBER = process.env.TELNYX_FROM_NUMBER || "+18445030386";
 
+// In-memory OTP storage as fallback when database table doesn't exist
+// Note: This works in development but won't persist across serverless function invocations in production
+// For production, ensure the phone_verifications table is created
+const memoryOtpStore = new Map<string, { otp: string; email?: string; expiresAt: number; attempts: number }>();
+
 // Generate 6-digit OTP
 function generateOTP(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
+
+// Store OTP - tries database first, falls back to memory
+async function storeOTP(phone: string, email: string | null, otp: string, expiresAt: string): Promise<boolean> {
+  // Try database first
+  const { error: dbError } = await supabase
+    .from("phone_verifications")
+    .upsert({
+      phone,
+      email: email || null,
+      otp_code: otp,
+      expires_at: expiresAt,
+      verified: false,
+      attempts: 0,
+    }, {
+      onConflict: "phone"
+    });
+
+  if (!dbError) {
+    return true;
+  }
+
+  // If table doesn't exist, use memory storage
+  if (dbError.code === "42P01" || dbError.code === "PGRST205") {
+    console.log("Using memory storage for OTP (table not found)");
+    memoryOtpStore.set(phone, {
+      otp,
+      email: email || undefined,
+      expiresAt: new Date(expiresAt).getTime(),
+      attempts: 0,
+    });
+    return true;
+  }
+
+  console.error("Failed to store OTP:", dbError);
+  return false;
+}
+
+// Export for use in verify route
+export { memoryOtpStore };
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,28 +76,9 @@ export async function POST(request: NextRequest) {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    // Store OTP in database (upsert to handle retries)
-    const { error: dbError } = await supabase
-      .from("phone_verifications")
-      .upsert({
-        phone: formattedPhone,
-        email: email || null,
-        otp_code: otp,
-        expires_at: expiresAt,
-        verified: false,
-        attempts: 0,
-      }, {
-        onConflict: "phone"
-      });
-
-    if (dbError) {
-      console.error("Failed to store OTP:", dbError);
-      // If table doesn't exist, create it
-      if (dbError.code === "42P01") {
-        return NextResponse.json({ 
-          error: "Phone verification not set up. Please run the setup SQL." 
-        }, { status: 500 });
-      }
+    // Store OTP (database or memory fallback)
+    const stored = await storeOTP(formattedPhone, email, otp, expiresAt);
+    if (!stored) {
       return NextResponse.json({ error: "Failed to generate verification code" }, { status: 500 });
     }
 

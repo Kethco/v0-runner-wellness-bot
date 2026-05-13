@@ -41,7 +41,7 @@ export default function LoginPage() {
       setIsLoading(true);
       const supabase = createClient();
       
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
@@ -49,7 +49,7 @@ export default function LoginPage() {
       if (error) {
         setErrors({ email: error.message });
         setIsLoading(false);
-      } else if (data.user) {
+      } else if (data?.user) {
         // Redirect based on user type
         const userType = data.user.user_metadata?.user_type || data.user.user_metadata?.role || "athlete";
         if (userType === "coach") {
