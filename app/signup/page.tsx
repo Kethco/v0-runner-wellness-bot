@@ -534,14 +534,16 @@ export default function SignUpPage() {
                   <p className="text-sm text-muted-foreground mb-2">Your 7-day free trial has started</p>
                   <p className="text-2xl font-bold text-foreground">7 days remaining</p>
                 </div>
-                <Link href="/">
+                <Link href={userType === "coach" ? "/coach" : "/"}>
                   <Button className="w-full gap-2">
-                    Go to Dashboard
+                    {userType === "coach" ? "Go to Coach Dashboard" : "Go to Dashboard"}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
                 <p className="text-xs text-muted-foreground text-center">
-                  Pro tip: Text &quot;checkin&quot; to +1 844 503 0386 to start your first check-in!
+                  {userType === "coach" 
+                    ? "Pro tip: Start by inviting your athletes from the dashboard!"
+                    : "Pro tip: Text \"checkin\" to +1 844 503 0386 to start your first check-in!"}
                 </p>
               </CardContent>
             </Card>

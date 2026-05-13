@@ -41,7 +41,11 @@ import {
   ExternalLink,
   Shield,
   Loader2,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 
 const fetcher = async (url: string) => {
@@ -356,6 +360,9 @@ return (
             </CardContent>
           </Card>
 
+          {/* Subscription Management */}
+          <SubscriptionCard user={user} />
+
           {/* Danger Zone */}
           <Card className="border-destructive/50 bg-card">
             <CardHeader>
@@ -388,7 +395,18 @@ return (
                     </DialogHeader>
                     <DialogFooter>
                       <Button variant="outline">Cancel</Button>
-                      <Button variant="destructive">Delete Everything</Button>
+                      <Button variant="destructive" onClick={async () => {
+                        try {
+                          const res = await fetch("/api/account/delete", { method: "DELETE" });
+                          if (res.ok) {
+                            window.location.href = "/login";
+                          } else {
+                            toast({ title: "Error", description: "Failed to delete account", variant: "destructive" });
+                          }
+                        } catch {
+                          toast({ title: "Error", description: "Failed to delete account", variant: "destructive" });
+                        }
+                      }}>Delete Everything</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -412,5 +430,221 @@ return (
       </main>
       <BottomNav />
     </div>
+  );
+}
+
+// Subscription Management Component
+function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string }; created_at?: string } | null }) {
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  
+  const plan = user?.user_metadata?.plan || "free_trial";
+  const createdAt = user?.created_at ? new Date(user.created_at) : new Date();
+  const trialEndDate = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const daysLeft = Math.max(0, Math.ceil((trialEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+  
+  const planNames: Record<string, string> = {
+    free_trial: "Free Trial",
+    pro_monthly: "Pro Monthly",
+    pro_annual: "Pro Annual",
+    coach_trial: "Coach Free Trial",
+    coach_starter: "Coach Starter",
+    coach_pro: "Coach Pro",
+    coach_elite: "Coach Elite",
+    coach_athlete: "Team Member (Coach Pays)",
+  };
+  
+  const planPrices: Record<string, string> = {
+    free_trial: "$0/7 days",
+    pro_monthly: "$9.99/month",
+    pro_annual: "$99.99/year",
+    coach_trial: "$0/7 days",
+    coach_starter: "$29.99/month",
+    coach_pro: "$49.99/month",
+    coach_elite: "$79.99/month",
+    coach_athlete: "Free",
+  };
+  
+  const isTrialPlan = plan === "free_trial" || plan === "coach_trial";
+  const isCoachAthlete = plan === "coach_athlete";
+  
+  const handleCancelSubscription = async () => {
+    setIsCancelling(true);
+    try {
+      const res = await fetch("/api/subscription/cancel", { method: "POST" });
+      if (res.ok) {
+        toast({ 
+          title: "Subscription Cancelled", 
+          description: "Your subscription has been cancelled. You can continue using the app until the end of your billing period.",
+        });
+        setShowCancelDialog(false);
+      } else {
+        const data = await res.json();
+        toast({ 
+          title: "Error", 
+          description: data.error || "Failed to cancel subscription", 
+          variant: "destructive" 
+        });
+      }
+    } catch {
+      toast({ title: "Error", description: "Failed to cancel subscription", variant: "destructive" });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+  
+  return (
+    <Card className="border-border bg-card">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <CreditCard className="w-5 h-5" />
+          Subscription
+        </CardTitle>
+        <CardDescription>Manage your plan and billing</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Current Plan */}
+        <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+          <div>
+            <div className="flex items-center gap-2">
+              <h4 className="font-medium text-foreground">{planNames[plan] || plan}</h4>
+              {isTrialPlan && daysLeft > 0 && (
+                <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
+                  {daysLeft} days left
+                </Badge>
+              )}
+              {isCoachAthlete && (
+                <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-400">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Active
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">{planPrices[plan] || ""}</p>
+          </div>
+          {!isCoachAthlete && (
+            <Button variant="outline" size="sm" asChild>
+              <a href="/pricing">
+                {isTrialPlan ? "Upgrade" : "Change Plan"}
+              </a>
+            </Button>
+          )}
+        </div>
+        
+        {/* Trial Info */}
+        {isTrialPlan && daysLeft > 0 && (
+          <div className="flex items-start gap-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-foreground">Trial Period</h4>
+              <p className="text-sm text-muted-foreground">
+                Your free trial ends on {trialEndDate.toLocaleDateString()}. Upgrade to keep your data and continue using all features.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Coach Athlete Info */}
+        {isCoachAthlete && (
+          <div className="flex items-start gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+            <Users className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-foreground">Team Membership</h4>
+              <p className="text-sm text-muted-foreground">
+                Your account is managed by your coach. Contact your coach if you need to make changes to your subscription.
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Cancel Subscription */}
+        {!isTrialPlan && !isCoachAthlete && (
+          <div className="pt-2">
+            <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Cancel Subscription
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-border">
+                <DialogHeader>
+                  <DialogTitle>Cancel Subscription?</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to cancel? You&apos;ll lose access to:
+                  </DialogDescription>
+                </DialogHeader>
+                <ul className="text-sm text-muted-foreground space-y-2 py-4">
+                  <li className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive" />
+                    AI coaching recommendations
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive" />
+                    30-day analytics and trends
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive" />
+                    Unlimited goals
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-destructive" />
+                    Race predictions
+                  </li>
+                </ul>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+                    Keep Subscription
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleCancelSubscription}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Yes, Cancel
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+        
+        {/* Downgrade from Trial */}
+        {isTrialPlan && (
+          <div className="pt-2">
+            <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Cancel Trial
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-border">
+                <DialogHeader>
+                  <DialogTitle>Cancel Free Trial?</DialogTitle>
+                  <DialogDescription>
+                    Your trial will end immediately and your account will be deactivated. You can always sign up again later.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+                    Keep Trial
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleCancelSubscription}
+                    disabled={isCancelling}
+                  >
+                    {isCancelling && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Yes, Cancel Trial
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
