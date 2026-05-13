@@ -873,7 +873,7 @@ function BulkInviteModal({ onClose, onSuccess, coachId }: { onClose: () => void;
                 Copy All Links
               </Button>
               <Button 
-                onClick={onSuccess}
+                onClick={() => onClose()}
                 className="flex-1 bg-[#FF4500] hover:bg-[#FF6B00]"
               >
                 Done

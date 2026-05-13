@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Activity, Lock, User, Mail, CheckCircle2 } from "lucide-react";
+import { Activity, Lock, User, Mail, CheckCircle2, Phone } from "lucide-react";
 
 function JoinForm() {
   const searchParams = useSearchParams();
@@ -17,6 +17,7 @@ function JoinForm() {
   const [formData, setFormData] = useState({
     name: athleteName,
     email: "",
+    phone: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +56,7 @@ function JoinForm() {
           password: formData.password,
           first_name: formData.name.split(" ")[0] || formData.name,
           last_name: formData.name.split(" ").slice(1).join(" ") || "",
+          phone: formData.phone,
           user_type: "athlete",
           coach_id: coachId,
         }),
@@ -135,6 +137,22 @@ function JoinForm() {
                 required
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm text-[#8E8E93]">Phone Number (for SMS check-ins)</label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8E8E93]" />
+              <Input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="(555) 123-4567"
+                className="pl-10 bg-[#2C2C2E] border-[#3A3A3C] text-white"
+                required
+              />
+            </div>
+            <p className="text-xs text-[#8E8E93]">You&apos;ll receive daily check-in reminders via SMS</p>
           </div>
 
           <div className="space-y-2">
