@@ -137,6 +137,7 @@ export default function SignUpPage() {
   };
 
   const [otpCode, setOtpCode] = useState("");
+  const [otpToken, setOtpToken] = useState(""); // Signed token from server
   const [otpSending, setOtpSending] = useState(false);
   const [otpError, setOtpError] = useState("");
 
@@ -164,6 +165,9 @@ export default function SignUpPage() {
           setIsLoading(false);
           return;
         }
+        
+        // Store the signed token for verification
+        setOtpToken(data.otpToken);
         
         // Move to verification step
         setStep("verify");
@@ -196,6 +200,7 @@ export default function SignUpPage() {
         body: JSON.stringify({
           phone: formData.phone,
           code: otpCode,
+          otpToken, // Include the signed token for verification
           userData: {
             email: formData.email,
             password: formData.password,
@@ -245,9 +250,14 @@ export default function SignUpPage() {
         }),
       });
       
+      const data = await response.json();
+      
       if (!response.ok) {
-        const data = await response.json();
         setOtpError(data.error || "Failed to resend code");
+      } else {
+        // Store the new token
+        setOtpToken(data.otpToken);
+        setOtpCode(""); // Clear old code
       }
     } catch {
       setOtpError("Failed to resend code");
