@@ -16,6 +16,7 @@ import { celebrateMilestone, checkMilestone } from "@/lib/celebrations";
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
 import { toast } from "@/hooks/use-toast";
 import { TrialCountdown } from "@/components/trial-expired-blocker";
+import { LEDTicker } from "@/components/led-ticker";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -164,6 +165,13 @@ return (
             </motion.div>
           </div>
         </div>
+        
+        {/* LED Stadium Ticker */}
+        <LEDTicker 
+          streak={currentStreak} 
+          weeklyMiles={weeklyMiles} 
+          userName={userName} 
+        />
       </header>
 
       <main className="px-5 py-6 space-y-6">
