@@ -41,6 +41,7 @@ export default function Dashboard() {
   const { data: runsData, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher);
   const { data: profileData, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher);
   const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher);
+  const { data: streakData, mutate: mutateStreak } = useSWR(user ? "/api/streak" : null, fetcher);
   
   // Ref for milestone tracking
   const prevProgressRef = useRef<number>(0);
@@ -84,7 +85,7 @@ export default function Dashboard() {
   const weeklyMiles = runs.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
   const weeklyGoal = localGoal || profile?.weekly_goal || 25;
   const progressPercent = Math.min((weeklyMiles / weeklyGoal) * 100, 100);
-  const currentStreak = profile?.current_streak || checkins.length;
+  const currentStreak = streakData?.streak?.current_streak || 0;
   
   // Check if on trial
   const plan = user?.user_metadata?.plan;
@@ -422,10 +423,11 @@ return (
       {showCheckinModal && (
         <CheckInModal 
           isOpen={showCheckinModal} 
-          onClose={() => {
-            setShowCheckinModal(false);
-            mutateCheckins();
-          }} 
+onClose={() => {
+      setShowCheckinModal(false);
+      mutateCheckins();
+      mutateStreak();
+      }}
         />
       )}
 
