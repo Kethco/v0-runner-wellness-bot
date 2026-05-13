@@ -57,7 +57,10 @@ export async function POST(request: NextRequest) {
       
       // If it's a database trigger error, the user might still be created
       // Check if user exists and return success if so
-      if (authError.message?.includes("Database error")) {
+      if (authError.message?.includes("Database error") || authError.message?.includes("trigger")) {
+        // Wait a moment for the user to be created
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         const { data: users } = await supabase.auth.admin.listUsers();
         const createdUser = users?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
         
@@ -75,8 +78,13 @@ export async function POST(request: NextRequest) {
         }
       }
       
+      // User-friendly error messages
+      if (authError.message?.includes("already")) {
+        return NextResponse.json({ error: "An account with this email already exists" }, { status: 400 });
+      }
+      
       return NextResponse.json({ 
-        error: authError.message || "Failed to create account",
+        error: "Could not create account. Please try again.",
       }, { status: 500 });
     }
 
@@ -101,7 +109,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Create or update profile using upsert
+// Create or update profile - only use columns that exist
 async function createProfile(userId: string, data: {
   first_name?: string;
   last_name?: string;
@@ -112,30 +120,18 @@ async function createProfile(userId: string, data: {
   coach_id?: string;
 }) {
   try {
-    // First try to upsert with all fields
+    // Only use basic columns that definitely exist
     const { error } = await supabase
       .from("profiles")
       .upsert({
         id: userId,
         first_name: data.first_name || "",
         last_name: data.last_name || "",
-        phone: data.phone || "",
         role: data.user_type || "athlete",
-        plan: data.plan || "free_trial",
-        coach_id: data.coach_id || null,
-        created_at: new Date().toISOString(),
       }, { onConflict: "id" });
     
     if (error) {
       console.error("Profile upsert error:", error);
-      // If upsert fails (missing columns), try minimal update
-      await supabase
-        .from("profiles")
-        .update({
-          first_name: data.first_name || "",
-          last_name: data.last_name || "",
-        })
-        .eq("id", userId);
     }
   } catch (err) {
     console.error("Profile creation error:", err);
