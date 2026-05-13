@@ -174,10 +174,17 @@ export default function CoachDashboard() {
               <DropdownMenuContent align="end" className="bg-[#2C2C2E] border-[#3A3A3C]">
                 <DropdownMenuItem 
                   onClick={() => signOut()}
-                  className="text-[#FF3B30] focus:text-[#FF3B30]"
+                  className="text-white focus:text-white"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => window.location.href = "/account/cancel"}
+                  className="text-[#FF3B30] focus:text-[#FF3B30]"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Cancel Account
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

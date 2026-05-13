@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Lock, Sparkles, Clock, CheckCircle } from "lucide-react";
+import { Lock, Sparkles, Clock, CheckCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 // Routes that should never show the trial blocker
-const EXCLUDED_ROUTES = ["/pricing", "/login", "/signup", "/auth", "/join", "/terms", "/privacy", "/help"];
+const EXCLUDED_ROUTES = ["/pricing", "/login", "/signup", "/auth", "/join", "/terms", "/privacy", "/help", "/account/cancel"];
 
 export function TrialExpiredBlocker() {
   const { user, isLoading } = useAuth();
@@ -109,6 +110,12 @@ export function TrialExpiredBlocker() {
         <p className="text-[#8E8E93] text-sm mt-4">
           Starting at $9.99/month
         </p>
+
+        <Link href="/account/cancel" className="block mt-6">
+          <button className="text-[#8E8E93] text-sm hover:text-[#FF3B30] transition-colors">
+            Cancel account and delete my data
+          </button>
+        </Link>
       </motion.div>
     </motion.div>
   );
