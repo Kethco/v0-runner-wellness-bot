@@ -37,15 +37,15 @@ export function Navbar() {
   const isCoach = userType === "coach";
   
   return (
-    <nav className="fixed-header-safe z-50 flex items-center justify-between px-4 md:px-8 py-4 border-b border-border">
+    <nav className="fixed-header-safe z-50 flex items-center justify-between px-4 md:px-6 py-2 border-b border-border">
       {/* Logo */}
       <a href="/" className="flex items-center gap-2">
-        <div className="w-9 h-9 bg-primary rounded-lg flex items-center justify-center">
-          <Activity className="w-5 h-5 text-primary-foreground" />
+        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+          <Activity className="w-4 h-4 text-primary-foreground" />
         </div>
         <div className="hidden sm:flex items-baseline gap-1">
-          <span className="text-lg font-bold tracking-tight text-foreground">RUNNER</span>
-          <span className="text-lg font-bold tracking-tight text-primary">WELLNESS</span>
+          <span className="text-base font-bold tracking-tight text-foreground">RUNNER</span>
+          <span className="text-base font-bold tracking-tight text-primary">WELLNESS</span>
         </div>
       </a>
 

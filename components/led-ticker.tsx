@@ -96,7 +96,7 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
   const currentColor = LED_COLORS[currentIndex % LED_COLORS.length];
 
   return (
-    <div className="relative w-full h-7 overflow-hidden bg-gradient-to-r from-[#0a1520] via-[#0d1a28] to-[#0a1520] border-y border-white/10">
+    <div className="relative w-full h-5 overflow-hidden bg-gradient-to-r from-[#0a1520] via-[#0d1a28] to-[#0a1520] border-y border-white/10">
       {/* LED glow effect - changes with color */}
       <motion.div 
         className="absolute inset-0"
@@ -109,7 +109,7 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
       {/* Scanline effect */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent h-[2px]"
-        animate={{ y: [0, 28, 0] }}
+        animate={{ y: [0, 20, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
       />
       

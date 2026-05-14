@@ -40,11 +40,11 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-t border-[#2A2A2A]">
-      <div className="relative flex items-center justify-around py-3 px-2 max-w-lg mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t border-[#2A2A2A]">
+      <div className="relative flex items-center justify-around py-1.5 px-2 max-w-lg mx-auto">
         {/* Animated pill indicator */}
         <motion.div
-          className="absolute top-2 h-[52px] bg-[#FF4500]/15 rounded-2xl"
+          className="absolute top-1 h-[42px] bg-[#FF4500]/15 rounded-xl"
           initial={false}
           animate={{
             x: `calc(${activeIndex * 100}% + ${activeIndex * 4}px)`,
@@ -72,18 +72,18 @@ export function BottomNav() {
             >
               <motion.div
                 whileTap={{ scale: 0.92 }}
-                className="flex flex-col items-center gap-1 py-2"
+                className="flex flex-col items-center gap-0.5 py-1"
               >
                 <motion.div
                   initial={false}
                   animate={{
-                    scale: isActive ? 1.1 : 1,
-                    y: isActive ? -2 : 0,
+                    scale: isActive ? 1.05 : 1,
+                    y: isActive ? -1 : 0,
                   }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
                   <Icon 
-                    className={`w-6 h-6 transition-colors duration-200 ${
+                    className={`w-5 h-5 transition-colors duration-200 ${
                       isActive ? "text-[#FF4500]" : "text-[#6E6E73]"
                     }`} 
                   />
@@ -92,9 +92,9 @@ export function BottomNav() {
                   initial={false}
                   animate={{
                     color: isActive ? "#FF4500" : "#6E6E73",
-                    fontWeight: isActive ? 700 : 500,
+                    fontWeight: isActive ? 600 : 500,
                   }}
-                  className="text-[10px] tracking-wide"
+                  className="text-[9px] tracking-wide"
                 >
                   {item.label}
                 </motion.span>
