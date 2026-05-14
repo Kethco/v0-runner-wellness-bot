@@ -174,7 +174,7 @@ return (
         />
       </header>
 
-      <main className="px-5 py-6 space-y-6 mt-[105px]">
+      <main className="px-5 py-6 space-y-6 mt-[115px]">
         {/* Hero Stats Card with Animated Border */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
