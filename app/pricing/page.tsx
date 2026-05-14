@@ -37,7 +37,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container max-w-6xl mx-auto px-4 py-8 mt-[56px]">
+      <main className="container max-w-6xl mx-auto px-4 py-8 mt-[70px]">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-black tracking-tight mb-4">
