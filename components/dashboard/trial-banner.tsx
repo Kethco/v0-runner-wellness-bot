@@ -60,9 +60,9 @@ export function TrialBanner() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -100, opacity: 0 }}
-        className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg"
+        className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-red-600 to-red-500 text-white shadow-lg pt-safe"
       >
-        <div className="max-w-lg mx-auto px-4 py-3">
+        <div className="max-w-lg mx-auto px-4 py-2">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 flex-shrink-0" />
@@ -109,9 +109,9 @@ export function TrialBanner() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -100, opacity: 0 }}
-        className={`fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r ${gradients[urgency]} text-white shadow-lg`}
+        className={`fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r ${gradients[urgency]} text-white shadow-lg pt-safe`}
       >
-        <div className="max-w-lg mx-auto px-4 py-2.5">
+        <div className="max-w-lg mx-auto px-4 py-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <Clock className="w-4 h-4 flex-shrink-0" />

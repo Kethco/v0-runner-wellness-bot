@@ -60,7 +60,7 @@ return (
         </div>
       </header>
 
-      <main className="px-5 py-4 mt-[90px]">
+      <main className="px-5 py-4 mt-[100px]">
         <AnimatePresence mode="wait">
           {mode === "home" && <HomeView onSelectMode={setMode} />}
           {mode === "pre-run" && <PreRunView onComplete={() => setMode("home")} />}
