@@ -28,7 +28,7 @@ export default function MindPage() {
 return (
   <div className="min-h-screen bg-black text-white pb-28">
       {/* Header - Fixed with solid background */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black pt-safe border-b border-[#3A3A3C]">
+      <header className="fixed-header-safe z-50 border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center gap-4">
           {mode !== "home" ? (
             <motion.button

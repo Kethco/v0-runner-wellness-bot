@@ -272,12 +272,28 @@
 }
 
 /* Safe area for fixed headers on phones with notches */
+/* Use top-safe class to position element at very top and add padding for content */
+.top-safe {
+  top: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
 .pt-safe {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* For fixed headers that need to cover the entire top including notch area */
+.fixed-header-safe {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+  background-color: black;
 }
 
 /* Custom scrollbar */
