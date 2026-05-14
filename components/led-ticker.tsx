@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const MOTIVATIONAL_QUOTES = [
@@ -40,6 +40,9 @@ interface LEDTickerProps {
 export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTickerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [messages, setMessages] = useState<string[]>([]);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Build personalized messages
@@ -70,15 +73,33 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
     setMessages(allMessages);
   }, [streak, weeklyMiles, userName]);
 
+  // Check if text overflows container
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (textRef.current && containerRef.current) {
+        const textWidth = textRef.current.scrollWidth;
+        const containerWidth = containerRef.current.offsetWidth - 64; // Account for padding
+        setIsOverflowing(textWidth > containerWidth);
+      }
+    };
+    
+    // Small delay to allow text to render
+    const timer = setTimeout(checkOverflow, 100);
+    return () => clearTimeout(timer);
+  }, [currentIndex, messages]);
+
   useEffect(() => {
     if (messages.length === 0) return;
     
+    // Longer display time for scrolling messages
+    const displayTime = isOverflowing ? 8000 : 4000;
+    
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % messages.length);
-    }, 4000);
+    }, displayTime);
     
     return () => clearInterval(interval);
-  }, [messages.length]);
+  }, [messages.length, isOverflowing]);
 
   if (messages.length === 0) return null;
 
@@ -113,22 +134,34 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
       />
       
       {/* Text content */}
-      <div className="relative h-full flex items-center justify-center px-4">
+      <div ref={containerRef} className="relative h-full flex items-center overflow-hidden px-8">
         <AnimatePresence mode="wait">
-          <motion.p
+          <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="text-xs font-bold tracking-wide text-center truncate"
-            style={{
-              color: currentColor.color,
-              textShadow: `0 0 10px ${currentColor.glow}, 0 0 20px ${currentColor.glow}`,
-            }}
+            className="w-full flex justify-center"
           >
-            {messages[currentIndex]}
-          </motion.p>
+            <motion.p
+              ref={textRef}
+              initial={isOverflowing ? { x: "10%" } : { x: 0 }}
+              animate={isOverflowing ? { x: "-100%" } : { x: 0 }}
+              transition={isOverflowing ? { 
+                duration: 6, 
+                ease: "linear",
+                delay: 0.5 
+              } : {}}
+              className="text-xs font-bold tracking-wide whitespace-nowrap"
+              style={{
+                color: currentColor.color,
+                textShadow: `0 0 10px ${currentColor.glow}, 0 0 20px ${currentColor.glow}`,
+              }}
+            >
+              {messages[currentIndex]}
+            </motion.p>
+          </motion.div>
         </AnimatePresence>
       </div>
       
