@@ -81,7 +81,7 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
     if (messages.length === 0) return;
     
     // Longer display time for scrolling messages
-    const displayTime = needsScroll ? 10000 : 4000;
+    const displayTime = needsScroll ? 16000 : 4000;
     
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % messages.length);
@@ -137,9 +137,9 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
               initial={needsScroll ? { x: "100%" } : { x: 0 }}
               animate={needsScroll ? { x: "-100%" } : { x: 0 }}
               transition={needsScroll ? { 
-                duration: 8, 
+                duration: 14, 
                 ease: "linear",
-                delay: 0.3 
+                delay: 0.5 
               } : {}}
               className="text-xs font-bold tracking-wide whitespace-nowrap"
               style={{
