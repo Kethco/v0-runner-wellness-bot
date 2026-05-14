@@ -61,10 +61,21 @@ function getWeeksUntil(dateStr: string): number {
   return Math.floor(getDaysUntil(dateStr) / 7);
 }
 
+// Helper to convert pace string "MM:SS" to seconds
+function paceToSeconds(pace: string | undefined | null): number | null {
+  if (!pace) return null;
+  const parts = pace.split(":");
+  if (parts.length !== 2) return null;
+  const minutes = parseInt(parts[0]);
+  const seconds = parseInt(parts[1]);
+  if (isNaN(minutes) || isNaN(seconds)) return null;
+  return minutes * 60 + seconds;
+}
+
 // Race time prediction using Riegel formula: T2 = T1 × (D2/D1)^1.06
 // Also factors in recent training data for more accurate predictions
 function predictRaceTime(
-  recentRuns: { miles: number; duration_minutes?: number; pace_seconds?: number }[],
+  recentRuns: { miles: number; duration_minutes?: number; pace?: string; pace_seconds?: number }[],
   targetDistance: string
 ): { predictedTime: string; confidence: string; basedOn: string } | null {
   // Distance in miles
@@ -80,8 +91,13 @@ function predictRaceTime(
   if (!targetMiles) return null;
   
   // Find runs with pace data, sorted by distance (prefer longer runs for prediction)
+  // Support both pace (string "MM:SS") and pace_seconds (number)
   const runsWithPace = recentRuns
-    .filter(r => r.pace_seconds && r.miles >= 2)
+    .map(r => ({
+      ...r,
+      paceInSeconds: r.pace_seconds || paceToSeconds(r.pace)
+    }))
+    .filter(r => r.paceInSeconds && r.miles >= 1)
     .sort((a, b) => b.miles - a.miles);
   
   if (runsWithPace.length === 0) return null;
@@ -89,7 +105,7 @@ function predictRaceTime(
   // Use the longest recent run as base for prediction
   const baseRun = runsWithPace[0];
   const baseMiles = baseRun.miles;
-  const basePaceSeconds = baseRun.pace_seconds!;
+  const basePaceSeconds = baseRun.paceInSeconds!;
   const baseTimeMinutes = (baseMiles * basePaceSeconds) / 60;
   
   // Riegel formula with 1.06 exponent (accounts for fatigue in longer races)
