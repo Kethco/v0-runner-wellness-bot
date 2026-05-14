@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp } from "lucide-react";
+import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp, Medal } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 
 interface Goal {
@@ -49,6 +49,81 @@ const fetcher = async (url: string) => {
 };
 
 const DISTANCES = ["5K", "10K", "Half Marathon", "Marathon", "Ultra"];
+
+// PR distance definitions (in miles) with tolerance for matching
+const PR_DISTANCES = [
+  { name: "1 Mile", miles: 1, tolerance: 0.05 },
+  { name: "5K", miles: 3.1, tolerance: 0.1 },
+  { name: "10K", miles: 6.2, tolerance: 0.15 },
+  { name: "Half Marathon", miles: 13.1, tolerance: 0.2 },
+  { name: "Marathon", miles: 26.2, tolerance: 0.3 },
+];
+
+interface PersonalRecord {
+  distance: string;
+  time: string;
+  timeSeconds: number;
+  date: string;
+  miles: number;
+}
+
+// Calculate PRs from run history
+function calculatePRs(runs: { miles: number; pace?: string; duration_minutes?: number; date: string }[]): PersonalRecord[] {
+  const prs: PersonalRecord[] = [];
+  
+  for (const prDist of PR_DISTANCES) {
+    // Find all runs that match this distance (within tolerance)
+    const matchingRuns = runs.filter(r => 
+      Math.abs(r.miles - prDist.miles) <= prDist.tolerance
+    );
+    
+    if (matchingRuns.length === 0) {
+      prs.push({ distance: prDist.name, time: "--:--", timeSeconds: Infinity, date: "", miles: prDist.miles });
+      continue;
+    }
+    
+    // Calculate time for each matching run and find the fastest
+    let bestRun: { time: string; timeSeconds: number; date: string } | null = null;
+    
+    for (const run of matchingRuns) {
+      let timeSeconds: number | null = null;
+      
+      // Try to calculate time from duration_minutes
+      if (run.duration_minutes) {
+        timeSeconds = run.duration_minutes * 60;
+      }
+      // Or calculate from pace
+      else if (run.pace) {
+        const paceSeconds = paceToSeconds(run.pace);
+        if (paceSeconds) {
+          timeSeconds = paceSeconds * run.miles;
+        }
+      }
+      
+      if (timeSeconds && (!bestRun || timeSeconds < bestRun.timeSeconds)) {
+        // Format time as H:MM:SS or MM:SS
+        const hours = Math.floor(timeSeconds / 3600);
+        const mins = Math.floor((timeSeconds % 3600) / 60);
+        const secs = Math.floor(timeSeconds % 60);
+        const timeStr = hours > 0 
+          ? `${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+          : `${mins}:${secs.toString().padStart(2, "0")}`;
+        
+        bestRun = { time: timeStr, timeSeconds, date: run.date };
+      }
+    }
+    
+    prs.push({
+      distance: prDist.name,
+      time: bestRun?.time || "--:--",
+      timeSeconds: bestRun?.timeSeconds || Infinity,
+      date: bestRun?.date || "",
+      miles: prDist.miles,
+    });
+  }
+  
+  return prs;
+}
 
 function getDaysUntil(dateStr: string): number {
   const raceDate = new Date(dateStr);
@@ -146,7 +221,9 @@ function formatDateStatic(dateStr: string): string {
 
 function GoalsPageContent() {
   const { data, error, mutate, isLoading } = useSWR<{ goals: Goal[] }>("/api/goals", fetcher);
-  const { data: runsData } = useSWR<{ runs: { miles: number; duration_minutes?: number; pace_seconds?: number }[] }>("/api/runs?days=30", fetcher);
+  const { data: runsData } = useSWR<{ runs: { miles: number; duration_minutes?: number; pace?: string; pace_seconds?: number; date: string }[] }>("/api/runs?days=30", fetcher);
+  // Fetch all runs for PR calculation (365 days to capture full history)
+  const { data: allRunsData } = useSWR<{ runs: { miles: number; duration_minutes?: number; pace?: string; date: string }[] }>("/api/runs?days=365", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -159,6 +236,8 @@ function GoalsPageContent() {
   });
   
   const recentRuns = runsData?.runs || [];
+  const allRuns = allRunsData?.runs || [];
+  const personalRecords = calculatePRs(allRuns);
 
   useEffect(() => {
     setMounted(true);
@@ -404,6 +483,51 @@ return (
           </Card>
         ) : (
           <>
+            {/* Personal Records Card */}
+            <Card className="mb-6 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-amber-500/20">
+                    <Medal className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Personal Records</CardTitle>
+                    <CardDescription>Your best times at each distance</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  {personalRecords.map((pr) => {
+                    const hasPR = pr.time !== "--:--";
+                    return (
+                      <div 
+                        key={pr.distance}
+                        className={`p-3 rounded-xl border transition-all ${
+                          hasPR 
+                            ? "bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40" 
+                            : "bg-[#1A1A1A] border-[#2A2A2A]"
+                        }`}
+                      >
+                        <p className="text-xs text-muted-foreground mb-1">{pr.distance}</p>
+                        <p className={`text-xl font-bold ${hasPR ? "text-amber-500" : "text-muted-foreground/50"}`}>
+                          {pr.time}
+                        </p>
+                        {hasPR && pr.date && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(pr.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </p>
+                        )}
+                        {!hasPR && (
+                          <p className="text-xs text-muted-foreground/50 mt-1">No PR yet</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
 {/* Race Prediction Card */}
   {activeGoal && (
     <Card className="mb-6 border-[#00D4FF]/30 bg-gradient-to-br from-[#00D4FF]/10 to-transparent">
