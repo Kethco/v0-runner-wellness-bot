@@ -80,7 +80,7 @@ return (
   <div className="min-h-screen bg-[#0A0A0A] text-white pb-24">
   <Navbar />
       
-      <main className="container max-w-lg mx-auto px-4 pt-20">
+      <main className="container max-w-lg mx-auto px-4 pt-24 mt-[60px]">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

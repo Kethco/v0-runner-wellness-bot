@@ -27,8 +27,8 @@ export default function MindPage() {
   
 return (
   <div className="min-h-screen bg-black text-white pb-28">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#3A3A3C]">
+      {/* Header - Fixed with solid background */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black pt-safe border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center gap-4">
           {mode !== "home" ? (
             <motion.button
@@ -60,7 +60,7 @@ return (
         </div>
       </header>
 
-      <main className="px-5 py-6">
+      <main className="px-5 py-6 mt-[80px]">
         <AnimatePresence mode="wait">
           {mode === "home" && <HomeView onSelectMode={setMode} />}
           {mode === "pre-run" && <PreRunView onComplete={() => setMode("home")} />}
