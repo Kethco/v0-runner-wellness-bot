@@ -130,8 +130,8 @@ export default function Dashboard() {
 
 return (
   <div className={`min-h-screen bg-black text-white pb-28 ${showTrialBanner ? "pt-10" : ""}`}>
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-xl border-b border-[#3A3A3C]">
+      {/* Header - Fixed with solid background, extends to safe area */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black pt-safe border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center justify-between">
           <div>
             <p className={`text-sm font-bold bg-gradient-to-r ${greeting.gradient} bg-clip-text text-transparent`}>{greeting.text}</p>
@@ -174,7 +174,7 @@ return (
         />
       </header>
 
-      <main className="px-5 py-6 space-y-6">
+      <main className="px-5 py-6 space-y-6 mt-[120px]">
         {/* Hero Stats Card with Animated Border */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
