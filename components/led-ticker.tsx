@@ -37,12 +37,12 @@ interface LEDTickerProps {
   userName?: string;
 }
 
+// Threshold for when to scroll (approx characters that fit in container)
+const SCROLL_THRESHOLD = 45;
+
 export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTickerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [messages, setMessages] = useState<string[]>([]);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-  const textRef = useRef<HTMLParagraphElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Build personalized messages
@@ -73,33 +73,22 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
     setMessages(allMessages);
   }, [streak, weeklyMiles, userName]);
 
-  // Check if text overflows container
-  useEffect(() => {
-    const checkOverflow = () => {
-      if (textRef.current && containerRef.current) {
-        const textWidth = textRef.current.scrollWidth;
-        const containerWidth = containerRef.current.offsetWidth - 64; // Account for padding
-        setIsOverflowing(textWidth > containerWidth);
-      }
-    };
-    
-    // Small delay to allow text to render
-    const timer = setTimeout(checkOverflow, 100);
-    return () => clearTimeout(timer);
-  }, [currentIndex, messages]);
+  // Check if current message needs scrolling based on length
+  const currentMessage = messages[currentIndex] || "";
+  const needsScroll = currentMessage.length > SCROLL_THRESHOLD;
 
   useEffect(() => {
     if (messages.length === 0) return;
     
     // Longer display time for scrolling messages
-    const displayTime = isOverflowing ? 8000 : 4000;
+    const displayTime = needsScroll ? 10000 : 4000;
     
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % messages.length);
     }, displayTime);
     
     return () => clearInterval(interval);
-  }, [messages.length, isOverflowing]);
+  }, [messages.length, needsScroll, currentIndex]);
 
   if (messages.length === 0) return null;
 
@@ -134,7 +123,7 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
       />
       
       {/* Text content */}
-      <div ref={containerRef} className="relative h-full flex items-center overflow-hidden px-8">
+      <div className="relative h-full flex items-center overflow-hidden px-8">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
@@ -142,16 +131,15 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full flex justify-center"
+            className={`w-full ${needsScroll ? "" : "flex justify-center"}`}
           >
             <motion.p
-              ref={textRef}
-              initial={isOverflowing ? { x: "10%" } : { x: 0 }}
-              animate={isOverflowing ? { x: "-100%" } : { x: 0 }}
-              transition={isOverflowing ? { 
-                duration: 6, 
+              initial={needsScroll ? { x: "100%" } : { x: 0 }}
+              animate={needsScroll ? { x: "-100%" } : { x: 0 }}
+              transition={needsScroll ? { 
+                duration: 8, 
                 ease: "linear",
-                delay: 0.5 
+                delay: 0.3 
               } : {}}
               className="text-xs font-bold tracking-wide whitespace-nowrap"
               style={{
@@ -159,7 +147,7 @@ export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTic
                 textShadow: `0 0 10px ${currentColor.glow}, 0 0 20px ${currentColor.glow}`,
               }}
             >
-              {messages[currentIndex]}
+              {currentMessage}
             </motion.p>
           </motion.div>
         </AnimatePresence>
