@@ -6,11 +6,11 @@ import { Activity, TrendingUp, Sparkles, Target, User } from "lucide-react";
 import { hapticLight } from "@/lib/haptics";
 
 const navItems = [
-  { icon: Activity, label: "Home", href: "/" },
-  { icon: TrendingUp, label: "Runs", href: "/runs" },
-  { icon: Sparkles, label: "Mind", href: "/mind" },
-  { icon: Target, label: "Goals", href: "/goals" },
-  { icon: User, label: "Profile", href: "/profile" },
+  { icon: Activity, label: "Home", href: "/", color: "#FF4500", bgColor: "rgba(255, 69, 0, 0.15)" },
+  { icon: TrendingUp, label: "Runs", href: "/runs", color: "#00D4FF", bgColor: "rgba(0, 212, 255, 0.15)" },
+  { icon: Sparkles, label: "Mind", href: "/mind", color: "#A78BFA", bgColor: "rgba(167, 139, 250, 0.15)" },
+  { icon: Target, label: "Goals", href: "/goals", color: "#22C55E", bgColor: "rgba(34, 197, 94, 0.15)" },
+  { icon: User, label: "Profile", href: "/profile", color: "#2DD4BF", bgColor: "rgba(45, 212, 191, 0.15)" },
 ];
 
 export function BottomNav() {
@@ -44,11 +44,12 @@ export function BottomNav() {
       <div className="relative flex items-center justify-around py-1.5 px-2 max-w-lg mx-auto">
         {/* Animated pill indicator */}
         <motion.div
-          className="absolute top-1 h-[42px] bg-[#FF4500]/15 rounded-xl"
+          className="absolute top-1 h-[42px] rounded-xl"
           initial={false}
           animate={{
             x: `calc(${activeIndex * 100}% + ${activeIndex * 4}px)`,
             width: `calc(${100 / navItems.length}% - 8px)`,
+            backgroundColor: activeIndex >= 0 ? navItems[activeIndex].bgColor : "transparent",
           }}
           transition={{
             type: "spring",
@@ -83,15 +84,14 @@ export function BottomNav() {
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
                   <Icon 
-                    className={`w-5 h-5 transition-colors duration-200 ${
-                      isActive ? "text-[#FF4500]" : "text-[#6E6E73]"
-                    }`} 
+                    className="w-5 h-5 transition-colors duration-200"
+                    style={{ color: isActive ? item.color : "#6E6E73" }}
                   />
                 </motion.div>
                 <motion.span 
                   initial={false}
                   animate={{
-                    color: isActive ? "#FF4500" : "#6E6E73",
+                    color: isActive ? item.color : "#6E6E73",
                     fontWeight: isActive ? 600 : 500,
                   }}
                   className="text-[9px] tracking-wide"
