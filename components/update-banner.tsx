@@ -15,7 +15,7 @@ export function UpdateBanner() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -100, opacity: 0 }}
-        className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-4 py-3 shadow-lg"
+        className="fixed top-0 left-0 right-0 z-[100] bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-4 py-2 pt-safe shadow-lg"
       >
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div className="flex items-center gap-3">
