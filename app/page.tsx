@@ -115,10 +115,6 @@ export default function Dashboard() {
   }
 
   // Chart data for last 7 days
-  console.log("[v0] All runs:", runs);
-  console.log("[v0] todayStr:", todayStr);
-  console.log("[v0] last7Days:", last7Days);
-  
   const chartData = last7Days.map(dateStr => {
     // Normalize run dates to YYYY-MM-DD format for comparison
     const dayRuns = runs.filter((r: { date: string }) => {
@@ -126,7 +122,6 @@ export default function Dashboard() {
       return runDate === dateStr;
     });
     const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
-    console.log("[v0] dateStr:", dateStr, "dayRuns:", dayRuns.length, "miles:", miles);
     const [year, month, day] = dateStr.split('-').map(Number);
     const localDate = new Date(year, month - 1, day);
     const dayLabel = localDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
@@ -249,33 +244,27 @@ return (
 
             {/* Weekly Bar Chart */}
             <div className="flex items-end justify-between gap-2 mt-2">
-              {chartData.map((day, i) => {
+              {chartData.map((day) => {
                 const isToday = day.date === todayStr;
-                const barHeight = day.miles > 0 ? Math.max((day.miles / maxMiles) * 100, 15) : 8;
+                // Calculate bar height in pixels (max 80px)
+                const barHeightPx = day.miles > 0 ? Math.max((day.miles / maxMiles) * 80, 8) : 4;
                 
                 return (
-                  <div key={`${day.date}-${day.miles}`} className="flex-1 flex flex-col items-center">
+                  <div key={day.date} className="flex-1 flex flex-col items-center">
                     {/* Miles label above bar */}
-                    <motion.span
-                      key={`label-${day.date}-${day.miles}`}
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
+                    <span
                       className={`text-[10px] font-bold mb-1 ${
                         isToday ? "text-[#FF6B00]" : "text-[#8E8E93]"
                       }`}
                     >
                       {day.miles > 0 ? day.miles.toFixed(1) : "0"}
-                    </motion.span>
+                    </span>
                     
                     {/* Bar */}
                     <div className="w-full h-20 flex items-end justify-center">
-                      <motion.div
-                        key={`bar-${day.date}-${day.miles}`}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${barHeight}%` }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                        className={`w-full max-w-[28px] rounded-t-md min-h-[6px] ${
+                      <div
+                        style={{ height: `${barHeightPx}px` }}
+                        className={`w-full max-w-[28px] rounded-t-md transition-all duration-500 ${
                           isToday 
                             ? "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/40" 
                             : "bg-[#FF4500]/60"
