@@ -322,7 +322,7 @@ return (
                     
                     {/* Day label */}
                     <span className={`text-[9px] font-bold mt-1.5 ${
-                      isToday ? "text-[#FF6B00]" : "text-[#6E6E73]"
+                      isToday ? "text-[#FF6B00]" : "text-[#AEAEB2]"
                     }`}>
                       {day.day}
                     </span>
