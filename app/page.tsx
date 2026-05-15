@@ -123,7 +123,8 @@ export default function Dashboard() {
     const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
     const [year, month, day] = dateStr.split('-').map(Number);
     const localDate = new Date(year, month - 1, day);
-    return { date: dateStr, miles, day: localDate.toLocaleDateString('en-US', { weekday: 'short' }).charAt(0) };
+    const dayLabel = localDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+    return { date: dateStr, miles, day: dayLabel };
   });
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
@@ -240,27 +241,49 @@ return (
               </div>
             </div>
 
-            {/* Mini Bar Chart */}
-            <div className="flex items-end justify-between h-16 gap-2">
-              {chartData.map((day, i) => (
-                <div key={day.date} className="flex-1 flex flex-col items-center gap-2">
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: day.miles > 0 ? `${(day.miles / maxMiles) * 100}%` : '4px' }}
-                    transition={{ delay: 0.5 + i * 0.08, duration: 0.6, ease: "easeOut" }}
-                    className={`w-full rounded-full min-h-[4px] ${
-                      day.date === todayStr 
-                        ? "bg-gradient-to-t from-[#FF4500] to-[#FFD700] shadow-lg shadow-[#FF4500]/50" 
-                        : day.miles > 0 
-                          ? "bg-[#3A3A3C]" 
-                          : "bg-[#2A2A2A]"
-                    }`}
-                  />
-                  <span className={`text-xs font-bold ${day.date === todayStr ? "text-[#FF4500]" : "text-[#8E8E93]"}`}>
-                    {day.day}
-                  </span>
-                </div>
-              ))}
+            {/* Weekly Bar Chart */}
+            <div className="flex items-end justify-between gap-2 mt-2">
+              {chartData.map((day, i) => {
+                const isToday = day.date === todayStr;
+                const barHeight = day.miles > 0 ? Math.max((day.miles / maxMiles) * 100, 15) : 8;
+                
+                return (
+                  <div key={day.date} className="flex-1 flex flex-col items-center">
+                    {/* Miles label above bar */}
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 + i * 0.08 }}
+                      className={`text-[10px] font-bold mb-1 ${
+                        isToday ? "text-[#FF6B00]" : "text-[#8E8E93]"
+                      }`}
+                    >
+                      {day.miles > 0 ? day.miles.toFixed(1) : "0"}
+                    </motion.span>
+                    
+                    {/* Bar */}
+                    <div className="w-full h-20 flex items-end justify-center">
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${barHeight}%` }}
+                        transition={{ delay: 0.5 + i * 0.08, duration: 0.6, ease: "easeOut" }}
+                        className={`w-full max-w-[28px] rounded-t-md min-h-[6px] ${
+                          isToday 
+                            ? "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/40" 
+                            : "bg-[#FF4500]/60"
+                        }`}
+                      />
+                    </div>
+                    
+                    {/* Day label */}
+                    <span className={`text-[9px] font-bold mt-1.5 ${
+                      isToday ? "text-[#FF6B00]" : "text-[#6E6E73]"
+                    }`}>
+                      {day.day}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </motion.div>
