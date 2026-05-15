@@ -3,18 +3,22 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Activity, Eye, EyeOff, Users, User, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Activity, Eye, EyeOff, Users, User, CheckCircle2, ArrowLeft, Check, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { PRODUCTS } from "@/lib/products";
 
 type UserType = "athlete" | "coach";
+type PlanId = string;
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [step, setStep] = useState<"select" | "form" | "success">("select");
+  const [step, setStep] = useState<"select" | "plans" | "form" | "success">("select");
   const [userType, setUserType] = useState<UserType>("athlete");
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>("free_trial");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -30,9 +34,22 @@ export default function SignUpPage() {
 
   const handleSelectType = (type: UserType) => {
     setUserType(type);
-    setStep("form");
+    setSelectedPlan(type === "coach" ? "coach_trial" : "free_trial");
+    setStep("plans");
     setError("");
   };
+
+  const handleSelectPlan = (planId: PlanId) => {
+    setSelectedPlan(planId);
+    setStep("form");
+  };
+
+  // Get plans based on user type
+  const trialProduct = PRODUCTS.find((p) => p.id === "free_trial");
+  const proMonthly = PRODUCTS.find((p) => p.id === "pro_monthly");
+  const coachTrial = PRODUCTS.find((p) => p.id === "coach_trial");
+  const coachStarter = PRODUCTS.find((p) => p.id === "coach_starter");
+  const coachPro = PRODUCTS.find((p) => p.id === "coach_pro");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +90,7 @@ export default function SignUpPage() {
           last_name: formData.lastName,
           phone: formData.phone,
           user_type: userType,
-          plan: userType === "coach" ? "coach_trial" : "free_trial",
+          plan: selectedPlan,
           program_name: formData.programName || undefined,
         }),
       });
@@ -187,8 +204,8 @@ export default function SignUpPage() {
             </div>
           )}
 
-          {/* Step 2: Form */}
-          {step === "form" && (
+          {/* Step 2: Plans Selection */}
+          {step === "plans" && (
             <div className="space-y-6">
               <div>
                 <button 
@@ -197,6 +214,198 @@ export default function SignUpPage() {
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
+                </button>
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                  {userType === "coach" ? "Choose Your Coach Plan" : "Choose Your Plan"}
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Start with a free trial, upgrade anytime
+                </p>
+              </div>
+
+              {userType === "athlete" ? (
+                <div className="space-y-4">
+                  {/* Free Trial */}
+                  <Card 
+                    className="border-2 border-primary bg-card cursor-pointer hover:shadow-lg transition-all"
+                    onClick={() => handleSelectPlan("free_trial")}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{trialProduct?.name || "Free Trial"}</CardTitle>
+                        <span className="bg-primary/20 text-primary text-xs font-bold px-2 py-1 rounded-full">
+                          RECOMMENDED
+                        </span>
+                      </div>
+                      <CardDescription>{trialProduct?.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="flex items-baseline gap-1 mb-3">
+                        <span className="text-3xl font-black">Free</span>
+                        <span className="text-muted-foreground">for 7 days</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {trialProduct?.features.slice(0, 4).map((feature, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm">
+                            <Check className="w-4 h-4 text-primary" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                    <CardFooter>
+                      <Button className="w-full">Start Free Trial</Button>
+                    </CardFooter>
+                  </Card>
+
+                  {/* Pro Monthly */}
+                  <Card 
+                    className="border border-border bg-card cursor-pointer hover:border-primary hover:shadow-lg transition-all"
+                    onClick={() => handleSelectPlan("pro_monthly")}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{proMonthly?.name || "Pro Monthly"}</CardTitle>
+                        <Zap className="w-5 h-5 text-primary" />
+                      </div>
+                      <CardDescription>{proMonthly?.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="flex items-baseline gap-1 mb-3">
+                        <span className="text-3xl font-black">${(proMonthly?.priceInCents || 999) / 100}</span>
+                        <span className="text-muted-foreground">/month</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {proMonthly?.features.slice(0, 4).map((feature, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm">
+                            <Check className="w-4 h-4 text-primary" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" className="w-full">Subscribe to Pro</Button>
+                    </CardFooter>
+                  </Card>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Coach Free Trial */}
+                  <Card 
+                    className="border-2 border-primary bg-card cursor-pointer hover:shadow-lg transition-all"
+                    onClick={() => handleSelectPlan("coach_trial")}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{coachTrial?.name || "Coach Trial"}</CardTitle>
+                        <span className="bg-primary/20 text-primary text-xs font-bold px-2 py-1 rounded-full">
+                          RECOMMENDED
+                        </span>
+                      </div>
+                      <CardDescription>{coachTrial?.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="flex items-baseline gap-1 mb-3">
+                        <span className="text-3xl font-black">Free</span>
+                        <span className="text-muted-foreground">for 7 days</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {coachTrial?.features.slice(0, 4).map((feature, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm">
+                            <Check className="w-4 h-4 text-primary" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                    <CardFooter>
+                      <Button className="w-full">Start Free Trial</Button>
+                    </CardFooter>
+                  </Card>
+
+                  {/* Coach Starter */}
+                  <Card 
+                    className="border border-border bg-card cursor-pointer hover:border-primary hover:shadow-lg transition-all"
+                    onClick={() => handleSelectPlan("coach_starter")}
+                  >
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg">{coachStarter?.name || "Coach Starter"}</CardTitle>
+                      <CardDescription>{coachStarter?.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="flex items-baseline gap-1 mb-3">
+                        <span className="text-3xl font-black">${(coachStarter?.priceInCents || 2999) / 100}</span>
+                        <span className="text-muted-foreground">/month</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {coachStarter?.features.slice(0, 3).map((feature, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm">
+                            <Check className="w-4 h-4 text-primary" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" className="w-full">Choose Starter</Button>
+                    </CardFooter>
+                  </Card>
+
+                  {/* Coach Pro */}
+                  <Card 
+                    className="border border-border bg-card cursor-pointer hover:border-primary hover:shadow-lg transition-all"
+                    onClick={() => handleSelectPlan("coach_pro")}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{coachPro?.name || "Coach Pro"}</CardTitle>
+                        <span className="bg-green-600/20 text-green-500 text-xs font-bold px-2 py-1 rounded-full">
+                          BEST VALUE
+                        </span>
+                      </div>
+                      <CardDescription>{coachPro?.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pb-2">
+                      <div className="flex items-baseline gap-1 mb-3">
+                        <span className="text-3xl font-black">${(coachPro?.priceInCents || 7999) / 100}</span>
+                        <span className="text-muted-foreground">/month</span>
+                      </div>
+                      <ul className="space-y-2">
+                        {coachPro?.features.slice(0, 3).map((feature, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm">
+                            <Check className="w-4 h-4 text-primary" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="outline" className="w-full">Choose Pro</Button>
+                    </CardFooter>
+                  </Card>
+                </div>
+              )}
+
+              <p className="text-center text-sm text-muted-foreground">
+                View all plans on our{" "}
+                <Link href="/pricing" className="text-primary hover:underline">
+                  pricing page
+                </Link>
+              </p>
+            </div>
+          )}
+
+          {/* Step 3: Form */}
+          {step === "form" && (
+            <div className="space-y-6">
+              <div>
+                <button 
+                  onClick={() => { setStep("plans"); setError(""); }}
+                  className="flex items-center gap-1 text-muted-foreground hover:text-foreground mb-4 text-sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Plans
                 </button>
                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
                   {userType === "coach" ? "Create Coach Account" : "Create Your Account"}
