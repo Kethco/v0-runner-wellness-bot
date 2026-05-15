@@ -7,10 +7,8 @@ const supabase = createClient(
 );
 
 export async function POST(request: NextRequest) {
-  console.log("[v0] Signup API called");
   try {
     const body = await request.json();
-    console.log("[v0] Signup body:", { email: body.email, user_type: body.user_type, coach_id: body.coach_id });
     const { email, password, first_name, last_name, phone, user_type, plan, program_name, coach_id } = body;
 
     if (!email || !password) {
@@ -27,12 +25,30 @@ export async function POST(request: NextRequest) {
       ? (normalizedPhone.startsWith("1") ? `+${normalizedPhone}` : `+1${normalizedPhone}`)
       : "";
 
-    // Check if user exists
+    // Check if user with email exists
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
     if (existingUsers?.users?.some(u => u.email?.toLowerCase() === email.toLowerCase())) {
       return NextResponse.json({ 
         error: "An account with this email already exists",
       }, { status: 400 });
+    }
+
+    // Check if phone number already exists (if provided)
+    if (formattedPhone) {
+      const phoneExists = existingUsers?.users?.some(u => {
+        const userPhone = u.phone || u.user_metadata?.phone;
+        if (!userPhone) return false;
+        // Normalize both phones for comparison
+        const normalizedExisting = userPhone.replace(/\D/g, "");
+        const normalizedNew = formattedPhone.replace(/\D/g, "");
+        return normalizedExisting === normalizedNew;
+      });
+      
+      if (phoneExists) {
+        return NextResponse.json({ 
+          error: "An account with this phone number already exists",
+        }, { status: 400 });
+      }
     }
 
     // Create user with metadata including coach_id for linking
@@ -55,7 +71,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError) {
-      console.log("[v0] Auth error occurred:", authError.message);
       
       // If it's a database trigger error, the user might still be created
       // Check if user exists and return success if so
@@ -92,13 +107,11 @@ export async function POST(request: NextRequest) {
 
     // Manually create/update profile (don't rely on trigger)
     if (authData?.user) {
-      console.log("[v0] User created successfully:", authData.user.id);
       await createProfile(authData.user.id, {
         first_name, last_name, email, phone: formattedPhone, user_type, plan, coach_id
       });
     }
 
-    console.log("[v0] Signup complete, returning success");
     return NextResponse.json({ 
       success: true, 
       userId: authData?.user?.id,
