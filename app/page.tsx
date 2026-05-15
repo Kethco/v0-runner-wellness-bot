@@ -79,7 +79,6 @@ export default function Dashboard() {
   
   // Derived state (safe to compute after hooks)
   const runs = runsData?.runs || [];
-  console.log("[v0] runsData updated:", runsData, "runs count:", runs.length);
   const checkins = checkinsData?.checkins || [];
   const profile = profileData?.profile;
   const hasCheckedInToday = checkins.some((c: { date: string }) => c.date === todayStr);
@@ -120,7 +119,11 @@ export default function Dashboard() {
 
   // Chart data for last 7 days
   const chartData = last7Days.map(dateStr => {
-    const dayRuns = runs.filter((r: { date: string }) => r.date === dateStr);
+    // Normalize run dates to YYYY-MM-DD format for comparison
+    const dayRuns = runs.filter((r: { date: string }) => {
+      const runDate = r.date?.split('T')[0]; // Handle both "2024-01-15" and "2024-01-15T00:00:00" formats
+      return runDate === dateStr;
+    });
     const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
     const [year, month, day] = dateStr.split('-').map(Number);
     const localDate = new Date(year, month - 1, day);
@@ -129,7 +132,6 @@ export default function Dashboard() {
   });
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
-  console.log("[v0] chartData:", chartData, "todayStr:", todayStr);
 
 return (
   <div className={`min-h-screen bg-black text-white pb-20 ${showTrialBanner ? "pt-10" : ""}`}>
@@ -299,7 +301,7 @@ return (
           transition={{ delay: 0.15 }}
           className="grid grid-cols-2 gap-4"
         >
-          <LogRunModal onRunLogged={() => { console.log("[v0] Run logged, calling mutateRuns"); mutateRuns(); }}>
+          <LogRunModal onRunLogged={() => mutateRuns()}>
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
