@@ -115,6 +115,10 @@ export default function Dashboard() {
   }
 
   // Chart data for last 7 days
+  console.log("[v0] All runs:", runs);
+  console.log("[v0] todayStr:", todayStr);
+  console.log("[v0] last7Days:", last7Days);
+  
   const chartData = last7Days.map(dateStr => {
     // Normalize run dates to YYYY-MM-DD format for comparison
     const dayRuns = runs.filter((r: { date: string }) => {
@@ -122,6 +126,7 @@ export default function Dashboard() {
       return runDate === dateStr;
     });
     const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
+    console.log("[v0] dateStr:", dateStr, "dayRuns:", dayRuns.length, "miles:", miles);
     const [year, month, day] = dateStr.split('-').map(Number);
     const localDate = new Date(year, month - 1, day);
     const dayLabel = localDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
