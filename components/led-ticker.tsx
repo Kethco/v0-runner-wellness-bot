@@ -1,35 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const MOTIVATIONAL_QUOTES = [
-  "The miracle isn't that I finished. It's that I had the courage to start.",
-  "Run when you can, walk if you have to, crawl if you must; just never give up.",
-  "Every mile is a gift. Embrace it.",
-  "Your legs are not giving out. Your head is giving up.",
-  "Pain is temporary. Pride is forever.",
-  "The body achieves what the mind believes.",
-  "One run can change your day. Many runs can change your life.",
-  "You're stronger than your excuses.",
-  "Champions train, losers complain.",
-  "Run the mile you're in.",
-  "Trust your training.",
-  "Rest days build champions.",
-  "Sweat is just fat crying.",
-  "The only bad run is the one you didn't do.",
-  "Believe in the run.",
-];
-
-// Cool, calm color palette for LED effect
-const LED_COLORS = [
-  { color: "#00d4ff", glow: "rgba(0, 212, 255, 0.6)" },    // Cyan
-  { color: "#00E5A0", glow: "rgba(0, 229, 160, 0.6)" },    // Mint
-  { color: "#A78BFA", glow: "rgba(167, 139, 250, 0.6)" },  // Purple
-  { color: "#F472B6", glow: "rgba(244, 114, 182, 0.6)" },  // Pink
-  { color: "#38BDF8", glow: "rgba(56, 189, 248, 0.6)" },   // Sky blue
-  { color: "#2DD4BF", glow: "rgba(45, 212, 191, 0.6)" },   // Teal
-];
 
 interface LEDTickerProps {
   streak?: number;
@@ -37,125 +9,136 @@ interface LEDTickerProps {
   userName?: string;
 }
 
-// Threshold for when to scroll (approx characters that fit in container)
-const SCROLL_THRESHOLD = 45;
+// Get time-based greeting
+function getTimeGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 6) return "night owl";
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  if (hour < 21) return "evening";
+  return "night";
+}
+
+// Context-aware message generator
+function generateMessages(streak: number, weeklyMiles: number, userName: string): string[] {
+  const messages: string[] = [];
+  const timeOfDay = getTimeGreeting();
+  const firstName = userName.split(" ")[0] || "Runner";
+  
+  // Streak-based messages
+  if (streak >= 30) {
+    messages.push(`${streak}-day streak. Legendary commitment.`);
+  } else if (streak >= 14) {
+    messages.push(`${streak} days strong. You're unstoppable.`);
+  } else if (streak >= 7) {
+    messages.push(`${streak}-day streak! Keep the momentum.`);
+  } else if (streak >= 3) {
+    messages.push(`${streak} days in a row. Building habits.`);
+  } else if (streak === 1) {
+    messages.push("Day 1. Every journey starts here.");
+  }
+  
+  // Weekly miles messages
+  if (weeklyMiles >= 30) {
+    messages.push(`${weeklyMiles.toFixed(0)} miles this week. Elite volume.`);
+  } else if (weeklyMiles >= 20) {
+    messages.push(`${weeklyMiles.toFixed(0)} weekly miles. Strong progress.`);
+  } else if (weeklyMiles >= 10) {
+    messages.push(`${weeklyMiles.toFixed(0)} miles logged this week.`);
+  } else if (weeklyMiles > 0) {
+    messages.push(`${weeklyMiles.toFixed(1)} miles and counting.`);
+  }
+  
+  // Time-based contextual messages
+  if (timeOfDay === "morning") {
+    messages.push("Perfect time for a morning run.");
+    messages.push("Fresh legs, clear mind. Let's go.");
+  } else if (timeOfDay === "afternoon") {
+    messages.push("Afternoon miles hit different.");
+  } else if (timeOfDay === "evening") {
+    messages.push("End the day strong.");
+  }
+  
+  // Motivational messages (always include a few)
+  const motivational = [
+    "Trust the process.",
+    "Consistency beats intensity.",
+    "One mile at a time.",
+    "Recovery is training too.",
+    "Run your own race.",
+    "Progress, not perfection.",
+    "The body achieves what the mind believes.",
+    "Small steps, big results.",
+  ];
+  
+  // Shuffle and pick 2-3 motivational messages
+  const shuffled = motivational.sort(() => Math.random() - 0.5);
+  messages.push(...shuffled.slice(0, 3));
+  
+  // Return unique messages
+  return [...new Set(messages)];
+}
 
 export function LEDTicker({ streak = 0, weeklyMiles = 0, userName = "" }: LEDTickerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [messages, setMessages] = useState<string[]>([]);
 
   useEffect(() => {
-    // Build personalized messages
-    const personalizedMessages: string[] = [];
-    
-    // Add streak-based messages
-    if (streak >= 7) {
-      personalizedMessages.push(`🔥 ${streak} day streak! You're on fire!`);
-    } else if (streak >= 3) {
-      personalizedMessages.push(`💪 ${streak} days strong! Keep it going!`);
-    }
-    
-    // Add weekly progress
-    if (weeklyMiles > 0) {
-      personalizedMessages.push(`📊 ${weeklyMiles.toFixed(1)} miles this week!`);
-    }
-    
-    // Add greeting
-    if (userName) {
-      personalizedMessages.push(`⭐ Let's crush it today, ${userName}!`);
-    }
-    
-    // Mix in motivational quotes
-    const shuffledQuotes = [...MOTIVATIONAL_QUOTES].sort(() => Math.random() - 0.5).slice(0, 5);
-    
-    // Combine and shuffle
-    const allMessages = [...personalizedMessages, ...shuffledQuotes];
-    setMessages(allMessages);
+    const newMessages = generateMessages(streak, weeklyMiles, userName);
+    setMessages(newMessages);
   }, [streak, weeklyMiles, userName]);
-
-  // Check if current message needs scrolling based on length
-  const currentMessage = messages[currentIndex] || "";
-  const needsScroll = currentMessage.length > SCROLL_THRESHOLD;
 
   useEffect(() => {
     if (messages.length === 0) return;
     
-    // Longer display time for scrolling messages
-    const displayTime = needsScroll ? 16000 : 4000;
-    
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % messages.length);
-    }, displayTime);
+    }, 4000); // 4 seconds per message
     
     return () => clearInterval(interval);
-  }, [messages.length, needsScroll, currentIndex]);
+  }, [messages.length]);
 
   if (messages.length === 0) return null;
 
-  // Get current color based on message index
-  const currentColor = LED_COLORS[currentIndex % LED_COLORS.length];
+  const currentMessage = messages[currentIndex] || "";
 
   return (
-    <div className="relative w-full h-5 overflow-hidden bg-gradient-to-r from-[#0a1520] via-[#0d1a28] to-[#0a1520] border-y border-white/10">
-      {/* LED glow effect - changes with color */}
-      <motion.div 
-        className="absolute inset-0"
-        animate={{ 
-          background: `linear-gradient(to right, transparent, ${currentColor.color}10, transparent)` 
-        }}
-        transition={{ duration: 0.3 }}
-      />
+    <div className="relative w-full h-6 overflow-hidden bg-[#0a0a0a] border-t border-[#1a1a1a]">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FF4500]/5 to-transparent" />
       
-      {/* Scanline effect */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent h-[2px]"
-        animate={{ y: [0, 20, 0] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-      />
-      
-      {/* LED dots pattern overlay */}
-      <div 
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: `radial-gradient(circle, white 1px, transparent 1px)`,
-          backgroundSize: '4px 4px',
-        }}
-      />
-      
-      {/* Text content */}
-      <div className="relative h-full flex items-center overflow-hidden px-8">
+      {/* Text content with fade transition */}
+      <div className="relative h-full flex items-center justify-center px-4">
         <AnimatePresence mode="wait">
-          <motion.div
+          <motion.p
             key={currentIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`w-full ${needsScroll ? "" : "flex justify-center"}`}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ 
+              duration: 0.5,
+              ease: "easeOut"
+            }}
+            className="text-[11px] font-medium tracking-wide text-center text-[#8E8E93]"
           >
-            <motion.p
-              initial={needsScroll ? { x: "100%" } : { x: 0 }}
-              animate={needsScroll ? { x: "-100%" } : { x: 0 }}
-              transition={needsScroll ? { 
-                duration: 14, 
-                ease: "linear",
-                delay: 0.5 
-              } : {}}
-              className="text-xs font-bold tracking-wide whitespace-nowrap"
-              style={{
-                color: currentColor.color,
-                textShadow: `0 0 10px ${currentColor.glow}, 0 0 20px ${currentColor.glow}`,
-              }}
-            >
-              {currentMessage}
-            </motion.p>
-          </motion.div>
+            {currentMessage}
+          </motion.p>
         </AnimatePresence>
       </div>
       
-      {/* Edge glow */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0a1520] to-transparent" />
-      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0a1520] to-transparent" />
+      {/* Progress indicator dots */}
+      <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-1">
+        {messages.slice(0, Math.min(5, messages.length)).map((_, i) => (
+          <div
+            key={i}
+            className={`w-1 h-1 rounded-full transition-colors duration-300 ${
+              i === currentIndex % Math.min(5, messages.length)
+                ? "bg-[#FF4500]"
+                : "bg-[#2A2A2A]"
+            }`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

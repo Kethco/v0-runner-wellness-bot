@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp, Medal } from "lucide-react";
+import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 
 interface Goal {
@@ -483,48 +483,91 @@ return (
           </Card>
         ) : (
           <>
-            {/* Personal Records Card */}
-            <Card className="mb-6 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-amber-500/20">
-                    <Medal className="w-5 h-5 text-amber-500" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">Personal Records</CardTitle>
-                    <CardDescription>Your best times at each distance</CardDescription>
+            {/* Personal Records Card - Trophy Grid */}
+            <Card className="mb-6 border-[#2A2A2A] bg-[#141414] overflow-hidden">
+              <CardHeader className="pb-4 border-b border-[#2A2A2A]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10">
+                      <Trophy className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Personal Records</CardTitle>
+                      <CardDescription className="text-[#6E6E73]">
+                        {personalRecords.filter(pr => pr.time !== "--:--").length} of {personalRecords.length} earned
+                      </CardDescription>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                  {personalRecords.map((pr) => {
+              <CardContent className="pt-4">
+                {/* Trophy Grid - 2x3 layout on mobile, 5 columns on desktop */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {personalRecords.map((pr, index) => {
                     const hasPR = pr.time !== "--:--";
+                    
                     return (
                       <div 
                         key={pr.distance}
-                        className={`p-3 rounded-xl border transition-all ${
+                        className={`relative group rounded-xl p-4 transition-all duration-300 ${
                           hasPR 
-                            ? "bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40" 
-                            : "bg-[#1A1A1A] border-[#2A2A2A]"
+                            ? "bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/30 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10" 
+                            : "bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#3A3A3A]"
                         }`}
                       >
-                        <p className="text-xs text-muted-foreground mb-1">{pr.distance}</p>
-                        <p className={`text-xl font-bold ${hasPR ? "text-amber-500" : "text-muted-foreground/50"}`}>
-                          {pr.time}
+                        {/* Trophy Icon */}
+                        <div className={`w-10 h-10 mx-auto mb-3 rounded-full flex items-center justify-center ${
+                          hasPR 
+                            ? "bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/30" 
+                            : "bg-[#2A2A2A]"
+                        }`}>
+                          <Trophy className={`w-5 h-5 ${hasPR ? "text-white" : "text-[#4A4A4A]"}`} />
+                        </div>
+                        
+                        {/* Distance Label */}
+                        <p className={`text-[11px] font-medium text-center uppercase tracking-wider mb-1 ${
+                          hasPR ? "text-amber-500/80" : "text-[#6E6E73]"
+                        }`}>
+                          {pr.distance}
                         </p>
-                        {hasPR && pr.date && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {new Date(pr.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        
+                        {/* Time */}
+                        <p className={`text-lg font-bold text-center ${
+                          hasPR ? "text-white" : "text-[#3A3A3A]"
+                        }`}>
+                          {hasPR ? pr.time : "---"}
+                        </p>
+                        
+                        {/* Date or Unlock Message */}
+                        {hasPR && pr.date ? (
+                          <p className="text-[10px] text-center text-[#6E6E73] mt-1">
+                            {new Date(pr.date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-center text-[#3A3A3A] mt-1">
+                            Run {pr.miles.toFixed(1)}mi to unlock
                           </p>
                         )}
-                        {!hasPR && (
-                          <p className="text-xs text-muted-foreground/50 mt-1">No PR yet</p>
+                        
+                        {/* Earned Badge */}
+                        {hasPR && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center shadow-lg">
+                            <CheckCircle2 className="w-3 h-3 text-white" />
+                          </div>
                         )}
                       </div>
                     );
                   })}
                 </div>
+                
+                {/* Empty State Message */}
+                {personalRecords.filter(pr => pr.time !== "--:--").length === 0 && (
+                  <div className="mt-6 p-4 rounded-xl bg-[#1A1A1A] border border-dashed border-[#2A2A2A]">
+                    <p className="text-center text-[#6E6E73] text-sm">
+                      Your first PR awaits. Log runs at standard race distances to start building your trophy case.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
