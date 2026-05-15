@@ -33,9 +33,16 @@ export default function Dashboard() {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [newGoalValue, setNewGoalValue] = useState("");
   const [localGoal, setLocalGoal] = useState<number | null>(null);
-  const [todayStr, setTodayStr] = useState("2026-01-01");
-  const [last7Days, setLast7Days] = useState<string[]>([]);
   const [greeting, setGreeting] = useState({ text: "Welcome", gradient: "from-[#FF6B00] via-[#FF4500] to-[#FF2D00]" });
+  
+  // Compute dates directly (not in state to avoid hydration issues)
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - i));
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  });
   
   // Data fetching hooks
   const { data: checkinsData, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher);
@@ -62,18 +69,8 @@ export default function Dashboard() {
     }
   }, [authLoading, user, router]);
   
-  // Set date values on client
+  // Set greeting on client
   useEffect(() => {
-    const today = new Date();
-    const todayFormatted = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    setTodayStr(todayFormatted);
-    
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    });
-    setLast7Days(days);
     setGreeting(getGreeting());
   }, []);
   
@@ -118,15 +115,10 @@ export default function Dashboard() {
   }
 
   // Chart data for last 7 days
-  console.log("[v0] runs from API:", runs.map((r: {date: string, miles: number}) => ({ date: r.date, miles: r.miles })));
-  console.log("[v0] last7Days:", last7Days);
-  console.log("[v0] todayStr:", todayStr);
-  
   const chartData = last7Days.map(dateStr => {
     // Normalize run dates to YYYY-MM-DD format for comparison
     const dayRuns = runs.filter((r: { date: string }) => {
       const runDate = r.date?.split('T')[0]; // Handle both "2024-01-15" and "2024-01-15T00:00:00" formats
-      console.log("[v0] Comparing runDate:", runDate, "with dateStr:", dateStr, "match:", runDate === dateStr);
       return runDate === dateStr;
     });
     const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
