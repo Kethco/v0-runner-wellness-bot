@@ -118,10 +118,15 @@ export default function Dashboard() {
   }
 
   // Chart data for last 7 days
+  console.log("[v0] runs from API:", runs.map((r: {date: string, miles: number}) => ({ date: r.date, miles: r.miles })));
+  console.log("[v0] last7Days:", last7Days);
+  console.log("[v0] todayStr:", todayStr);
+  
   const chartData = last7Days.map(dateStr => {
     // Normalize run dates to YYYY-MM-DD format for comparison
     const dayRuns = runs.filter((r: { date: string }) => {
       const runDate = r.date?.split('T')[0]; // Handle both "2024-01-15" and "2024-01-15T00:00:00" formats
+      console.log("[v0] Comparing runDate:", runDate, "with dateStr:", dateStr, "match:", runDate === dateStr);
       return runDate === dateStr;
     });
     const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
