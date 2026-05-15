@@ -79,6 +79,7 @@ export default function Dashboard() {
   
   // Derived state (safe to compute after hooks)
   const runs = runsData?.runs || [];
+  console.log("[v0] runsData updated:", runsData, "runs count:", runs.length);
   const checkins = checkinsData?.checkins || [];
   const profile = profileData?.profile;
   const hasCheckedInToday = checkins.some((c: { date: string }) => c.date === todayStr);
@@ -128,6 +129,7 @@ export default function Dashboard() {
   });
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
+  console.log("[v0] chartData:", chartData, "todayStr:", todayStr);
 
 return (
   <div className={`min-h-screen bg-black text-white pb-20 ${showTrialBanner ? "pt-10" : ""}`}>
@@ -297,7 +299,7 @@ return (
           transition={{ delay: 0.15 }}
           className="grid grid-cols-2 gap-4"
         >
-          <LogRunModal onRunLogged={() => mutateRuns()}>
+          <LogRunModal onRunLogged={() => { console.log("[v0] Run logged, calling mutateRuns"); mutateRuns(); }}>
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
