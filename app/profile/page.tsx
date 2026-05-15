@@ -30,6 +30,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   User,
   Bell,
   CreditCard,
@@ -44,6 +49,7 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
@@ -73,6 +79,7 @@ export default function ProfilePage() {
     injuryAlerts: true,
   });
   const [privacyMode, setPrivacyMode] = useState<"solo" | "coach">("solo");
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   // Initialize edited profile when data loads
   useEffect(() => {
@@ -147,33 +154,71 @@ return (
         </div>
 
         <div className="space-y-6">
-          {/* Profile Card */}
+          {/* Profile Header Card - Always Visible */}
           <Card className="border-border bg-card">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Profile Information
-                </CardTitle>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  {isEditing ? "Cancel" : "Edit"}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-6">
-                <Avatar className="w-20 h-20">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} />
-                  <AvatarFallback className="bg-primary/20 text-primary text-xl">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-5">
+                {/* Styled Avatar with Initials Badge */}
+                <div className="relative">
+                  <Avatar className="w-20 h-20 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-gradient-to-br from-[#FF4500] to-[#FF6B00] text-white text-xl font-bold">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  {/* Status indicator */}
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-background flex items-center justify-center">
+                    <CheckCircle className="w-3.5 h-3.5 text-white" />
+                  </div>
+                </div>
                 
-                <div className="flex-1 space-y-4">
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-foreground">{displayName}</h2>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <Badge variant="secondary" className="gap-1 text-xs">
+                      <Activity className="w-3 h-3" />
+                      Runner
+                    </Badge>
+                    <Badge variant="secondary" className="gap-1 text-xs">
+                      <Calendar className="w-3 h-3" />
+                      Since {memberSince}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Personal Information - Collapsible */}
+          <Collapsible open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+            <Card className="border-border bg-card">
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-secondary/50 transition-colors rounded-t-lg">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      Personal Information
+                    </CardTitle>
+                    <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isInfoOpen ? "rotate-180" : ""}`} />
+                  </div>
+                  <CardDescription>
+                    {isInfoOpen ? "Click to collapse" : "Tap to view and edit your details"}
+                  </CardDescription>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0">
+                  <div className="flex justify-end mb-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setIsEditing(!isEditing)}
+                    >
+                      {isEditing ? "Cancel" : "Edit"}
+                    </Button>
+                  </div>
+                  
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
@@ -233,25 +278,17 @@ return (
                     </Button>
                   )}
 
-                  <div className="flex flex-wrap gap-3 pt-2">
-                    <Badge variant="secondary" className="gap-1">
-                      <Activity className="w-3 h-3" />
-                      Runner
-                    </Badge>
-                    <Badge variant="secondary" className="gap-1">
-                      <Calendar className="w-3 h-3" />
-                      Member since {memberSince}
-                    </Badge>
-                    {editedProfile.birthYear && calculateAge(editedProfile.birthYear) && (
+                  {editedProfile.birthYear && calculateAge(editedProfile.birthYear) && (
+                    <div className="mt-4 pt-4 border-t border-border">
                       <Badge variant="secondary">
                         Age {calculateAge(editedProfile.birthYear)}
                       </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    </div>
+                  )}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Privacy & Data Sharing */}
           <Card className="border-border bg-card">

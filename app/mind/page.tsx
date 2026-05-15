@@ -39,7 +39,7 @@ return (
               <ArrowLeft className="w-5 h-5 text-white" />
             </motion.button>
           ) : (
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#AF52DE] to-[#BF5AF2] flex items-center justify-center shadow-lg shadow-[#AF52DE]/30">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#5E5CE6] to-[#7B6CF6] flex items-center justify-center shadow-lg shadow-[#5E5CE6]/30">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
           )}
@@ -135,11 +135,12 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] p-6 border border-[#3A3A3C]"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1A1A2E] to-[#0F0F1A] p-6 border border-[#2A2A40]"
       >
-        <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#AF52DE] rounded-full blur-[80px] opacity-40" />
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#5E5CE6] rounded-full blur-[80px] opacity-30" />
+        <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-[#64D2FF] rounded-full blur-[60px] opacity-20" />
         <div className="relative z-10">
-          <p className="text-[#AF52DE] text-xs font-bold uppercase tracking-wider mb-3">Daily Wisdom</p>
+          <p className="text-[#64D2FF] text-xs font-bold uppercase tracking-wider mb-3">Daily Wisdom</p>
           <p className="text-white text-xl font-medium leading-relaxed italic">
             "{todaysWisdom.quote}"
           </p>
@@ -152,7 +153,7 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
+        className="rounded-2xl bg-[#1A1A2E]/80 border border-[#2A2A40] p-5"
       >
         <h3 className="text-white font-bold mb-4">Daily Tips</h3>
         <DailyTips />
@@ -166,17 +167,17 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => onSelectMode("breathe")}
-        className="w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#00D4FF] via-[#5AC8FA] to-[#AF52DE] p-1"
+        className="w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#64D2FF] via-[#5E5CE6] to-[#7B6CF6] p-[1px]"
       >
-        <div className="relative bg-[#0A0A0A] rounded-[22px] p-5 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#00D4FF] to-[#AF52DE] flex items-center justify-center shadow-lg shadow-[#00D4FF]/30">
+        <div className="relative bg-[#0F0F1A] rounded-[22px] p-5 flex items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#64D2FF] to-[#5E5CE6] flex items-center justify-center shadow-lg shadow-[#64D2FF]/20">
             <Wind className="w-8 h-8 text-white" />
           </div>
           <div className="flex-1 text-left">
             <p className="text-white font-bold text-lg">Guided Breathing</p>
-            <p className="text-[#AEAEB2] text-sm">Calm your mind with breathing exercises</p>
+            <p className="text-[#8E8E93] text-sm">Calm your mind with breathing exercises</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-[#00D4FF]" />
+          <ChevronRight className="w-5 h-5 text-[#64D2FF]" />
         </div>
       </motion.button>
 
@@ -189,16 +190,16 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
           whileHover={{ scale: 1.01, x: 4 }}
           whileTap={{ scale: 0.99 }}
           onClick={() => onSelectMode("pre-run")}
-          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#FF9500]/20 to-[#FF9500]/5 border border-[#FF9500]/30 hover:border-[#FF9500]/50 transition-colors"
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#FFD60A]/15 to-[#FFD60A]/5 border border-[#FFD60A]/25 hover:border-[#FFD60A]/40 transition-colors"
         >
-          <div className="w-14 h-14 rounded-2xl bg-[#FF9500]/20 flex items-center justify-center">
-            <Sun className="w-7 h-7 text-[#FF9500]" />
+          <div className="w-14 h-14 rounded-2xl bg-[#FFD60A]/15 flex items-center justify-center">
+            <Sun className="w-7 h-7 text-[#FFD60A]" />
           </div>
           <div className="flex-1 text-left">
             <p className="text-white font-bold text-lg">Pre-Run Mindset</p>
-            <p className="text-[#AEAEB2] text-sm">Set your intention before you head out</p>
+            <p className="text-[#8E8E93] text-sm">Set your intention before you head out</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-[#8E8E93]" />
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
         </motion.button>
 
         {/* Post-Run Reflection */}
@@ -206,16 +207,16 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
           whileHover={{ scale: 1.01, x: 4 }}
           whileTap={{ scale: 0.99 }}
           onClick={() => onSelectMode("post-run")}
-          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#30D158]/20 to-[#30D158]/5 border border-[#30D158]/30 hover:border-[#30D158]/50 transition-colors"
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#32D74B]/15 to-[#32D74B]/5 border border-[#32D74B]/25 hover:border-[#32D74B]/40 transition-colors"
         >
-          <div className="w-14 h-14 rounded-2xl bg-[#30D158]/20 flex items-center justify-center">
-            <Heart className="w-7 h-7 text-[#30D158]" />
+          <div className="w-14 h-14 rounded-2xl bg-[#32D74B]/15 flex items-center justify-center">
+            <Heart className="w-7 h-7 text-[#32D74B]" />
           </div>
           <div className="flex-1 text-left">
             <p className="text-white font-bold text-lg">Post-Run Reflection</p>
-            <p className="text-[#AEAEB2] text-sm">Capture the joy, not just the stats</p>
+            <p className="text-[#8E8E93] text-sm">Capture the joy, not just the stats</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-[#8E8E93]" />
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
         </motion.button>
 
         {/* Motivation Support */}
@@ -223,16 +224,16 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
           whileHover={{ scale: 1.01, x: 4 }}
           whileTap={{ scale: 0.99 }}
           onClick={() => onSelectMode("burnout")}
-          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#00D4FF]/20 to-[#00D4FF]/5 border border-[#00D4FF]/30 hover:border-[#00D4FF]/50 transition-colors"
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#5E5CE6]/15 to-[#5E5CE6]/5 border border-[#5E5CE6]/25 hover:border-[#5E5CE6]/40 transition-colors"
         >
-          <div className="w-14 h-14 rounded-2xl bg-[#00D4FF]/20 flex items-center justify-center">
-            <Wind className="w-7 h-7 text-[#00D4FF]" />
+          <div className="w-14 h-14 rounded-2xl bg-[#5E5CE6]/15 flex items-center justify-center">
+            <Heart className="w-7 h-7 text-[#5E5CE6]" />
           </div>
           <div className="flex-1 text-left">
             <p className="text-white font-bold text-lg">Feeling Low?</p>
-            <p className="text-[#AEAEB2] text-sm">Support for motivation dips & burnout</p>
+            <p className="text-[#8E8E93] text-sm">Support for motivation dips & burnout</p>
           </div>
-          <ChevronRight className="w-5 h-5 text-[#8E8E93]" />
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
         </motion.button>
       </div>
 
