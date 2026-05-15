@@ -248,12 +248,13 @@ return (
                 const barHeight = day.miles > 0 ? Math.max((day.miles / maxMiles) * 100, 15) : 8;
                 
                 return (
-                  <div key={day.date} className="flex-1 flex flex-col items-center">
+                  <div key={`${day.date}-${day.miles}`} className="flex-1 flex flex-col items-center">
                     {/* Miles label above bar */}
                     <motion.span
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.6 + i * 0.08 }}
+                      key={`label-${day.date}-${day.miles}`}
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
                       className={`text-[10px] font-bold mb-1 ${
                         isToday ? "text-[#FF6B00]" : "text-[#8E8E93]"
                       }`}
@@ -264,9 +265,10 @@ return (
                     {/* Bar */}
                     <div className="w-full h-20 flex items-end justify-center">
                       <motion.div
+                        key={`bar-${day.date}-${day.miles}`}
                         initial={{ height: 0 }}
                         animate={{ height: `${barHeight}%` }}
-                        transition={{ delay: 0.5 + i * 0.08, duration: 0.6, ease: "easeOut" }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
                         className={`w-full max-w-[28px] rounded-t-md min-h-[6px] ${
                           isToday 
                             ? "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/40" 
