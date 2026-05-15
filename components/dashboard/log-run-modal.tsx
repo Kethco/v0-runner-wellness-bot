@@ -27,6 +27,12 @@ interface LogRunModalProps {
   children?: React.ReactNode;
 }
 
+// Helper to get local date in YYYY-MM-DD format
+const getLocalDateStr = () => {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+};
+
 export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +44,7 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
     runType: "easy",
     feeling: "",
     notes: "",
-    date: new Date().toISOString().split("T")[0],
+    date: getLocalDateStr(),
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,7 +76,7 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
           runType: "easy",
           feeling: "",
           notes: "",
-          date: new Date().toISOString().split("T")[0],
+          date: getLocalDateStr(),
         });
         
         // Celebrate the logged run
@@ -137,7 +143,7 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
                 type="date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                max={new Date().toISOString().split("T")[0]}
+                max={getLocalDateStr()}
               />
             </div>
           </div>
