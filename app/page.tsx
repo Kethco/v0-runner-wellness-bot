@@ -377,18 +377,67 @@ return (
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
-          className="relative overflow-hidden rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
+          className="relative overflow-hidden rounded-2xl bg-[#141414] border border-[#2A2A2A] p-5"
         >
-          <div className="absolute -bottom-16 -right-16 w-40 h-40 bg-[#00D4FF] rounded-full blur-[80px] opacity-30" />
+          {/* Gradient accent line at top */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF4500] via-[#00D4FF] to-[#AF52DE]" />
+          
+          {/* Ambient glow */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-[#00D4FF]/5 rounded-full blur-3xl" />
           
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00D4FF] to-[#0099CC] flex items-center justify-center shadow-lg shadow-[#00D4FF]/30">
-                <Brain className="w-6 h-6 text-white" />
+              {/* Pulsing Brain Icon */}
+              <div className="relative w-12 h-12">
+                {/* Pulsing glow rings */}
+                <motion.div
+                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF4500] to-[#00D4FF] opacity-20"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.1, 0.2] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div
+                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF4500] to-[#00D4FF] opacity-10"
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0.05, 0.1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+                />
+                
+                {/* Main brain container */}
+                <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-[#FF4500] to-[#00D4FF] flex items-center justify-center overflow-hidden shadow-lg shadow-[#FF4500]/20">
+                  {/* Neural connection dots */}
+                  <motion.div
+                    className="absolute w-1 h-1 bg-white/60 rounded-full"
+                    style={{ top: '20%', left: '25%' }}
+                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+                  />
+                  <motion.div
+                    className="absolute w-1 h-1 bg-white/60 rounded-full"
+                    style={{ top: '35%', right: '20%' }}
+                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+                  />
+                  <motion.div
+                    className="absolute w-1 h-1 bg-white/60 rounded-full"
+                    style={{ bottom: '30%', left: '30%' }}
+                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
+                  />
+                  <motion.div
+                    className="absolute w-1 h-1 bg-white/60 rounded-full"
+                    style={{ bottom: '25%', right: '25%' }}
+                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.9 }}
+                  />
+                  
+                  <Brain className="w-6 h-6 text-white drop-shadow-lg" />
+                </div>
               </div>
               <div>
-                <h3 className="text-white font-bold text-lg">AI Coach</h3>
-                <p className="text-[#AEAEB2] text-sm font-medium">Your personal advisor</p>
+                <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                  AI Coach
+                  <Sparkles className="w-4 h-4 text-[#00D4FF]" />
+                </h3>
+                <p className="text-[#6E6E73] text-sm">Your personalized guidance companion</p>
               </div>
             </div>
             
