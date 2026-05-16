@@ -144,7 +144,7 @@ return (
   <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-[70px]">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-[70px] pb-32">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Profile & Settings</h1>
@@ -424,6 +424,9 @@ return (
 
           {/* Legal Links */}
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground justify-center pt-4">
+            <a href="/about" className="hover:text-foreground flex items-center gap-1">
+              Our Story <ExternalLink className="w-3 h-3" />
+            </a>
             <a href="/privacy" className="hover:text-foreground flex items-center gap-1">
               Privacy Policy <ExternalLink className="w-3 h-3" />
             </a>
