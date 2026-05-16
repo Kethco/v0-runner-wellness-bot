@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { 
-  Moon, Droplets, Stretch, Heart, Coffee, 
+  Moon, Droplets, StretchVertical, Heart, Coffee, 
   Footprints, BedDouble, ThermometerSnowflake,
   Sparkles, ChevronRight
 } from "lucide-react";
@@ -36,7 +36,7 @@ function getRecoveryTips(data: {
   // High soreness tips
   if (data.soreness >= 4) {
     tips.push({
-      icon: Stretch,
+      icon: StretchVertical,
       title: "Foam Rolling",
       description: "Spend 10 minutes on tight areas",
       color: "#FF9500",
@@ -112,7 +112,7 @@ function getRecoveryTips(data: {
   // General wellness if not much else
   if (tips.length < 2) {
     tips.push({
-      icon: Stretch,
+      icon: StretchVertical,
       title: "Light Stretching",
       description: "5 minutes keeps you mobile",
       color: "#30D158",
