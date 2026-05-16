@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wind, Play, Square, RotateCcw } from "lucide-react";
+import { Wind, Play, Square, RotateCcw, Volume2, VolumeX } from "lucide-react";
 
 type BreathingPattern = "relaxing" | "energizing" | "focus" | "sleep";
 
@@ -68,8 +68,54 @@ export function GuidedBreathing() {
   const [currentCycle, setCurrentCycle] = useState(0);
   const [countdown, setCountdown] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const lastSpokenPhase = useRef<Phase>("idle");
 
   const pattern = PATTERNS[selectedPattern];
+
+  // Voice guidance using Web Speech API
+  const speak = useCallback((text: string) => {
+    if (!voiceEnabled || typeof window === "undefined") return;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis?.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.85;
+    utterance.pitch = 0.9;
+    utterance.volume = 0.8;
+    
+    // Try to get a calm, female voice if available
+    const voices = window.speechSynthesis?.getVoices() || [];
+    const preferredVoice = voices.find(v => 
+      v.name.includes("Samantha") || 
+      v.name.includes("Karen") || 
+      v.name.includes("Google UK English Female") ||
+      v.lang.startsWith("en")
+    );
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    
+    window.speechSynthesis?.speak(utterance);
+  }, [voiceEnabled]);
+
+  // Speak phase changes
+  useEffect(() => {
+    if (phase !== lastSpokenPhase.current && phase !== "idle") {
+      lastSpokenPhase.current = phase;
+      
+      if (phase === "inhale") {
+        speak("Breathe in");
+      } else if (phase === "hold1" || phase === "hold2") {
+        speak("Hold");
+      } else if (phase === "exhale") {
+        speak("Breathe out");
+      } else if (phase === "complete") {
+        speak("Well done. You completed the exercise.");
+      }
+    }
+  }, [phase, speak]);
 
   const resetExercise = useCallback(() => {
     setPhase("idle");
@@ -266,16 +312,30 @@ export function GuidedBreathing() {
         {/* Controls */}
         <div className="flex gap-3 mt-6">
           {phase === "idle" && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={startExercise}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white"
-              style={{ backgroundColor: pattern.color }}
-            >
-              <Play className="w-5 h-5" />
-              Start
-            </motion.button>
+            <>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={startExercise}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-white"
+                style={{ backgroundColor: pattern.color }}
+              >
+                <Play className="w-5 h-5" />
+                Start
+              </motion.button>
+              
+              {/* Voice Toggle */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setVoiceEnabled(!voiceEnabled)}
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl font-semibold transition-colors ${
+                  voiceEnabled ? "bg-[#30D158]/20 text-[#30D158]" : "bg-[#2C2C2E] text-[#8E8E93]"
+                }`}
+              >
+                {voiceEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+              </motion.button>
+            </>
           )}
 
           {isActive && (

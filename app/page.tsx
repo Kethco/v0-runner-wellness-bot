@@ -17,6 +17,9 @@ import { hapticLight, hapticSuccess } from "@/lib/haptics";
 import { toast } from "@/hooks/use-toast";
 import { TrialCountdown } from "@/components/trial-expired-blocker";
 import { LEDTicker } from "@/components/led-ticker";
+import { ReadinessScore } from "@/components/dashboard/readiness-score";
+import { RecoveryCard } from "@/components/dashboard/recovery-card";
+import { GentleReminder } from "@/components/dashboard/gentle-reminder";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -397,6 +400,15 @@ return (
             </div>
           </motion.button>
         </motion.div>
+
+        {/* Gentle Reminder (shows when needed) */}
+        <GentleReminder />
+
+        {/* Readiness Score Card */}
+        <ReadinessScore />
+
+        {/* Recovery Card (shows when readiness is low) */}
+        <RecoveryCard />
 
         {/* Wellness Metrics */}
         {todayCheckin && (

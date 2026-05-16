@@ -11,6 +11,7 @@ import Link from "next/link";
 import { BottomNav } from "@/components/bottom-nav";
 import { DailyTips } from "@/components/daily-tips";
 import { GuidedBreathing } from "@/components/guided-breathing";
+import { RunVisualization } from "@/components/run-visualization";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -19,7 +20,7 @@ const fetcher = async (url: string) => {
   return res.json();
 };
 
-type MindMode = "home" | "pre-run" | "post-run" | "burnout" | "breathe";
+type MindMode = "home" | "pre-run" | "post-run" | "burnout" | "breathe" | "visualize";
 
 export default function MindPage() {
   const [mode, setMode] = useState<MindMode>("home");
@@ -48,13 +49,15 @@ return (
               {mode === "home" ? "Mind & Soul" : 
                mode === "pre-run" ? "Pre-Run Mindset" :
                mode === "post-run" ? "Post-Run Reflection" : 
-               mode === "breathe" ? "Guided Breathing" : "Motivation Support"}
+               mode === "breathe" ? "Guided Breathing" :
+               mode === "visualize" ? "Run Visualization" : "Motivation Support"}
             </h1>
             <p className="text-[#AEAEB2] text-sm">
               {mode === "home" ? "Your mental wellness toolkit" :
                mode === "pre-run" ? "Set your intention" :
                mode === "post-run" ? "Celebrate the moment" :
-               mode === "breathe" ? "Find your calm" : "You're not alone"}
+               mode === "breathe" ? "Find your calm" :
+               mode === "visualize" ? "See your success" : "You're not alone"}
             </p>
           </div>
         </div>
@@ -73,6 +76,15 @@ return (
     exit={{ opacity: 0 }}
   >
     <GuidedBreathing />
+  </motion.div>
+)}
+{mode === "visualize" && (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+  >
+    <RunVisualization onComplete={() => setMode("home")} />
   </motion.div>
 )}
 </AnimatePresence>
@@ -159,27 +171,50 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
         <DailyTips />
       </motion.div>
 
-      {/* Guided Breathing Card */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => onSelectMode("breathe")}
-        className="w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#64D2FF] via-[#5E5CE6] to-[#7B6CF6] p-[1px]"
-      >
-        <div className="relative bg-[#0F0F1A] rounded-[22px] p-5 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#64D2FF] to-[#5E5CE6] flex items-center justify-center shadow-lg shadow-[#64D2FF]/20">
-            <Wind className="w-8 h-8 text-white" />
+      {/* Quick Tools Row */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Guided Breathing Card */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => onSelectMode("breathe")}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#64D2FF]/20 to-[#5E5CE6]/10 border border-[#64D2FF]/30 p-4"
+        >
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#64D2FF] to-[#5E5CE6] flex items-center justify-center shadow-lg shadow-[#64D2FF]/20">
+              <Wind className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm">Breathing</p>
+              <p className="text-[#8E8E93] text-xs">Calm your mind</p>
+            </div>
           </div>
-          <div className="flex-1 text-left">
-            <p className="text-white font-bold text-lg">Guided Breathing</p>
-            <p className="text-[#8E8E93] text-sm">Calm your mind with breathing exercises</p>
+        </motion.button>
+
+        {/* Run Visualization Card */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => onSelectMode("visualize")}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#AF52DE]/20 to-[#7B6CF6]/10 border border-[#AF52DE]/30 p-4"
+        >
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#AF52DE] to-[#7B6CF6] flex items-center justify-center shadow-lg shadow-[#AF52DE]/20">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="text-white font-bold text-sm">Visualize</p>
+              <p className="text-[#8E8E93] text-xs">See your success</p>
+            </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-[#64D2FF]" />
-        </div>
-      </motion.button>
+        </motion.button>
+      </div>
 
   {/* Main Actions */}
   <div className="space-y-4">

@@ -137,18 +137,71 @@ export async function POST(request: NextRequest) {
     // Get recent data for AI
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     
-    const { data: recentCheckins } = await supabase
-      .from("checkins")
-      .select("*")
-      .eq("user_id", user.id)
-      .gte("date", weekAgo.toISOString().split("T")[0]);
-    
-    const { data: recentRuns } = await supabase
-      .from("runs")
-      .select("miles")
-      .eq("user_id", user.id)
-      .gte("date", weekAgo.toISOString().split("T")[0]);
+    const [checkinsRes, runsRes, goalsRes, streakRes, profileRes] = await Promise.all([
+      supabase
+        .from("checkins")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("date", weekAgo.toISOString().split("T")[0]),
+      supabase
+        .from("runs")
+        .select("miles, run_type, effort_level, date")
+        .eq("user_id", user.id)
+        .gte("date", weekAgo.toISOString().split("T")[0])
+        .order("date", { ascending: false }),
+      supabase
+        .from("goals")
+        .select("goal_type, target_value, target_date")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .limit(3),
+      supabase
+        .from("streaks")
+        .select("current_streak")
+        .eq("user_id", user.id)
+        .single(),
+      supabase
+        .from("profiles")
+        .select("first_name")
+        .eq("id", user.id)
+        .single(),
+    ]);
+
+    const recentCheckins = checkinsRes.data || [];
+    const recentRuns = runsRes.data || [];
+    const goals = goalsRes.data || [];
+    const currentStreak = streakRes.data?.current_streak || 0;
+    const firstName = profileRes.data?.first_name;
+
+    // Calculate hard runs in last 3 days
+    const hardRunsLast3Days = recentRuns.filter(r => {
+      const runDate = new Date(r.date);
+      return runDate >= threeDaysAgo && 
+        (r.run_type === 'tempo' || r.run_type === 'intervals' || r.run_type === 'race' || (r.effort_level && r.effort_level >= 4));
+    }).length;
+
+    // Get last run type
+    const lastRunType = recentRuns[0]?.run_type;
+
+    // Calculate days until next race goal
+    let daysUntilRace: number | undefined;
+    const raceGoal = goals.find(g => g.goal_type?.toLowerCase().includes('race') || g.goal_type?.toLowerCase().includes('marathon') || g.goal_type?.toLowerCase().includes('5k') || g.goal_type?.toLowerCase().includes('10k'));
+    if (raceGoal?.target_date) {
+      const raceDate = new Date(raceGoal.target_date);
+      daysUntilRace = Math.ceil((raceDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    }
+
+    // Calculate readiness score
+    let readinessScore = 70;
+    if (body.sleepRating) readinessScore += (body.sleepRating - 3) * 5;
+    if (body.energy) readinessScore += (body.energy - 3) * 5;
+    if (body.soreness) readinessScore -= (body.soreness - 1) * 4;
+    if (body.readiness) readinessScore += (body.readiness - 3) * 3;
+    if (hardRunsLast3Days >= 2) readinessScore -= 8;
+    readinessScore = Math.max(0, Math.min(100, readinessScore));
     
     const avg = (arr: (number | null | undefined)[]) => {
       const valid = arr.filter((n): n is number => n != null);
@@ -171,6 +224,18 @@ export async function POST(request: NextRequest) {
       },
       weeklyMiles: recentRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0,
       totalRuns: recentRuns?.length || 0,
+      // Enhanced context
+      firstName,
+      currentStreak,
+      readinessScore: Math.round(readinessScore),
+      hardRunsLast3Days,
+      lastRunType,
+      daysUntilRace,
+      goals: goals.map(g => ({
+        goal_type: g.goal_type,
+        target_value: g.target_value,
+        target_date: g.target_date,
+      })),
     });
 
     // Save AI advice to database so it persists
