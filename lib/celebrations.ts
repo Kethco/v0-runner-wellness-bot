@@ -96,6 +96,54 @@ export function celebrateCheckin() {
   });
 }
 
+// Streak milestone messages
+const STREAK_MILESTONES: Record<number, { title: string; description: string; intensity: "light" | "medium" | "heavy" }> = {
+  3: { title: "3-Day Streak!", description: "You're building a habit. Keep it up!", intensity: "light" },
+  7: { title: "7-Day Streak!", description: "A full week of consistency. You're on fire!", intensity: "medium" },
+  14: { title: "2-Week Streak!", description: "Two weeks strong. This is becoming second nature.", intensity: "medium" },
+  21: { title: "21-Day Streak!", description: "They say it takes 21 days to form a habit. You did it!", intensity: "heavy" },
+  30: { title: "30-Day Streak!", description: "A full month of dedication. You're a champion!", intensity: "heavy" },
+  50: { title: "50-Day Streak!", description: "Fifty days of pure commitment. Legendary!", intensity: "heavy" },
+  100: { title: "100-Day Streak!", description: "Triple digits! You're in the elite club now.", intensity: "heavy" },
+  365: { title: "365-Day Streak!", description: "A full year. You are the definition of consistency.", intensity: "heavy" },
+};
+
+// Celebrate streak milestones
+export function celebrateStreakMilestone(streak: number) {
+  const milestone = STREAK_MILESTONES[streak];
+  if (!milestone) return false;
+  
+  if (milestone.intensity === "heavy") {
+    hapticHeavy();
+    fireConfettiCannon();
+  } else if (milestone.intensity === "medium") {
+    hapticSuccess();
+    fireConfetti("medium");
+  } else {
+    hapticMedium();
+    fireConfetti("light");
+  }
+  
+  toast({
+    title: milestone.title,
+    description: milestone.description,
+    duration: 5000,
+  });
+  
+  return true;
+}
+
+// Check if streak just hit a milestone
+export function checkStreakMilestone(previousStreak: number, currentStreak: number): number | null {
+  const milestones = [3, 7, 14, 21, 30, 50, 100, 365];
+  for (const m of milestones) {
+    if (previousStreak < m && currentStreak >= m) {
+      return m;
+    }
+  }
+  return null;
+}
+
 // Celebrate milestone achievement
 export function celebrateMilestone(milestone: 25 | 50 | 75 | 100) {
   const message = MILESTONE_MESSAGES[milestone];

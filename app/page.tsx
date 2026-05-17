@@ -12,7 +12,7 @@ import { LogRunModal } from "@/components/dashboard/log-run-modal";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { BottomNav } from "@/components/bottom-nav";
-import { celebrateMilestone, checkMilestone } from "@/lib/celebrations";
+import { celebrateMilestone, checkMilestone, celebrateStreakMilestone, checkStreakMilestone } from "@/lib/celebrations";
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
 import { toast } from "@/hooks/use-toast";
 import { TrialCountdown } from "@/components/trial-expired-blocker";
@@ -20,6 +20,9 @@ import { LEDTicker } from "@/components/led-ticker";
 import { ReadinessScore } from "@/components/dashboard/readiness-score";
 import { RecoveryCard } from "@/components/dashboard/recovery-card";
 import { GentleReminder } from "@/components/dashboard/gentle-reminder";
+import { Onboarding } from "@/components/onboarding";
+import { WeeklySummary } from "@/components/dashboard/weekly-summary";
+import { AchievementBadges } from "@/components/dashboard/achievement-badges";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -36,6 +39,7 @@ export default function Dashboard() {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [newGoalValue, setNewGoalValue] = useState("");
   const [localGoal, setLocalGoal] = useState<number | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [greeting, setGreeting] = useState({ text: "Welcome", gradient: "from-[#FF6B00] via-[#FF4500] to-[#FF2D00]" });
   
   // Compute dates directly (not in state to avoid hydration issues)
@@ -56,6 +60,7 @@ export default function Dashboard() {
   
   // Ref for milestone tracking
   const prevProgressRef = useRef<number>(0);
+  const prevStreakRef = useRef<number>(0);
   
   // Redirect to login if not authenticated, or to coach dashboard if coach
   useEffect(() => {
@@ -87,6 +92,24 @@ export default function Dashboard() {
   const weeklyGoal = localGoal || profile?.weekly_goal || 25;
   const progressPercent = Math.min((weeklyMiles / weeklyGoal) * 100, 100);
   const currentStreak = streakData?.streak?.current_streak || 0;
+
+  // Show onboarding for new users (no check-ins and no runs)
+  useEffect(() => {
+    if (profile && !profile.onboarded && checkins.length === 0 && runs.length === 0) {
+      setShowOnboarding(true);
+    }
+  }, [profile, checkins.length, runs.length]);
+
+  // Check for streak milestone celebrations
+  useEffect(() => {
+    if (currentStreak > 0 && prevStreakRef.current > 0 && currentStreak > prevStreakRef.current) {
+      const milestone = checkStreakMilestone(prevStreakRef.current, currentStreak);
+      if (milestone) {
+        celebrateStreakMilestone(milestone);
+      }
+    }
+    prevStreakRef.current = currentStreak;
+  }, [currentStreak]);
   
   // Check if on trial
   const plan = user?.user_metadata?.plan;
@@ -135,6 +158,17 @@ export default function Dashboard() {
 
 return (
   <div className={`min-h-screen bg-black text-white pb-20 ${showTrialBanner ? "pt-10" : ""}`}>
+      {/* Onboarding for new users */}
+      {showOnboarding && (
+        <Onboarding 
+          userName={userName} 
+          onComplete={() => {
+            setShowOnboarding(false);
+            mutateProfile();
+          }} 
+        />
+      )}
+
       {/* Premium Header with Glassmorphism */}
       <header className="fixed-header-safe z-50">
         {/* Gradient border line */}
@@ -409,6 +443,12 @@ return (
 
         {/* Recovery Card (shows when readiness is low) */}
         <RecoveryCard />
+
+        {/* Weekly Wellness Summary (shows Sun/Mon) */}
+        <WeeklySummary />
+
+        {/* Achievement Badges */}
+        <AchievementBadges />
 
         {/* Wellness Metrics */}
         {todayCheckin && (

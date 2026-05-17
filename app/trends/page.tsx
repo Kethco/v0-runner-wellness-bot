@@ -25,7 +25,9 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts";
-import { Moon, Zap, Activity, TrendingUp, TrendingDown, Minus, AlertTriangle, Loader2, BarChart3 } from "lucide-react";
+import { Moon, Zap, Activity, TrendingUp, TrendingDown, Minus, AlertTriangle, Loader2, BarChart3, Lightbulb } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { ScatterChart, Scatter, ZAxis } from "recharts";
 
 interface Checkin {
   id: string;
@@ -184,6 +186,64 @@ export default function TrendsPage() {
   // Treat errors as empty state (user may not be logged in or have no data yet)
   const showEmptyState = error || checkins.length === 0;
 
+  // Correlation data: Sleep vs Energy scatter points
+  const correlationData = useMemo(() => {
+    if (checkins.length < 3) return { sleepEnergy: [], sleepReadiness: [], insights: [] };
+    
+    const sleepEnergy = checkins.map(c => ({
+      sleep: c.sleep_rating,
+      energy: c.energy,
+      date: new Date(c.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    }));
+    
+    const sleepReadiness = checkins.map(c => ({
+      sleep: c.sleep_rating,
+      readiness: c.readiness,
+      date: new Date(c.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    }));
+
+    // Compute simple correlation insights
+    const insights: string[] = [];
+    
+    // Sleep-Energy correlation
+    const highSleepDays = checkins.filter(c => c.sleep_rating >= 3);
+    const lowSleepDays = checkins.filter(c => c.sleep_rating <= 2);
+    if (highSleepDays.length > 0 && lowSleepDays.length > 0) {
+      const avgEnergyHighSleep = highSleepDays.reduce((s, c) => s + c.energy, 0) / highSleepDays.length;
+      const avgEnergyLowSleep = lowSleepDays.reduce((s, c) => s + c.energy, 0) / lowSleepDays.length;
+      const diff = avgEnergyHighSleep - avgEnergyLowSleep;
+      if (diff > 0.5) {
+        insights.push(`When you sleep well, your energy averages ${avgEnergyHighSleep.toFixed(1)} vs ${avgEnergyLowSleep.toFixed(1)} on poor sleep nights - a ${diff.toFixed(1)} point boost.`);
+      }
+    }
+
+    // Soreness-Readiness correlation
+    const lowSorenessDays = checkins.filter(c => c.soreness <= 2);
+    const highSorenessDays = checkins.filter(c => c.soreness >= 3);
+    if (lowSorenessDays.length > 0 && highSorenessDays.length > 0) {
+      const avgReadyLowSore = lowSorenessDays.reduce((s, c) => s + c.readiness, 0) / lowSorenessDays.length;
+      const avgReadyHighSore = highSorenessDays.reduce((s, c) => s + c.readiness, 0) / highSorenessDays.length;
+      if (avgReadyLowSore - avgReadyHighSore > 0.5) {
+        insights.push(`Low soreness days see ${avgReadyLowSore.toFixed(1)} avg readiness vs ${avgReadyHighSore.toFixed(1)} on high soreness days.`);
+      }
+    }
+
+    // Best day of week
+    const dayBuckets: Record<string, { total: number; count: number }> = {};
+    checkins.forEach(c => {
+      const day = new Date(c.date).toLocaleDateString("en-US", { weekday: "long" });
+      if (!dayBuckets[day]) dayBuckets[day] = { total: 0, count: 0 };
+      dayBuckets[day].total += c.readiness;
+      dayBuckets[day].count += 1;
+    });
+    const bestDay = Object.entries(dayBuckets).sort((a, b) => (b[1].total / b[1].count) - (a[1].total / a[1].count))[0];
+    if (bestDay && bestDay[1].count >= 2) {
+      insights.push(`${bestDay[0]}s tend to be your best day, averaging ${(bestDay[1].total / bestDay[1].count).toFixed(1)} readiness.`);
+    }
+
+    return { sleepEnergy, sleepReadiness, insights };
+  }, [checkins]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -227,17 +287,17 @@ export default function TrendsPage() {
             <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           </div>
         ) : showEmptyState ? (
-          <Card className="border-border bg-card">
-            <CardContent className="py-16 text-center">
-              <BarChart3 className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">No Wellness Data Yet</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Complete daily check-ins to see your wellness trends and track your progress over time.
-              </p>
-              <Button asChild>
-                <a href="/">Go to Dashboard</a>
-              </Button>
-            </CardContent>
+<Card className="border-border bg-card">
+  <CardContent className="py-6">
+    <EmptyState
+      icon={BarChart3}
+      title="Your Trends Will Appear Here"
+      description="Complete daily check-ins to unlock powerful insights about your sleep, energy, and recovery patterns over time."
+      actionLabel="Go to Dashboard"
+      actionHref="/"
+      color="#5E5CE6"
+    />
+  </CardContent>
           </Card>
         ) : (
           <>
@@ -291,6 +351,7 @@ export default function TrendsPage() {
             <Tabs defaultValue="overview" className="space-y-6">
               <TabsList className="bg-secondary">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="correlations">Insights</TabsTrigger>
                 <TabsTrigger value="sleep">Sleep</TabsTrigger>
                 <TabsTrigger value="energy">Energy</TabsTrigger>
                 <TabsTrigger value="recovery">Recovery</TabsTrigger>
@@ -382,6 +443,84 @@ export default function TrendsPage() {
                             <Bar dataKey="readyDays" fill="hsl(var(--primary))" name="Ready Days" radius={[4, 4, 0, 0]} />
                           </BarChart>
                         </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="correlations" className="space-y-6">
+                {/* Correlation Charts */}
+                <div className="grid lg:grid-cols-2 gap-6">
+                  <Card className="border-border bg-card">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Sleep vs Energy</CardTitle>
+                      <CardDescription>How does sleep quality affect your energy?</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[280px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ScatterChart>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis type="number" dataKey="sleep" name="Sleep" domain={[0, 5]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} label={{ value: "Sleep Score", position: "bottom", fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                            <YAxis type="number" dataKey="energy" name="Energy" domain={[0, 5]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} label={{ value: "Energy Level", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                            <ZAxis range={[60, 60]} />
+                            <Tooltip
+                              contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                              formatter={(value: number, name: string) => [value, name]}
+                            />
+                            <Scatter data={correlationData.sleepEnergy} fill="#60a5fa" fillOpacity={0.7} />
+                          </ScatterChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-border bg-card">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Sleep vs Readiness</CardTitle>
+                      <CardDescription>How sleep impacts your training readiness</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[280px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ScatterChart>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis type="number" dataKey="sleep" name="Sleep" domain={[0, 5]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} label={{ value: "Sleep Score", position: "bottom", fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                            <YAxis type="number" dataKey="readiness" name="Readiness" domain={[0, 5]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} label={{ value: "Readiness", angle: -90, position: "insideLeft", fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                            <ZAxis range={[60, 60]} />
+                            <Tooltip
+                              contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                              formatter={(value: number, name: string) => [value, name]}
+                            />
+                            <Scatter data={correlationData.sleepReadiness} fill="#30D158" fillOpacity={0.7} />
+                          </ScatterChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* AI Insights */}
+                {correlationData.insights.length > 0 && (
+                  <Card className="border-border bg-card">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Lightbulb className="w-5 h-5 text-[#FFD700]" />
+                        Pattern Insights
+                      </CardTitle>
+                      <CardDescription>What your data tells us about your performance</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {correlationData.insights.map((insight, i) => (
+                          <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-secondary/50">
+                            <div className="w-6 h-6 rounded-full bg-[#FFD700]/15 flex items-center justify-center shrink-0 mt-0.5">
+                              <span className="text-xs font-bold text-[#FFD700]">{i + 1}</span>
+                            </div>
+                            <p className="text-sm text-foreground leading-relaxed">{insight}</p>
+                          </div>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>

@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Flame, TrendingUp, ChevronLeft, ChevronRight, Activity, Zap, Route } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
+import { EmptyState } from "@/components/empty-state";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -262,18 +263,15 @@ export default function RunsPage() {
 
         {/* Timeline View */}
         <div className="space-y-3">
-          {groupedRuns.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1A1A1A] flex items-center justify-center">
-                <Calendar className="w-8 h-8 text-[#3A3A3A]" />
-              </div>
-              <p className="text-[#6E6E73] font-medium">No runs logged yet</p>
-              <p className="text-sm text-[#3A3A3A] mt-1">Tap the + button to log your first run</p>
-            </motion.div>
+{groupedRuns.length === 0 ? (
+  <EmptyState
+    icon={Activity}
+    title="Your Running Journey Starts Here"
+    description="Log your first run to start tracking your progress, building streaks, and getting personalized AI coaching."
+    actionLabel="Log Your First Run"
+    onAction={() => setShowLogRun(true)}
+    color="#FF4500"
+  />
           ) : (
             groupedRuns.map((group, groupIndex) => (
               <motion.div

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/contexts/auth-context'
+import { ThemeProvider } from '@/components/theme-provider'
 import { InstallPrompt } from '@/components/pwa/install-prompt'
 import { UpdateBanner } from '@/components/update-banner'
 import { TrialBanner } from '@/components/dashboard/trial-banner'
@@ -41,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark bg-background">
+    <html lang="en" className="bg-background" suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -50,14 +51,16 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192x192.jpg" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
-        <AuthProvider>
-          <UpdateBanner />
-          <TrialBanner />
-          {children}
-          <InstallPrompt />
-          <Toaster />
-          <TrialExpiredBlocker />
-        </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+          <AuthProvider>
+            <UpdateBanner />
+            <TrialBanner />
+            {children}
+            <InstallPrompt />
+            <Toaster />
+            <TrialExpiredBlocker />
+          </AuthProvider>
+        </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

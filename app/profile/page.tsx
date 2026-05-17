@@ -50,9 +50,14 @@ import {
   CheckCircle,
   XCircle,
   ChevronDown,
+  Sun,
+  Moon as MoonIcon,
+  Monitor,
+  Download,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
+import { useTheme } from "next-themes";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -62,6 +67,7 @@ const fetcher = async (url: string) => {
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const { data: profileData } = useSWR(user ? "/api/profile" : null, fetcher);
   const { data: statsData } = useSWR(user ? "/api/checkins?limit=1" : null, fetcher);
   
@@ -339,6 +345,39 @@ return (
             </CardContent>
           </Card>
 
+          {/* Appearance */}
+          <Card className="border-border bg-card">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Sun className="w-5 h-5" />
+                Appearance
+              </CardTitle>
+              <CardDescription>Choose your preferred theme</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { value: "light", label: "Light", icon: Sun },
+                  { value: "dark", label: "Dark", icon: MoonIcon },
+                  { value: "system", label: "System", icon: Monitor },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setTheme(opt.value)}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
+                      theme === opt.value
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-secondary/50 text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <opt.icon className="w-5 h-5" />
+                    <span className="text-sm font-medium">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Notifications */}
           <Card className="border-border bg-card">
             <CardHeader>
@@ -360,6 +399,25 @@ return (
                     onCheckedChange={(v) => setNotifications({ ...notifications, morningReminder: v })}
                   />
                 </div>
+                {notifications.morningReminder && (
+                  <div className="ml-0 pl-4 border-l-2 border-primary/30">
+                    <Label className="text-xs text-muted-foreground mb-1 block">Reminder Time</Label>
+                    <Select defaultValue="7:00">
+                      <SelectTrigger className="w-32 h-8 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="6:00">6:00 AM</SelectItem>
+                        <SelectItem value="6:30">6:30 AM</SelectItem>
+                        <SelectItem value="7:00">7:00 AM</SelectItem>
+                        <SelectItem value="7:30">7:30 AM</SelectItem>
+                        <SelectItem value="8:00">8:00 AM</SelectItem>
+                        <SelectItem value="8:30">8:30 AM</SelectItem>
+                        <SelectItem value="9:00">9:00 AM</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div>
@@ -399,6 +457,56 @@ return (
 
           {/* Subscription Management */}
           <SubscriptionCard user={user} />
+
+          {/* Data Export */}
+          <Card className="border-border bg-card">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Download className="w-5 h-5" />
+                Export Your Data
+              </CardTitle>
+              <CardDescription>Download your check-ins and run history</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">All Data (CSV)</p>
+                    <p className="text-xs text-muted-foreground">Check-ins and runs in spreadsheet format</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      window.open("/api/export?format=csv&type=all", "_blank");
+                      toast({ title: "Export started", description: "Your CSV download will begin shortly." });
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    CSV
+                  </Button>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">All Data (JSON)</p>
+                    <p className="text-xs text-muted-foreground">Full data in developer-friendly format</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      window.open("/api/export?type=all", "_blank");
+                      toast({ title: "Export started", description: "Your JSON download will begin shortly." });
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    JSON
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Danger Zone */}
           <Card className="border-destructive/50 bg-card">
