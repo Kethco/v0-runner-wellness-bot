@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
+import { LifeEventsManager } from "@/components/life-events-manager";
 
 interface Goal {
   id: string;
@@ -153,6 +155,13 @@ function GoalsPageContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [createTrainingPlan, setCreateTrainingPlan] = useState(true);
+  const [trainingPlanConfig, setTrainingPlanConfig] = useState({
+    experienceLevel: "intermediate" as "beginner" | "intermediate" | "advanced",
+    currentWeeklyMiles: 15,
+    trainingDaysPerWeek: 5,
+    longRunDay: "Sunday",
+  });
   const [newGoal, setNewGoal] = useState({
     distance: "",
     raceName: "",
@@ -203,8 +212,30 @@ function GoalsPageContent() {
       });
 
       if (response.ok) {
+        const goalData = await response.json();
+        
+        // Create training plan if requested
+        if (createTrainingPlan && goalData.goal?.id) {
+          try {
+            await fetch("/api/training-plan", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                goalId: goalData.goal.id,
+                raceDistance: newGoal.distance,
+                raceDate: newGoal.raceDate,
+                targetTime: newGoal.targetTime || null,
+                ...trainingPlanConfig,
+              }),
+            });
+          } catch (planErr) {
+            console.error("Failed to create training plan:", planErr);
+          }
+        }
+        
         mutate();
         setNewGoal({ distance: "", raceName: "", raceDate: "", targetTime: "" });
+        setCreateTrainingPlan(true);
         setSaveError(null);
         setIsDialogOpen(false);
       } else {
@@ -391,6 +422,98 @@ return (
                   />
                 </div>
               </div>
+              
+              {/* Training Plan Option */}
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="createPlan" className="font-medium">Generate Training Plan</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Create a personalized training schedule for this race
+                    </p>
+                  </div>
+                  <Switch
+                    id="createPlan"
+                    checked={createTrainingPlan}
+                    onCheckedChange={setCreateTrainingPlan}
+                  />
+                </div>
+                
+                {createTrainingPlan && (
+                  <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Experience Level</Label>
+                      <Select
+                        value={trainingPlanConfig.experienceLevel}
+                        onValueChange={(v) => setTrainingPlanConfig({
+                          ...trainingPlanConfig,
+                          experienceLevel: v as "beginner" | "intermediate" | "advanced"
+                        })}
+                      >
+                        <SelectTrigger className="h-9 text-sm bg-secondary border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">Beginner</SelectItem>
+                          <SelectItem value="intermediate">Intermediate</SelectItem>
+                          <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Current Weekly Miles</Label>
+                      <Input
+                        type="number"
+                        value={trainingPlanConfig.currentWeeklyMiles}
+                        onChange={(e) => setTrainingPlanConfig({
+                          ...trainingPlanConfig,
+                          currentWeeklyMiles: parseInt(e.target.value) || 15
+                        })}
+                        className="h-9 text-sm bg-secondary border-border"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Training Days/Week</Label>
+                      <Select
+                        value={String(trainingPlanConfig.trainingDaysPerWeek)}
+                        onValueChange={(v) => setTrainingPlanConfig({
+                          ...trainingPlanConfig,
+                          trainingDaysPerWeek: parseInt(v)
+                        })}
+                      >
+                        <SelectTrigger className="h-9 text-sm bg-secondary border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3">3 days</SelectItem>
+                          <SelectItem value="4">4 days</SelectItem>
+                          <SelectItem value="5">5 days</SelectItem>
+                          <SelectItem value="6">6 days</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Long Run Day</Label>
+                      <Select
+                        value={trainingPlanConfig.longRunDay}
+                        onValueChange={(v) => setTrainingPlanConfig({
+                          ...trainingPlanConfig,
+                          longRunDay: v
+                        })}
+                      >
+                        <SelectTrigger className="h-9 text-sm bg-secondary border-border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Saturday">Saturday</SelectItem>
+                          <SelectItem value="Sunday">Sunday</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
               <DialogFooter className="gap-2 sm:gap-0">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
@@ -741,6 +864,9 @@ return (
                 </CardContent>
               </Card>
             </div>
+            
+            {/* Life Events Manager */}
+            <LifeEventsManager />
           </>
         )}
       </main>

@@ -25,6 +25,7 @@ import { WeeklySummary } from "@/components/dashboard/weekly-summary";
 import { AchievementBadges } from "@/components/dashboard/achievement-badges";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { PersonalRecordsCard } from "@/components/dashboard/personal-records";
+import { ThisWeeksPlan } from "@/components/dashboard/this-weeks-plan";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -442,6 +443,9 @@ return (
 
         {/* Readiness Score Card */}
         <ReadinessScore />
+
+        {/* This Week's Training Plan */}
+        <ThisWeeksPlan />
 
         {/* Recovery Card (shows when readiness is low) */}
         <RecoveryCard />

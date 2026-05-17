@@ -132,6 +132,81 @@ const CHRISTIAN_WISDOM = [
 ];
 
 function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) {
+  // Fetch today's wellness data
+  const { data: checkinData } = useSWR<{ checkins: Array<{
+    sleep_rating: number;
+    energy: number;
+    soreness: number;
+    readiness: number;
+    feeling: string;
+  }> }>("/api/checkins?limit=1", fetcher);
+  
+  const todayCheckin = checkinData?.checkins?.[0];
+  
+  // Calculate wellness state
+  const getWellnessState = () => {
+    if (!todayCheckin) return null;
+    
+    const avgScore = (
+      (todayCheckin.sleep_rating || 3) +
+      (todayCheckin.energy || 3) +
+      (todayCheckin.readiness || 3) +
+      (6 - (todayCheckin.soreness || 3)) // Invert soreness
+    ) / 4;
+    
+    if (avgScore <= 2) return "low";
+    if (avgScore >= 4) return "high";
+    return "moderate";
+  };
+  
+  const wellnessState = getWellnessState();
+  
+  // Personalized greeting based on wellness
+  const getWellnessGreeting = () => {
+    if (!todayCheckin) {
+      return { message: "Welcome to your mental wellness toolkit", suggestion: null };
+    }
+    
+    if (wellnessState === "low") {
+      return {
+        message: "I sense today might be tough. Be gentle with yourself.",
+        suggestion: "breathe",
+        suggestionText: "Try some calming breathwork",
+      };
+    }
+    
+    if (todayCheckin.energy <= 2) {
+      return {
+        message: "Your energy seems low today. Rest is productive too.",
+        suggestion: "breathe",
+        suggestionText: "Energizing breathwork can help",
+      };
+    }
+    
+    if (todayCheckin.soreness >= 4) {
+      return {
+        message: "Your body is speaking. Listen to it with kindness.",
+        suggestion: "breathe",
+        suggestionText: "Recovery breathing recommended",
+      };
+    }
+    
+    if (wellnessState === "high") {
+      return {
+        message: "You're feeling great! Channel that energy.",
+        suggestion: "visualize",
+        suggestionText: "Perfect day to visualize success",
+      };
+    }
+    
+    return {
+      message: "Your mental wellness toolkit awaits",
+      suggestion: null,
+    };
+  };
+  
+  const greeting = getWellnessGreeting();
+  
   // Get daily wisdom based on day of year for consistency throughout the day
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
   const todaysWisdom = CHRISTIAN_WISDOM[dayOfYear % CHRISTIAN_WISDOM.length];
@@ -143,10 +218,55 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
       exit={{ opacity: 0 }}
       className="space-y-6"
     >
+      {/* Wellness-Aware Greeting */}
+      {greeting.suggestion && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`p-4 rounded-2xl border ${
+            wellnessState === "low" 
+              ? "bg-gradient-to-r from-[#64D2FF]/10 to-[#5E5CE6]/5 border-[#64D2FF]/20"
+              : wellnessState === "high"
+              ? "bg-gradient-to-r from-[#32D74B]/10 to-[#FFD60A]/5 border-[#32D74B]/20"
+              : "bg-gradient-to-r from-[#AF52DE]/10 to-[#5E5CE6]/5 border-[#AF52DE]/20"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              wellnessState === "low" 
+                ? "bg-[#64D2FF]/20"
+                : wellnessState === "high"
+                ? "bg-[#32D74B]/20"
+                : "bg-[#AF52DE]/20"
+            }`}>
+              {wellnessState === "low" ? (
+                <Heart className="w-5 h-5 text-[#64D2FF]" />
+              ) : wellnessState === "high" ? (
+                <Zap className="w-5 h-5 text-[#32D74B]" />
+              ) : (
+                <Sparkles className="w-5 h-5 text-[#AF52DE]" />
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-white text-sm font-medium">{greeting.message}</p>
+              {greeting.suggestionText && (
+                <button
+                  onClick={() => onSelectMode(greeting.suggestion as MindMode)}
+                  className="text-xs text-[#64D2FF] mt-1 hover:underline"
+                >
+                  {greeting.suggestionText} &rarr;
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+      
       {/* Daily Wisdom */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: greeting.suggestion ? 0.1 : 0 }}
         className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1A1A2E] to-[#0F0F1A] p-6 border border-[#2A2A40]"
       >
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#5E5CE6] rounded-full blur-[80px] opacity-30" />

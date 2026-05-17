@@ -30,10 +30,34 @@ interface WellnessData {
   hardRunsLast3Days?: number
   lastRunType?: string
   daysUntilRace?: number
+  // Training Plan Context
+  trainingPlan?: {
+    planType: string
+    currentWeek: number
+    totalWeeks: number
+    weekType: string
+    weekFocus: string
+    todayWorkout?: {
+      type: string
+      title: string
+      targetMiles: number
+      description: string
+    }
+    plannedMilesThisWeek: number
+    completedMilesThisWeek: number
+  }
+  // Life Events Context
+  upcomingEvents?: Array<{
+    type: string
+    title: string
+    startDate: string
+    daysAway: number
+    trainingImpact: string
+  }>
 }
 
 export async function generateCoachAdvice(data: WellnessData): Promise<string> {
-  const { todayCheckin, weeklyAverages, weeklyMiles, totalRuns, goals, firstName, currentStreak, recentPatterns, readinessScore, hardRunsLast3Days, lastRunType, daysUntilRace } = data
+  const { todayCheckin, weeklyAverages, weeklyMiles, totalRuns, goals, firstName, currentStreak, recentPatterns, readinessScore, hardRunsLast3Days, lastRunType, daysUntilRace, trainingPlan, upcomingEvents } = data
 
   // Build context-aware prompt
   let raceContext = '';
@@ -57,7 +81,37 @@ export async function generateCoachAdvice(data: WellnessData): Promise<string> {
     recoveryContext += ` Last run was a ${lastRunType} - consider easier effort today.`;
   }
 
-  const prompt = `You are an expert running coach and sports scientist providing personalized guidance. Analyze this runner's complete wellness data and provide specific, actionable advice.
+  // Training Plan Context
+  let trainingPlanContext = '';
+  if (trainingPlan) {
+    trainingPlanContext = `
+ACTIVE TRAINING PLAN: ${trainingPlan.planType}
+- Week ${trainingPlan.currentWeek} of ${trainingPlan.totalWeeks} (${trainingPlan.weekType} phase)
+- Week focus: ${trainingPlan.weekFocus}
+- Progress: ${trainingPlan.completedMilesThisWeek}/${trainingPlan.plannedMilesThisWeek} miles completed this week
+${trainingPlan.todayWorkout ? `
+TODAY'S PLANNED WORKOUT:
+- ${trainingPlan.todayWorkout.title}: ${trainingPlan.todayWorkout.targetMiles} miles
+- ${trainingPlan.todayWorkout.description}
+- Consider readiness score when recommending whether to do this workout as planned, modify it, or suggest rest.` : '- Rest day or no workout planned'}`;
+  }
+
+  // Life Events Context
+  let lifeEventsContext = '';
+  if (upcomingEvents && upcomingEvents.length > 0) {
+    const eventsList = upcomingEvents.map(e => {
+      if (e.daysAway <= 0) {
+        return `- CURRENTLY: ${e.title || e.type} (${e.trainingImpact} training impact)`;
+      }
+      return `- In ${e.daysAway} days: ${e.title || e.type} (${e.trainingImpact} training impact)`;
+    }).join('\n');
+    lifeEventsContext = `
+UPCOMING LIFE EVENTS (plan may need adjustment):
+${eventsList}
+Consider these when making recommendations - proactively suggest moving workouts if needed.`;
+  }
+
+  const prompt = `You are an expert running coach and sports scientist providing personalized guidance. You are proactive about helping runners adapt their training to real life. Analyze this runner's complete wellness data and provide specific, actionable advice.
 
 ${firstName ? `Runner's name: ${firstName}` : ''}
 ${currentStreak ? `Current check-in streak: ${currentStreak} days (acknowledge their consistency!)` : ''}
@@ -84,6 +138,10 @@ ${readinessScore ? `COMPUTED READINESS: ${readinessScore}/100 - ${readinessScore
 
 ${recentPatterns?.length ? `PATTERNS DETECTED:\n${recentPatterns.map(p => `- ${p}`).join('\n')}` : ''}
 
+${trainingPlanContext}
+
+${lifeEventsContext}
+
 ${raceContext ? `RACE PREPARATION:\n${raceContext}` : ''}
 
 ${recoveryContext ? `RECOVERY NOTE:\n${recoveryContext}` : ''}
@@ -93,10 +151,11 @@ ${goals?.length ? goals.map(g => `- ${g.goal_type}: ${g.target_value} by ${g.tar
 
 Based on ALL this context, provide:
 1. A brief personalized assessment (1-2 sentences) acknowledging their specific situation
-2. ONE specific training recommendation for today (be precise: pace zones, distance, or activity type)
-3. One recovery or wellness tip based on their data
+2. ONE specific training recommendation for today based on their planned workout and readiness
+3. If there are upcoming life events, proactively suggest how to adjust (e.g., "I see you have travel in 3 days - consider doing your long run tomorrow instead")
+4. One recovery or wellness tip based on their data
 
-Keep response under 150 words. Be encouraging but data-driven. ${firstName ? `Address ${firstName} by name.` : ''} If they have a race coming up, factor that into your recommendation.`
+Keep response under 180 words. Be encouraging but data-driven. Be PROACTIVE about suggesting plan adjustments. ${firstName ? `Address ${firstName} by name.` : ''} If they have a race coming up, factor that into your recommendation.`
 
   const { text } = await generateText({
     model: 'openai/gpt-4o-mini',
