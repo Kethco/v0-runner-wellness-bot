@@ -50,81 +50,6 @@ const fetcher = async (url: string) => {
 
 const DISTANCES = ["5K", "10K", "Half Marathon", "Marathon", "Ultra"];
 
-// PR distance definitions (in miles) with tolerance for matching
-const PR_DISTANCES = [
-  { name: "1 Mile", miles: 1, tolerance: 0.05 },
-  { name: "5K", miles: 3.1, tolerance: 0.1 },
-  { name: "10K", miles: 6.2, tolerance: 0.15 },
-  { name: "Half Marathon", miles: 13.1, tolerance: 0.2 },
-  { name: "Marathon", miles: 26.2, tolerance: 0.3 },
-];
-
-interface PersonalRecord {
-  distance: string;
-  time: string;
-  timeSeconds: number;
-  date: string;
-  miles: number;
-}
-
-// Calculate PRs from run history
-function calculatePRs(runs: { miles: number; pace?: string; duration_minutes?: number; date: string }[]): PersonalRecord[] {
-  const prs: PersonalRecord[] = [];
-  
-  for (const prDist of PR_DISTANCES) {
-    // Find all runs that match this distance (within tolerance)
-    const matchingRuns = runs.filter(r => 
-      Math.abs(r.miles - prDist.miles) <= prDist.tolerance
-    );
-    
-    if (matchingRuns.length === 0) {
-      prs.push({ distance: prDist.name, time: "--:--", timeSeconds: Infinity, date: "", miles: prDist.miles });
-      continue;
-    }
-    
-    // Calculate time for each matching run and find the fastest
-    let bestRun: { time: string; timeSeconds: number; date: string } | null = null;
-    
-    for (const run of matchingRuns) {
-      let timeSeconds: number | null = null;
-      
-      // Try to calculate time from duration_minutes
-      if (run.duration_minutes) {
-        timeSeconds = run.duration_minutes * 60;
-      }
-      // Or calculate from pace
-      else if (run.pace) {
-        const paceSeconds = paceToSeconds(run.pace);
-        if (paceSeconds) {
-          timeSeconds = paceSeconds * run.miles;
-        }
-      }
-      
-      if (timeSeconds && (!bestRun || timeSeconds < bestRun.timeSeconds)) {
-        // Format time as H:MM:SS or MM:SS
-        const hours = Math.floor(timeSeconds / 3600);
-        const mins = Math.floor((timeSeconds % 3600) / 60);
-        const secs = Math.floor(timeSeconds % 60);
-        const timeStr = hours > 0 
-          ? `${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-          : `${mins}:${secs.toString().padStart(2, "0")}`;
-        
-        bestRun = { time: timeStr, timeSeconds, date: run.date };
-      }
-    }
-    
-    prs.push({
-      distance: prDist.name,
-      time: bestRun?.time || "--:--",
-      timeSeconds: bestRun?.timeSeconds || Infinity,
-      date: bestRun?.date || "",
-      miles: prDist.miles,
-    });
-  }
-  
-  return prs;
-}
-
 function getDaysUntil(dateStr: string): number {
   const raceDate = new Date(dateStr);
   const today = new Date();
@@ -237,8 +162,7 @@ function GoalsPageContent() {
   
   const recentRuns = runsData?.runs || [];
   const allRuns = allRunsData?.runs || [];
-  const personalRecords = calculatePRs(allRuns);
-
+  
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -530,94 +454,6 @@ return (
           </Card>
         ) : (
           <>
-            {/* Personal Records Card - Trophy Grid */}
-            <Card className="mb-6 border-[#2A2A2A] bg-[#141414] overflow-hidden">
-              <CardHeader className="pb-4 border-b border-[#2A2A2A]">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10">
-                      <Trophy className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Personal Records</CardTitle>
-                      <CardDescription className="text-[#6E6E73]">
-                        {personalRecords.filter(pr => pr.time !== "--:--").length} of {personalRecords.length} earned
-                      </CardDescription>
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {/* Trophy Grid - 2x3 layout on mobile, 5 columns on desktop */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {personalRecords.map((pr, index) => {
-                    const hasPR = pr.time !== "--:--";
-                    
-                    return (
-                      <div 
-                        key={pr.distance}
-                        className={`relative group rounded-xl p-4 transition-all duration-300 ${
-                          hasPR 
-                            ? "bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/30 hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10" 
-                            : "bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#3A3A3A]"
-                        }`}
-                      >
-                        {/* Trophy Icon */}
-                        <div className={`w-10 h-10 mx-auto mb-3 rounded-full flex items-center justify-center ${
-                          hasPR 
-                            ? "bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/30" 
-                            : "bg-[#2A2A2A]"
-                        }`}>
-                          <Trophy className={`w-5 h-5 ${hasPR ? "text-white" : "text-[#4A4A4A]"}`} />
-                        </div>
-                        
-                        {/* Distance Label */}
-                        <p className={`text-[11px] font-medium text-center uppercase tracking-wider mb-1 ${
-                          hasPR ? "text-amber-500/80" : "text-[#6E6E73]"
-                        }`}>
-                          {pr.distance}
-                        </p>
-                        
-                        {/* Time */}
-                        <p className={`text-lg font-bold text-center ${
-                          hasPR ? "text-white" : "text-[#3A3A3A]"
-                        }`}>
-                          {hasPR ? pr.time : "---"}
-                        </p>
-                        
-                        {/* Date or Unlock Message */}
-                        {hasPR && pr.date ? (
-                          <p className="text-[10px] text-center text-[#6E6E73] mt-1">
-                            {new Date(pr.date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                          </p>
-                        ) : (
-                          <p className="text-[10px] text-center text-[#3A3A3A] mt-1">
-                            Run {pr.miles.toFixed(1)}mi to unlock
-                          </p>
-                        )}
-                        
-                        {/* Earned Badge */}
-                        {hasPR && (
-                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center shadow-lg">
-                            <CheckCircle2 className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                {/* Empty State Message */}
-                {personalRecords.filter(pr => pr.time !== "--:--").length === 0 && (
-                  <div className="mt-6 p-4 rounded-xl bg-[#1A1A1A] border border-dashed border-[#2A2A2A]">
-                    <p className="text-center text-[#6E6E73] text-sm">
-                      Your first PR awaits. Log runs at standard race distances to start building your trophy case.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
 {/* Race Prediction Card */}
   {activeGoal && (
     <Card className="mb-6 border-[#00D4FF]/30 bg-gradient-to-br from-[#00D4FF]/10 to-transparent">
