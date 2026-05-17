@@ -27,6 +27,7 @@ import {
 } from "recharts";
 import { Moon, Zap, Activity, TrendingUp, TrendingDown, Minus, AlertTriangle, Loader2, BarChart3, Lightbulb } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
+import { TrendsPageSkeleton } from "@/components/skeletons";
 import { ScatterChart, Scatter, ZAxis } from "recharts";
 
 interface Checkin {
@@ -282,11 +283,9 @@ export default function TrendsPage() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : showEmptyState ? (
+{isLoading ? (
+  <TrendsPageSkeleton />
+  ) : showEmptyState ? (
 <Card className="border-border bg-card">
   <CardContent className="py-6">
     <EmptyState

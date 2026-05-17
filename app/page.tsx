@@ -23,6 +23,7 @@ import { GentleReminder } from "@/components/dashboard/gentle-reminder";
 import { Onboarding } from "@/components/onboarding";
 import { WeeklySummary } from "@/components/dashboard/weekly-summary";
 import { AchievementBadges } from "@/components/dashboard/achievement-badges";
+import { DashboardSkeleton } from "@/components/skeletons";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -134,8 +135,8 @@ export default function Dashboard() {
   // Show loading state while checking auth or redirecting
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#FF4500] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-black">
+        <DashboardSkeleton />
       </div>
     );
   }

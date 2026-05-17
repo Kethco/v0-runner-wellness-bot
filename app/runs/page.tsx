@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Flame, TrendingUp, ChevronLeft, ChevronRight, Activity, Zap, Route } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { EmptyState } from "@/components/empty-state";
+import { RunsPageSkeleton } from "@/components/skeletons";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -43,7 +44,7 @@ type ViewMode = "recent" | "calendar";
 export default function RunsPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("recent");
-  const { data, mutate } = useSWR<{ runs: Run[]; weeklyTotal: number }>("/api/runs?days=90", fetcher);
+  const { data, mutate, isLoading } = useSWR<{ runs: Run[]; weeklyTotal: number }>("/api/runs?days=90", fetcher);
   
   const runs = data?.runs || [];
   
@@ -141,6 +142,11 @@ export default function RunsPage() {
     <div className="min-h-screen bg-[#0A0A0A] text-white pb-24">
       <Navbar />
       
+      {isLoading ? (
+        <div className="container max-w-lg mx-auto mt-[80px]">
+          <RunsPageSkeleton />
+        </div>
+      ) : (
       <main className="container max-w-lg mx-auto px-4 pt-4 mt-[80px]">
         {/* Header */}
         <motion.div
@@ -351,6 +357,7 @@ export default function RunsPage() {
           )}
         </div>
       </main>
+      )}
       <BottomNav />
     </div>
   );
