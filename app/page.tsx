@@ -24,6 +24,7 @@ import { Onboarding } from "@/components/onboarding";
 import { WeeklySummary } from "@/components/dashboard/weekly-summary";
 import { AchievementBadges } from "@/components/dashboard/achievement-badges";
 import { DashboardSkeleton } from "@/components/skeletons";
+import { PersonalRecordsCard } from "@/components/dashboard/personal-records";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -439,6 +440,9 @@ return (
         {/* Gentle Reminder (shows when needed) */}
         <GentleReminder />
 
+        {/* Readiness Score Card */}
+        <ReadinessScore />
+
         {/* Recovery Card (shows when readiness is low) */}
         <RecoveryCard />
 
@@ -590,8 +594,8 @@ return (
           </motion.div>
         )}
 
-        {/* Readiness Score Card */}
-        <ReadinessScore />
+        {/* Personal Records Card */}
+        <PersonalRecordsCard />
       </main>
 
       {/* Bottom Navigation */}
