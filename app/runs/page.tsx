@@ -139,7 +139,7 @@ export default function RunsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white pb-24">
+    <div className="min-h-screen bg-background text-foreground pb-24">
       <Navbar />
       
       {isLoading ? (

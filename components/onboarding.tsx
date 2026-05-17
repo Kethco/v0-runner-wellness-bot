@@ -105,7 +105,7 @@ export function Onboarding({ userName, onComplete }: OnboardingProps) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col h-full pt-24 pb-12 px-6">
+      <div className="relative z-10 flex flex-col h-full pt-24 pb-12 px-6 max-w-lg mx-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -113,7 +113,7 @@ export function Onboarding({ userName, onComplete }: OnboardingProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col overflow-y-auto"
           >
             {/* Icon */}
             <motion.div
@@ -221,17 +221,17 @@ export function Onboarding({ userName, onComplete }: OnboardingProps) {
               )}
 
               {step === 3 && (
-                <div className="flex flex-col items-center gap-6 max-w-sm mx-auto">
+                <div className="flex flex-col items-center gap-4 max-w-sm mx-auto pb-8">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                    className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FF6B00] flex items-center justify-center"
+                    className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FFD700] to-[#FF6B00] flex items-center justify-center"
                   >
-                    <Check className="w-12 h-12 text-white" />
+                    <Check className="w-10 h-10 text-white" />
                   </motion.div>
 
-                  <div className="space-y-3 w-full">
+                  <div className="space-y-2 w-full">
                     {[
                       { text: "Daily check-in", desc: "Log how you feel each day" },
                       { text: "Log your runs", desc: "Track miles, pace, and effort" },
@@ -243,10 +243,10 @@ export function Onboarding({ userName, onComplete }: OnboardingProps) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 + i * 0.1 }}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-[#1C1C1E] border border-[#2A2A2A]"
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-[#1C1C1E] border border-[#2A2A2A]"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-[#FFD700]/15 flex items-center justify-center">
-                          <Sparkles className="w-4 h-4 text-[#FFD700]" />
+                        <div className="w-7 h-7 rounded-lg bg-[#FFD700]/15 flex items-center justify-center">
+                          <Sparkles className="w-3.5 h-3.5 text-[#FFD700]" />
                         </div>
                         <div>
                           <p className="text-white text-sm font-semibold">{item.text}</p>

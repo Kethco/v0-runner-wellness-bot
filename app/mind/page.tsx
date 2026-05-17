@@ -27,7 +27,7 @@ export default function MindPage() {
   const { data: reflectionsData, mutate } = useSWR("/api/reflections", fetcher);
   
 return (
-  <div className="min-h-screen bg-black text-white pb-28">
+  <div className="min-h-screen bg-background text-foreground pb-28">
       {/* Header - Fixed with solid background */}
       <header className="fixed-header-safe z-50 border-b border-[#3A3A3C]">
         <div className="px-5 py-4 flex items-center gap-4">

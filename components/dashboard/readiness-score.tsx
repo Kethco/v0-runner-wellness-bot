@@ -16,12 +16,12 @@ export function ReadinessScore() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5 animate-pulse">
+      <div className="rounded-2xl bg-card border border-border p-5 animate-pulse">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[#2A2A2A]" />
+          <div className="w-16 h-16 rounded-full bg-muted" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-[#2A2A2A] rounded w-24" />
-            <div className="h-3 bg-[#2A2A2A] rounded w-40" />
+            <div className="h-4 bg-muted rounded w-24" />
+            <div className="h-3 bg-muted rounded w-40" />
           </div>
         </div>
       </div>
@@ -41,7 +41,7 @@ export function ReadinessScore() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-[#141414] border border-[#2A2A2A] overflow-hidden"
+      className="rounded-2xl bg-card border border-border overflow-hidden"
     >
       {/* Header accent */}
       <div 
@@ -62,7 +62,7 @@ export function ReadinessScore() {
                 cy="32"
                 r="28"
                 fill="none"
-                stroke="#2A2A2A"
+                stroke="hsl(var(--muted))"
                 strokeWidth="6"
               />
               {/* Progress circle */}
@@ -83,7 +83,7 @@ export function ReadinessScore() {
             {/* Center content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <motion.span
-                className="text-2xl font-black text-white"
+                className="text-2xl font-black text-foreground"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
@@ -97,7 +97,7 @@ export function ReadinessScore() {
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-white font-bold text-lg">Today&apos;s Readiness</h3>
+              <h3 className="text-foreground font-bold text-lg">Today&apos;s Readiness</h3>
               <span 
                 className="text-xs font-bold px-2 py-0.5 rounded-full"
                 style={{ 
@@ -124,7 +124,7 @@ export function ReadinessScore() {
 
         {/* Patterns & Insights */}
         {(patterns?.length > 0 || recoverySuggestions?.length > 0) && (
-          <div className="mt-4 pt-4 border-t border-[#2A2A2A]">
+          <div className="mt-4 pt-4 border-t border-border">
             {patterns?.length > 0 && (
               <div className="space-y-2 mb-3">
                 <p className="text-[10px] text-[#6E6E73] uppercase tracking-wider font-bold flex items-center gap-1">

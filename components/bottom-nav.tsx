@@ -40,7 +40,7 @@ export function BottomNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0D] border-t border-[#2A2A2A]">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-t border-border">
       <div className="relative flex items-center justify-around py-1.5 px-2 max-w-lg mx-auto">
         {/* Animated pill indicator */}
         <motion.div
@@ -105,7 +105,7 @@ export function BottomNav() {
       </div>
       
       {/* Safe area for notched phones */}
-      <div className="h-[env(safe-area-inset-bottom)] bg-[#0D0D0D]" />
+      <div className="h-[env(safe-area-inset-bottom)] bg-card" />
     </nav>
   );
 }

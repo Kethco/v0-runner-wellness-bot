@@ -135,7 +135,7 @@ export default function Dashboard() {
   // Show loading state while checking auth or redirecting
   if (authLoading || !user) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <DashboardSkeleton />
       </div>
     );
@@ -158,7 +158,7 @@ export default function Dashboard() {
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
 
 return (
-  <div className={`min-h-screen bg-black text-white pb-20 ${showTrialBanner ? "pt-10" : ""}`}>
+  <div className={`min-h-screen bg-background text-foreground pb-20 ${showTrialBanner ? "pt-10" : ""}`}>
       {/* Onboarding for new users */}
       {showOnboarding && (
         <Onboarding 
@@ -439,9 +439,6 @@ return (
         {/* Gentle Reminder (shows when needed) */}
         <GentleReminder />
 
-        {/* Readiness Score Card */}
-        <ReadinessScore />
-
         {/* Recovery Card (shows when readiness is low) */}
         <RecoveryCard />
 
@@ -592,6 +589,9 @@ return (
             </div>
           </motion.div>
         )}
+
+        {/* Readiness Score Card */}
+        <ReadinessScore />
       </main>
 
       {/* Bottom Navigation */}
