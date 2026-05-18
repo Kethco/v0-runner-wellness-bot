@@ -70,6 +70,8 @@ export async function GET(request: NextRequest) {
     .select("start_date, end_date, event_type, can_run, training_impact")
     .eq("user_id", user.id);
 
+  console.log("[v0] Training Plan API - Life events:", JSON.stringify(lifeEvents));
+
   // Mark workouts that fall during life events as blocked
   // Block if: can_run is false OR training_impact is "no_training"
   const processedWorkouts = (workouts || []).map(workout => {
@@ -81,6 +83,7 @@ export async function GET(request: NextRequest) {
     });
     
     if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
+      console.log("[v0] Blocking workout:", workout.scheduled_date, workout.workout_type);
       return {
         ...workout,
         status: "blocked",
@@ -89,6 +92,9 @@ export async function GET(request: NextRequest) {
     }
     return workout;
   });
+
+  const blockedCount = processedWorkouts.filter(w => w.status === "blocked").length;
+  console.log("[v0] Total blocked workouts:", blockedCount);
 
   // Group workouts by week
   const weeklyBreakdown = [];

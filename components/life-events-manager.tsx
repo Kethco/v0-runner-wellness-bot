@@ -84,8 +84,8 @@ export function LifeEventsManager() {
     title: "",
     startDate: "",
     endDate: "",
-    trainingImpact: "reduced",
-    canRun: true,
+    trainingImpact: "no_training",
+    canRun: false,
     notes: "",
   });
 

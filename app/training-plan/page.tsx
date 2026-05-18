@@ -42,6 +42,7 @@ interface Workout {
   target_pace_zone: string | null;
   status: string;
   week_number: number;
+  blocked_reason?: string;
 }
 
 interface TrainingPlan {
