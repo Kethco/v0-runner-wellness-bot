@@ -164,7 +164,11 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
   // Personalized greeting based on wellness
   const getWellnessGreeting = () => {
     if (!todayCheckin) {
-      return { message: "Welcome to your mental wellness toolkit", suggestion: null };
+      return { 
+        message: "Welcome to your mental wellness toolkit", 
+        suggestion: "breathe",
+        suggestionText: "Start with calming breathwork"
+      };
     }
     
     if (wellnessState === "low") {
@@ -201,7 +205,8 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
     
     return {
       message: "Your mental wellness toolkit awaits",
-      suggestion: null,
+      suggestion: "breathe",
+      suggestionText: "A few deep breaths can center you",
     };
   };
   
