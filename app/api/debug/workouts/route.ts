@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -110,6 +111,9 @@ export async function POST() {
   const updates: { date: string; type: string; action: string }[] = [];
   const debugMatches: string[] = [];
 
+  // Use service client for updates (bypasses RLS)
+  const serviceClient = createServiceClient();
+
   for (const event of events) {
     // Filter workouts in JavaScript to avoid Supabase date issues
     const workoutsInRange = allWorkouts.filter(w => {
@@ -122,9 +126,9 @@ export async function POST() {
       return inRange && notSkipped;
     });
 
-    // Update each workout to skipped
+    // Update each workout to skipped using service client (bypasses RLS)
     for (const workout of workoutsInRange) {
-      const { error: updateError } = await supabase
+      const { error: updateError } = await serviceClient
         .from("planned_workouts")
         .update({
           status: "skipped",
