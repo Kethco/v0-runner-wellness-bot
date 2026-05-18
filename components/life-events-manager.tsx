@@ -107,10 +107,14 @@ export function LifeEventsManager() {
           }))
         });
       } else {
-        alert(result.message || "No workouts to skip");
+        // Show debug info to help diagnose
+        const debugMsg = result.debug 
+          ? `\n\nDebug info:\n- Total workouts in plan: ${result.debug.totalWorkoutsInPlan}\n- Sample dates: ${result.debug.sampleDates?.slice(0,5).join(", ")}\n- Events: ${result.debug.events?.map((e: any) => `${e.start} to ${e.end}`).join(", ")}\n- Matches found: ${result.debug.matches?.length || 0}`
+          : "";
+        alert((result.message || "No workouts to skip") + debugMsg);
       }
     } catch (err) {
-      alert("Failed to update plan");
+      alert("Failed to update plan: " + err);
     }
     setIsResyncing(false);
   };

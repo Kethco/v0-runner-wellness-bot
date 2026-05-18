@@ -79,53 +79,68 @@ export async function POST() {
     .maybeSingle();
 
   if (!plan) {
-    return NextResponse.json({ error: "No active plan" });
+    return NextResponse.json({ error: "No active plan", userId: user.id });
   }
 
-  // Get ALL life events (not just where can_run is false)
+  // Get ALL life events
   const { data: events } = await supabase
     .from("life_events")
     .select("*")
     .eq("user_id", user.id);
 
   if (!events || events.length === 0) {
-    return NextResponse.json({ message: "No life events found" });
+    return NextResponse.json({ message: "No life events found", planId: plan.id });
+  }
+
+  // Get ALL workouts for this plan (no filtering)
+  const { data: allWorkouts } = await supabase
+    .from("planned_workouts")
+    .select("id, scheduled_date, status, workout_type")
+    .eq("plan_id", plan.id);
+
+  if (!allWorkouts || allWorkouts.length === 0) {
+    return NextResponse.json({ 
+      message: "No workouts found in plan", 
+      planId: plan.id,
+      events: events.map(e => ({ start: e.start_date, end: e.end_date }))
+    });
   }
 
   let totalUpdated = 0;
-  const updates = [];
+  const updates: { date: string; type: string; action: string }[] = [];
+  const debugMatches: string[] = [];
 
   for (const event of events) {
-    // Find all workouts during this event
-    const { data: workouts } = await supabase
-      .from("planned_workouts")
-      .select("id, scheduled_date, workout_type")
-      .eq("plan_id", plan.id)
-      .gte("scheduled_date", event.start_date)
-      .lte("scheduled_date", event.end_date)
-      .neq("status", "skipped");
+    // Filter workouts in JavaScript to avoid Supabase date issues
+    const workoutsInRange = allWorkouts.filter(w => {
+      const wDate = w.scheduled_date;
+      const inRange = wDate >= event.start_date && wDate <= event.end_date;
+      const notSkipped = w.status !== "skipped";
+      if (inRange) {
+        debugMatches.push(`${wDate} in ${event.start_date}-${event.end_date}, status=${w.status}, skip=${!notSkipped}`);
+      }
+      return inRange && notSkipped;
+    });
 
-    if (workouts && workouts.length > 0) {
-      // Update each workout to skipped
-      for (const workout of workouts) {
-        const { error: updateError } = await supabase
-          .from("planned_workouts")
-          .update({
-            status: "skipped",
-            adjustment_reason: `Life event: ${event.event_type} (${event.start_date} - ${event.end_date})`,
-            adjusted_at: new Date().toISOString(),
-            adjusted_by: "system",
-          })
-          .eq("id", workout.id);
+    // Update each workout to skipped
+    for (const workout of workoutsInRange) {
+      const { error: updateError } = await supabase
+        .from("planned_workouts")
+        .update({
+          status: "skipped",
+          adjustment_reason: `Life event: ${event.event_type} (${event.start_date} - ${event.end_date})`,
+          adjusted_at: new Date().toISOString(),
+          adjusted_by: "system",
+        })
+        .eq("id", workout.id);
 
-        if (!updateError) {
-          totalUpdated++;
-          updates.push({
-            date: workout.scheduled_date,
-            type: workout.workout_type,
-            action: "skipped",
-          });
-        }
+      if (!updateError) {
+        totalUpdated++;
+        updates.push({
+          date: workout.scheduled_date,
+          type: workout.workout_type,
+          action: "skipped",
+        });
       }
     }
   }
@@ -133,5 +148,11 @@ export async function POST() {
   return NextResponse.json({
     message: `Marked ${totalUpdated} workout(s) as skipped`,
     updates,
+    debug: {
+      totalWorkoutsInPlan: allWorkouts.length,
+      sampleDates: allWorkouts.slice(0, 10).map(w => w.scheduled_date),
+      events: events.map(e => ({ type: e.event_type, start: e.start_date, end: e.end_date })),
+      matches: debugMatches,
+    }
   });
 }
