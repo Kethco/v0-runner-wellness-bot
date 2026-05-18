@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET: Resync all life events (useful for existing events before the feature was built)
-export async function GET(request: NextRequest) {
+export async function GET() {
   const supabase = await createClient();
   
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -54,6 +54,8 @@ export async function GET(request: NextRequest) {
 
   // Get all future life events
   const today = new Date().toISOString().split("T")[0];
+  console.log("[v0] Resync API called, today:", today);
+  
   const { data: events, error: eventsError } = await supabase
     .from("life_events")
     .select("*")
@@ -61,7 +63,10 @@ export async function GET(request: NextRequest) {
     .gte("end_date", today)
     .order("start_date", { ascending: true });
 
+  console.log("[v0] Found life events:", events?.length, events);
+
   if (eventsError) {
+    console.log("[v0] Events error:", eventsError.message);
     return NextResponse.json({ error: eventsError.message }, { status: 500 });
   }
 
@@ -72,7 +77,11 @@ export async function GET(request: NextRequest) {
   // Process each event
   const results = [];
   for (const event of events) {
-    if (!event.can_run || event.training_impact === "reduced" || event.training_impact === "no_training") {
+    console.log("[v0] Processing event:", event.event_type, event.start_date, "-", event.end_date, "can_run:", event.can_run, "impact:", event.training_impact);
+    
+    // Process events where can_run is false OR training_impact is not "none"
+    if (!event.can_run || event.training_impact !== "none") {
+      console.log("[v0] Rescheduling for event:", event.id);
       const result = await rescheduleForLifeEvent(user.id, {
         id: event.id,
         start_date: event.start_date,
@@ -81,11 +90,14 @@ export async function GET(request: NextRequest) {
         training_impact: event.training_impact,
         can_run: event.can_run,
       });
+      console.log("[v0] Reschedule result:", result);
       results.push({
         event: event.title || event.event_type,
         dates: `${event.start_date} to ${event.end_date}`,
         ...result,
       });
+    } else {
+      console.log("[v0] Skipping event - can_run is true and impact is none");
     }
   }
 

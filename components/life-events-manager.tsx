@@ -90,24 +90,32 @@ export function LifeEventsManager() {
   });
 
   const handleResyncPlan = async () => {
+    console.log("[v0] Resync button clicked");
     setIsResyncing(true);
     try {
+      console.log("[v0] Calling /api/training-plan/resync");
       const response = await fetch("/api/training-plan/resync");
       const result = await response.json();
+      console.log("[v0] Resync response:", response.status, result);
       
       // Collect all adjustments from all events
       const allAdjustments: typeof adjustmentResult = { adjustments: [] };
       for (const eventResult of result.results || []) {
+        console.log("[v0] Event result:", eventResult);
         if (eventResult.adjustments?.length > 0) {
           allAdjustments.adjustments.push(...eventResult.adjustments);
         }
       }
       
+      console.log("[v0] Total adjustments:", allAdjustments.adjustments.length);
       if (allAdjustments.adjustments.length > 0) {
         setAdjustmentResult(allAdjustments);
+      } else {
+        alert("No workouts needed rescheduling. Your plan may already be adjusted, or there are no workouts during your life events.");
       }
     } catch (err) {
-      console.error("Failed to resync:", err);
+      console.error("[v0] Failed to resync:", err);
+      alert("Failed to resync plan. Check console for details.");
     }
     setIsResyncing(false);
   };

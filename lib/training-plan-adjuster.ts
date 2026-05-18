@@ -91,7 +91,7 @@ export async function rescheduleForLifeEvent(
     const eventEnd = new Date(event.end_date);
 
     // Determine action based on training impact
-    if (!event.can_run || event.training_impact === "none") {
+    if (!event.can_run || event.training_impact === "no_training") {
       // Can't run at all - try to reschedule before the event
       const newDate = findAvailableSlotBefore(
         workout,
