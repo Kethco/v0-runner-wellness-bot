@@ -138,26 +138,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Get active training plan info for week calculation
-  const { data: planInfo } = await supabase
-    .from("training_plans")
-    .select("id, plan_type, start_date, end_date, weekly_structure")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .maybeSingle();
-
-  // Calculate current week number
-  let currentWeekNumber: number | null = null;
+  // Get current week plan details from the already-fetched plan
   let currentWeekPlan = null;
   
-  if (planInfo) {
-    const startDate = new Date(planInfo.start_date);
-    const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
-    currentWeekNumber = Math.floor(daysSinceStart / 7) + 1;
-    
-    if (planInfo.weekly_structure && Array.isArray(planInfo.weekly_structure)) {
-      currentWeekPlan = planInfo.weekly_structure.find((w: { weekNumber: number }) => w.weekNumber === currentWeekNumber);
-    }
+  if (plan && plan.weekly_structure && Array.isArray(plan.weekly_structure)) {
+    currentWeekPlan = plan.weekly_structure.find((w: { weekNumber: number }) => w.weekNumber === currentWeekNumber);
   }
 
   // Find today's workout and apply adjustments if needed
