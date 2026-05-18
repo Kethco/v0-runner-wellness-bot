@@ -61,7 +61,7 @@ export default function Dashboard() {
   const { data: profileData, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher);
   const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher);
   const { data: streakData, mutate: mutateStreak } = useSWR(user ? "/api/streak" : null, fetcher);
-  const { data: weekPlanData } = useSWR(user ? "/api/training-plan/week" : null, fetcher);
+  const { data: weekPlanData, mutate: mutateWeekPlan } = useSWR(user ? "/api/training-plan/week" : null, fetcher);
   
   // Get today's workout from the week plan
   const todayWorkout = weekPlanData?.todayWorkout;
@@ -271,7 +271,7 @@ return (
           transition={{ delay: 0.15 }}
           className="grid grid-cols-2 gap-4"
         >
-          <LogRunModal onRunLogged={() => mutateRuns()}>
+          <LogRunModal onRunLogged={() => { mutateRuns(); mutateWeekPlan(); }}>
             <motion.button
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
