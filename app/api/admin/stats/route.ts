@@ -3,7 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+function getStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return null;
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY);
+}
 
 export async function GET() {
   const supabase = await createClient();
@@ -107,28 +112,31 @@ export async function GET() {
     balance: 0,
   };
 
-  try {
-    const subscriptions = await stripe.subscriptions.list({
-      status: "active",
-      limit: 100,
-    });
+  const stripe = getStripe();
+  if (stripe) {
+    try {
+      const subscriptions = await stripe.subscriptions.list({
+        status: "active",
+        limit: 100,
+      });
 
-    stripeStats.activeSubscriptions = subscriptions.data.length;
+      stripeStats.activeSubscriptions = subscriptions.data.length;
 
-    subscriptions.data.forEach((sub) => {
-      const amount = sub.items.data[0]?.price?.unit_amount || 0;
-      const interval = sub.items.data[0]?.price?.recurring?.interval;
-      const monthlyAmount = interval === "year" ? amount / 12 : amount;
-      stripeStats.mrr += monthlyAmount;
+      subscriptions.data.forEach((sub) => {
+        const amount = sub.items.data[0]?.price?.unit_amount || 0;
+        const interval = sub.items.data[0]?.price?.recurring?.interval;
+        const monthlyAmount = interval === "year" ? amount / 12 : amount;
+        stripeStats.mrr += monthlyAmount;
 
-      const productName = sub.items.data[0]?.price?.nickname || sub.items.data[0]?.price?.id || "unknown";
-      stripeStats.subscriptionsByPlan[productName] = (stripeStats.subscriptionsByPlan[productName] || 0) + 1;
-    });
+        const productName = sub.items.data[0]?.price?.nickname || sub.items.data[0]?.price?.id || "unknown";
+        stripeStats.subscriptionsByPlan[productName] = (stripeStats.subscriptionsByPlan[productName] || 0) + 1;
+      });
 
-    const balance = await stripe.balance.retrieve();
-    stripeStats.balance = balance.available.reduce((sum, b) => sum + b.amount, 0);
-  } catch (e) {
-    console.error("Stripe error:", e);
+      const balance = await stripe.balance.retrieve();
+      stripeStats.balance = balance.available.reduce((sum, b) => sum + b.amount, 0);
+    } catch (e) {
+      console.error("Stripe error:", e);
+    }
   }
 
   // Calculate engagement rate
