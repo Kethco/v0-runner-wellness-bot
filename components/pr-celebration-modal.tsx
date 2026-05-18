@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Zap, Star, TrendingUp, X } from "lucide-react";
+import { Trophy, Zap, Star, TrendingUp, X, Share2, Download, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useShareCard } from "@/hooks/use-share-card";
 import confetti from "canvas-confetti";
 
 interface PRCelebrationModalProps {
@@ -24,6 +25,9 @@ export function PRCelebrationModal({
   improvementDisplay,
 }: PRCelebrationModalProps) {
   const [showContent, setShowContent] = useState(false);
+  const [shareStatus, setShareStatus] = useState<"idle" | "sharing" | "shared">("idle");
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { shareToSocial, downloadShareImage } = useShareCard();
 
   useEffect(() => {
     if (isOpen) {
@@ -70,8 +74,32 @@ export function PRCelebrationModal({
       return () => clearInterval(interval);
     } else {
       setShowContent(false);
+      setShareStatus("idle");
     }
   }, [isOpen]);
+
+  const handleShare = async () => {
+    setShareStatus("sharing");
+    const success = await shareToSocial({
+      type: "pr",
+      title: distanceLabel,
+      value: newTime,
+      improvement: improvementDisplay || undefined,
+    }, cardRef.current);
+    
+    if (success) {
+      setShareStatus("shared");
+      setTimeout(() => setShareStatus("idle"), 2000);
+    } else {
+      setShareStatus("idle");
+    }
+  };
+
+  const handleDownload = async () => {
+    if (cardRef.current) {
+      await downloadShareImage(cardRef.current, `pr-${distanceLabel.toLowerCase().replace(/\s/g, "-")}.png`);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -96,7 +124,7 @@ export function PRCelebrationModal({
           <div className="absolute inset-0 bg-gradient-to-br from-amber-500/30 via-orange-500/20 to-red-500/30 rounded-3xl blur-xl" />
           
           {/* Main card */}
-          <div className="relative bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border-2 border-amber-500/50 rounded-3xl p-6 overflow-hidden">
+          <div ref={cardRef} className="relative bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border-2 border-amber-500/50 rounded-3xl p-6 overflow-hidden">
             {/* Animated border glow */}
             <motion.div
               className="absolute inset-0 rounded-3xl"
@@ -244,12 +272,48 @@ export function PRCelebrationModal({
                     </motion.p>
                   )}
                   
-                  {/* Action button */}
+                  {/* Action buttons */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.9 }}
+                    className="space-y-3"
                   >
+                    {/* Share row */}
+                    <div className="flex items-center justify-center gap-2">
+                      <Button
+                        onClick={handleShare}
+                        variant="outline"
+                        size="sm"
+                        disabled={shareStatus === "sharing"}
+                        className="border-amber-500/30 hover:bg-amber-500/10 text-amber-400"
+                      >
+                        {shareStatus === "shared" ? (
+                          <>
+                            <Check className="w-4 h-4 mr-1" />
+                            Copied!
+                          </>
+                        ) : shareStatus === "sharing" ? (
+                          "Sharing..."
+                        ) : (
+                          <>
+                            <Share2 className="w-4 h-4 mr-1" />
+                            Share
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={handleDownload}
+                        variant="outline"
+                        size="sm"
+                        className="border-amber-500/30 hover:bg-amber-500/10 text-amber-400"
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        Save
+                      </Button>
+                    </div>
+                    
+                    {/* Main action */}
                     <Button
                       onClick={onClose}
                       className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-8 py-3 rounded-full shadow-lg shadow-amber-500/30"

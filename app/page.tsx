@@ -26,6 +26,8 @@ import { AchievementBadges } from "@/components/dashboard/achievement-badges";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { PersonalRecordsCard } from "@/components/dashboard/personal-records";
 import { UnifiedWeekCard } from "@/components/dashboard/unified-week-card";
+import { CountingNumber } from "@/components/ui/animated-number";
+import { RaceCountdown } from "@/components/dashboard/race-countdown";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -224,7 +226,9 @@ return (
                 >
                   <Flame className="w-5 h-5 text-white drop-shadow-[0_0_8px_rgba(255,200,0,0.8)]" />
                 </motion.div>
-                <span className="relative text-white font-black text-base">{currentStreak}</span>
+                <span className="relative text-white font-black text-base">
+                  <CountingNumber value={currentStreak} duration={1} />
+                </span>
               </motion.div>
             </div>
           </div>
@@ -233,12 +237,21 @@ return (
           <div className="flex items-center gap-4 mt-2 ml-[60px]">
             <div className="flex items-center gap-1.5 text-xs">
               <TrendingUp className="w-3 h-3 text-[#30D158]" />
-              <span className="text-[#8E8E93]">{(weekPlanData?.weekStats?.completedMiles ?? weeklyMiles).toFixed(1)} mi this week</span>
+              <span className="text-[#8E8E93]">
+                <CountingNumber 
+                  value={weekPlanData?.weekStats?.completedMiles ?? weeklyMiles} 
+                  decimals={1} 
+                  duration={1.2}
+                  suffix=" mi this week"
+                />
+              </span>
             </div>
             {currentStreak > 0 && (
               <div className="flex items-center gap-1.5 text-xs">
                 <Zap className="w-3 h-3 text-[#FFD700]" />
-                <span className="text-[#8E8E93]">{currentStreak} day streak</span>
+                <span className="text-[#8E8E93]">
+                  <CountingNumber value={currentStreak} duration={1} suffix=" day streak" />
+                </span>
               </div>
             )}
           </div>
@@ -259,6 +272,9 @@ return (
           weeklyGoal={weeklyGoal} 
           runsData={runs.map((r: { date: string; miles: number }) => ({ date: r.date, miles: r.miles }))}
         />
+
+        {/* Race Countdown - Only shows when race is <= 30 days away */}
+        <RaceCountdown />
 
         {/* Action Buttons */}
         <motion.div 

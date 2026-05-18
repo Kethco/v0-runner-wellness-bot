@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Flame, Moon, Zap, Target, Star, Mountain, Clock, Heart, Shield, X, Sparkles } from "lucide-react";
+import { Trophy, Flame, Moon, Zap, Target, Star, Mountain, Clock, Heart, Shield, X, Sparkles, Share2 } from "lucide-react";
 import useSWR from "swr";
+import { useShareCard } from "@/hooks/use-share-card";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -143,6 +146,7 @@ export function AchievementBadges() {
   const { data: checkinsData } = useSWR("/api/checkins?limit=365", fetcher);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const { shareToSocial } = useShareCard();
 
   const runs = runsData?.runs || [];
   const checkins = checkinsData?.checkins || [];
@@ -558,7 +562,7 @@ export function AchievementBadges() {
               {/* Earned badge */}
               {selectedBadge.earned && (
                 <motion.div 
-                  className="mt-6"
+                  className="mt-6 flex flex-col items-center gap-3"
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ type: "spring", delay: 0.7 }}
@@ -578,6 +582,29 @@ export function AchievementBadges() {
                     </motion.span>
                     UNLOCKED!
                   </div>
+                  
+                  {/* Share button for earned badges */}
+                  <Button
+                    onClick={async () => {
+                      const success = await shareToSocial({
+                        type: "achievement",
+                        title: selectedBadge.name,
+                        subtitle: selectedBadge.description,
+                      });
+                      if (success) {
+                        toast({
+                          title: "Shared!",
+                          description: "Your achievement has been shared",
+                        });
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="border-[#3A3A3A] hover:bg-[#2A2A2A] text-white/70 gap-2"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share Achievement
+                  </Button>
                 </motion.div>
               )}
             </motion.div>

@@ -29,6 +29,7 @@ import { Moon, Zap, Activity, TrendingUp, TrendingDown, Minus, AlertTriangle, Lo
 import { EmptyState } from "@/components/empty-state";
 import { TrendsPageSkeleton } from "@/components/skeletons";
 import { ScatterChart, Scatter, ZAxis } from "recharts";
+import { ActivityHeatmap } from "@/components/activity-heatmap";
 
 interface Checkin {
   id: string;
@@ -92,7 +93,15 @@ export default function TrendsPage() {
     { refreshInterval: 60000 }
   );
 
+  // Fetch runs for heatmap (last 12 weeks)
+  const { data: runsData } = useSWR<{ runs: { date: string; miles: number }[] }>(
+    "/api/runs?limit=100",
+    fetcher,
+    { refreshInterval: 60000 }
+  );
+
   const checkins = data?.checkins || [];
+  const runs = runsData?.runs || [];
 
   // Process checkins into chart data
   const trendData = useMemo(() => {
@@ -357,6 +366,11 @@ export default function TrendsPage() {
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6">
+                {/* Activity Heatmap */}
+                {runs.length > 0 && (
+                  <ActivityHeatmap runs={runs} weeks={12} />
+                )}
+
                 <div className="grid lg:grid-cols-3 gap-6">
                   {/* Wellness Radar */}
                   <Card className="border-border bg-card">
