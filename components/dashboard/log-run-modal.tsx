@@ -21,6 +21,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { celebrateRun } from "@/lib/celebrations";
+import { PRCelebrationModal } from "@/components/pr-celebration-modal";
+
+interface PRResult {
+  isNewPR: boolean;
+  distanceLabel: string | null;
+  newTime: string | null;
+  previousTime: string | null;
+  improvementDisplay: string | null;
+}
 
 interface LogRunModalProps {
   onRunLogged?: () => void;
@@ -37,6 +46,7 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [prCelebration, setPrCelebration] = useState<PRResult | null>(null);
   const [formData, setFormData] = useState({
     miles: "",
     pace: "",
@@ -68,6 +78,8 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
       });
 
       if (response.ok) {
+        const data = await response.json();
+        
         setOpen(false);
         setFormData({
           miles: "",
@@ -79,8 +91,16 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
           date: getLocalDateStr(),
         });
         
-        // Celebrate the logged run
-        setTimeout(() => celebrateRun(), 300);
+        // Check if we got a new PR
+        if (data.pr?.isNewPR) {
+          // Show PR celebration instead of regular celebration
+          setTimeout(() => {
+            setPrCelebration(data.pr);
+          }, 300);
+        } else {
+          // Regular run celebration
+          setTimeout(() => celebrateRun(), 300);
+        }
         
         onRunLogged?.();
       } else {
@@ -99,6 +119,7 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
 <DialogTrigger asChild>
   {children || (
@@ -241,5 +262,16 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
         </form>
       </DialogContent>
     </Dialog>
+    
+    {/* PR Celebration Modal */}
+    <PRCelebrationModal
+      isOpen={!!prCelebration?.isNewPR}
+      onClose={() => setPrCelebration(null)}
+      distanceLabel={prCelebration?.distanceLabel || ""}
+      newTime={prCelebration?.newTime || ""}
+      previousTime={prCelebration?.previousTime}
+      improvementDisplay={prCelebration?.improvementDisplay}
+    />
+    </>
   );
 }

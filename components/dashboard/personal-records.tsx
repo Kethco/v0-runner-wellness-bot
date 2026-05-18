@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Timer, Flame, Target, Zap, ChevronRight, Star, TrendingUp } from "lucide-react";
+import { Trophy, Timer, Flame, Target, Zap, ChevronRight, Star, TrendingUp, History } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import useSWR from "swr";
 
@@ -10,11 +10,11 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 // PR distance definitions (in miles) with tolerance for matching
 const PR_DISTANCES = [
-  { name: "1 Mile", shortName: "1MI", miles: 1, tolerance: 0.05, icon: Zap, motivationalText: "Speed demon starter" },
-  { name: "5K", shortName: "5K", miles: 3.1, tolerance: 0.1, icon: Flame, motivationalText: "The classic distance" },
-  { name: "10K", shortName: "10K", miles: 6.2, tolerance: 0.15, icon: Target, motivationalText: "Double the glory" },
-  { name: "Half Marathon", shortName: "HALF", miles: 13.1, tolerance: 0.2, icon: Star, motivationalText: "The big milestone" },
-  { name: "Marathon", shortName: "26.2", miles: 26.2, tolerance: 0.3, icon: Trophy, motivationalText: "Ultimate achievement" },
+  { name: "1 Mile", shortName: "1MI", miles: 1, tolerance: 0.05, icon: Zap, motivationalText: "Speed demon starter", key: "1_mile" },
+  { name: "5K", shortName: "5K", miles: 3.1, tolerance: 0.1, icon: Flame, motivationalText: "The classic distance", key: "5k" },
+  { name: "10K", shortName: "10K", miles: 6.2, tolerance: 0.15, icon: Target, motivationalText: "Double the glory", key: "10k" },
+  { name: "Half Marathon", shortName: "HALF", miles: 13.1, tolerance: 0.2, icon: Star, motivationalText: "The big milestone", key: "half_marathon" },
+  { name: "Marathon", shortName: "26.2", miles: 26.2, tolerance: 0.3, icon: Trophy, motivationalText: "Ultimate achievement", key: "marathon" },
 ];
 
 interface PersonalRecord {
@@ -104,13 +104,36 @@ function calculatePRs(runs: { miles: number; pace?: string; duration_minutes?: n
 
 export function PersonalRecordsCard() {
   const [selectedPR, setSelectedPR] = useState<PersonalRecord | null>(null);
+  
+  // Try to fetch from the new PR API first
+  const { data: prData } = useSWR<{ prs: { distance: string; label: string; shortName: string; hasPR: boolean; time: string | null; timeSeconds: number | null; pace: string | null; achievedAt: string | null }[] }>(
+    "/api/personal-records",
+    fetcher
+  );
+  
+  // Fallback to runs data if PR API doesn't return data
   const { data: runsData } = useSWR<{ runs: { miles: number; pace?: string; duration_minutes?: number; date: string }[] }>(
-    "/api/runs?days=365",
+    !prData?.prs ? "/api/runs?days=365" : null,
     fetcher
   );
 
-  const runs = runsData?.runs || [];
-  const personalRecords = calculatePRs(runs);
+  // Use PR API data if available, otherwise calculate from runs
+  const personalRecords: PersonalRecord[] = prData?.prs 
+    ? prData.prs.map(pr => {
+        const distConfig = PR_DISTANCES.find(d => d.key === pr.distance);
+        return {
+          distance: pr.label,
+          shortName: pr.shortName,
+          time: pr.time || "--:--",
+          timeSeconds: pr.timeSeconds || Infinity,
+          date: pr.achievedAt || "",
+          miles: distConfig?.miles || 0,
+          icon: distConfig?.icon || Trophy,
+          motivationalText: distConfig?.motivationalText || "",
+        };
+      })
+    : calculatePRs(runsData?.runs || []);
+    
   const earnedCount = personalRecords.filter(pr => pr.time !== "--:--").length;
   const hasAnyPR = earnedCount > 0;
 

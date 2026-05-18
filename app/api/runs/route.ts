@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkAndRecordPR } from "@/lib/personal-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -82,7 +83,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to log run" }, { status: 500 });
     }
 
-    return NextResponse.json({ run }, { status: 201 });
+    // Check if this run is a new PR
+    let prResult = null;
+    try {
+      prResult = await checkAndRecordPR(supabase, user.id, {
+        id: run.id,
+        miles: run.miles,
+        duration_minutes: run.duration_minutes,
+        pace: run.pace,
+        date: run.date,
+      });
+    } catch (prError) {
+      console.error("Error checking PR:", prError);
+      // Don't fail the run log if PR check fails
+    }
+
+    return NextResponse.json({ 
+      run, 
+      pr: prResult 
+    }, { status: 201 });
   } catch (error) {
     console.error("Error in runs API:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
