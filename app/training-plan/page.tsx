@@ -167,7 +167,10 @@ export default function TrainingPlanPage() {
       const inTravelRange = workout.scheduled_date >= travelStart && 
                             workout.scheduled_date <= travelEnd;
       
+      console.log("[v0] Processing:", workout.scheduled_date, "status:", workout.status, "inRange:", inTravelRange);
+      
       if (inTravelRange && workout.status !== "skipped" && workout.status !== "completed") {
+        console.log("[v0] MARKING AS BLOCKED:", workout.scheduled_date);
         return {
           ...workout,
           status: "blocked",
@@ -177,6 +180,8 @@ export default function TrainingPlanPage() {
       return workout;
     })
   } : null;
+  
+  console.log("[v0] Processed workouts:", processedWeekData?.workouts?.map(w => ({ date: w.scheduled_date, status: w.status })));
   
   const today = new Date().toISOString().split("T")[0];
 
