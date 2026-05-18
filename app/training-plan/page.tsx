@@ -321,7 +321,7 @@ export default function TrainingPlanPage() {
                   const isToday = workout.scheduled_date === today;
                   const isPast = workout.scheduled_date < today;
                   const isCompleted = workout.status === "completed";
-                  const isBlocked = workout.status === "blocked";
+                  const isBlocked = workout.status === "blocked" || workout.status === "skipped";
                   const isRest = workout.workout_type === "rest";
 
                   return (
