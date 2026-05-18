@@ -26,7 +26,6 @@ import { AchievementBadges } from "@/components/dashboard/achievement-badges";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { PersonalRecordsCard } from "@/components/dashboard/personal-records";
 import { UnifiedWeekCard } from "@/components/dashboard/unified-week-card";
-import { GoalProgressionCard } from "@/components/dashboard/goal-progression-card";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -260,9 +259,6 @@ return (
           weeklyGoal={weeklyGoal} 
           runsData={runs.map((r: { date: string; miles: number }) => ({ date: r.date, miles: r.miles }))}
         />
-
-        {/* Goal Progression Card */}
-        <GoalProgressionCard />
 
         {/* Action Buttons */}
         <motion.div 

@@ -29,6 +29,7 @@ import {
 import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { LifeEventsManager } from "@/components/life-events-manager";
+import { GoalProgressionCard } from "@/components/dashboard/goal-progression-card";
 
 interface Goal {
   id: string;
@@ -308,6 +309,11 @@ return (
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-[70px]">
+        {/* Goal Progression Card - Shows training progress toward goal */}
+        <div className="mb-6">
+          <GoalProgressionCard />
+        </div>
+        
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           {/* Header with Progress Ring */}
