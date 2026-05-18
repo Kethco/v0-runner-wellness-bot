@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adjustWorkoutForReadiness } from "@/lib/training-plan-generator";
+import { redistributeTraining } from "@/lib/training-redistributor";
 
 // Get this week's workouts with wellness adjustments
 export async function GET(request: NextRequest) {
@@ -41,21 +42,19 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   // Get this week's workouts from the training plan's weekly_structure
-  let thisWeekWorkouts: any[] = [];
-  let weekMonday = monday; // Default to current week's Monday
+  let allWorkouts: any[] = [];
+  let weekMonday = monday;
+  let currentWeekNumber = 1;
   
   if (plan && plan.weekly_structure) {
-    // Calculate which week number we're in
     const startDate = new Date(plan.start_date);
     const todayMs = today.getTime();
     const startMs = startDate.getTime();
     const daysSinceStart = Math.floor((todayMs - startMs) / (24 * 60 * 60 * 1000));
     
     // If plan hasn't started yet, show week 1 with the plan's start date
-    let currentWeekNumber: number;
     if (daysSinceStart < 0) {
       currentWeekNumber = 1;
-      // Calculate the Monday of the plan's first week
       const planStartDay = startDate.getDay();
       const planMondayOffset = planStartDay === 0 ? -6 : 1 - planStartDay;
       weekMonday = new Date(startDate);
@@ -64,55 +63,56 @@ export async function GET(request: NextRequest) {
       currentWeekNumber = Math.floor(daysSinceStart / 7) + 1;
     }
     
-    // Find the current week in weekly_structure
+    // Get ALL weeks' workouts for redistribution (same as training plan page)
     const weekStructure = plan.weekly_structure as any[];
-    const currentWeek = weekStructure.find((w: any) => w.weekNumber === currentWeekNumber);
+    const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     
-    if (currentWeek && currentWeek.workouts) {
-      // Convert weekly_structure workouts to the format expected by the frontend
-      const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-      
-      thisWeekWorkouts = currentWeek.workouts.map((workout: any, index: number) => {
-        // Calculate the date for this workout based on weekMonday
-        const dayIndex = dayOrder.indexOf(workout.dayOfWeek);
-        const workoutDate = new Date(weekMonday);
-        workoutDate.setDate(weekMonday.getDate() + dayIndex);
+    weekStructure.forEach((week: any) => {
+      if (week.workouts) {
+        // Calculate Monday for this week
+        const weekStartDate = new Date(plan.start_date);
+        weekStartDate.setDate(weekStartDate.getDate() + (week.weekNumber - 1) * 7);
+        const weekDay = weekStartDate.getDay();
+        const weekMondayOffset = weekDay === 0 ? -6 : 1 - weekDay;
+        const weekMon = new Date(weekStartDate);
+        weekMon.setDate(weekStartDate.getDate() + weekMondayOffset);
         
-        return {
-          id: `week-${currentWeekNumber}-${index}`,
-          scheduled_date: workoutDate.toISOString().split("T")[0],
-          day_of_week: workout.dayOfWeek,
-          workout_type: workout.workoutType,
-          title: workout.title,
-          description: workout.description,
-          target_miles: workout.targetMiles,
-          target_pace_zone: workout.targetPaceZone,
-          intervals: workout.intervals,
-          status: "pending",
-          completed_run: [],
-        };
-      });
-    }
-  }
-
-  // Mark workouts that fall during life events as blocked
-  const processedWorkouts = thisWeekWorkouts.map(workout => {
-    const blockingEvent = lifeEvents?.find(event => {
-      const shouldBlock = !event.can_run || event.training_impact === "no_training";
-      const inDateRange = workout.scheduled_date >= event.start_date && 
-                          workout.scheduled_date <= event.end_date;
-      return shouldBlock && inDateRange;
+        week.workouts.forEach((workout: any, index: number) => {
+          const dayIndex = dayOrder.indexOf(workout.dayOfWeek);
+          const workoutDate = new Date(weekMon);
+          workoutDate.setDate(weekMon.getDate() + dayIndex);
+          
+          allWorkouts.push({
+            id: `week-${week.weekNumber}-${index}`,
+            scheduled_date: workoutDate.toISOString().split("T")[0],
+            day_of_week: workout.dayOfWeek,
+            workout_type: workout.workoutType,
+            title: workout.title,
+            description: workout.description,
+            target_miles: workout.targetMiles,
+            target_pace_zone: workout.targetPaceZone,
+            intervals: workout.intervals,
+            status: "pending",
+            completed_run: [],
+          });
+        });
+      }
     });
-    
-    if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
-      return {
-        ...workout,
-        status: "blocked",
-        blocked_reason: `${blockingEvent.event_type}: ${blockingEvent.start_date} - ${blockingEvent.end_date}`,
-      };
-    }
-    return workout;
-  });
+  }
+  
+  // Apply redistribution (same logic as training plan page)
+  const { adjustedWorkouts } = redistributeTraining(allWorkouts, lifeEvents || []);
+  
+  // Calculate this week's Monday based on plan start
+  const thisWeekMondayStr = weekMonday.toISOString().split("T")[0];
+  const thisWeekSundayDate = new Date(weekMonday);
+  thisWeekSundayDate.setDate(weekMonday.getDate() + 6);
+  const thisWeekSundayStr = thisWeekSundayDate.toISOString().split("T")[0];
+  
+  // Filter to just this week's workouts AFTER redistribution
+  const processedWorkouts = adjustedWorkouts.filter(w => 
+    w.scheduled_date >= thisWeekMondayStr && w.scheduled_date <= thisWeekSundayStr
+  );
 
   // Get today's check-in for readiness score
   const todayStr = today.toISOString().split("T")[0];
