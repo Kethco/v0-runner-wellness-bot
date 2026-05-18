@@ -143,11 +143,43 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
   const plannedMiles = hasPlan ? planData!.weekStats.plannedMiles : weeklyGoal;
   const completedMiles = hasPlan ? planData!.weekStats.completedMiles : weeklyMiles;
 
-  // Build chart data - always show all 7 days
+  // Build chart data - use workouts from API if available, otherwise show current week
   const chartData = (() => {
     const days = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     
-    // Calculate Monday of current week
+    // If we have plan workouts, use their dates directly
+    if (hasPlan && planData?.workouts && planData.workouts.length > 0) {
+      // Create a map of day_of_week to workout
+      const workoutsByDay: Record<string, any> = {};
+      planData.workouts.forEach(w => {
+        workoutsByDay[w.day_of_week] = w;
+      });
+      
+      return dayNames.map((dayName, i) => {
+        const workout = workoutsByDay[dayName];
+        const workoutType = workout?.workout_type || "rest";
+        const workoutIcon = WORKOUT_ICONS[workoutType] || WORKOUT_ICONS.easy;
+        const isCompleted = workout?.status === "completed";
+        const isSkipped = workout?.status === "skipped" || workout?.status === "blocked";
+        const miles = workout?.target_miles || 0;
+        
+        return {
+          day: days[i],
+          date: workout?.scheduled_date || "",
+          miles,
+          type: workoutType,
+          color: workoutIcon.color,
+          isToday: workout?.scheduled_date === todayStr,
+          isCompleted,
+          isPast: workout?.scheduled_date ? workout.scheduled_date < todayStr : false,
+          isSkipped,
+          title: workout?.title || "",
+        };
+      });
+    }
+    
+    // Fallback: generate current week dates
     const weekStart = new Date(today);
     const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -158,36 +190,20 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
       date.setDate(weekStart.getDate() + i);
       const dateStr = date.toISOString().split("T")[0];
       
-      // Check if there's a planned workout for this day
-      const plannedWorkout = hasPlan && planData?.workouts 
-        ? planData.workouts.find(w => w.scheduled_date === dateStr)
-        : null;
-      
-      // Check for completed runs on this day
       const dayRuns = runsData.filter(r => r.date === dateStr);
       const completedMilesDay = dayRuns.reduce((sum, r) => sum + r.miles, 0);
-      
-      const workoutType = plannedWorkout?.workout_type || (completedMilesDay > 0 ? "easy" : "rest");
-      const workout = WORKOUT_ICONS[workoutType] || WORKOUT_ICONS.easy;
-      const isToday = dateStr === todayStr;
-      const isCompleted = plannedWorkout?.status === "completed" || completedMilesDay > 0;
-      const isPast = dateStr < todayStr;
-      const isSkipped = plannedWorkout?.status === "skipped" || plannedWorkout?.status === "blocked";
-      
-      // Use planned miles if available, otherwise completed miles
-      const miles = plannedWorkout?.target_miles || completedMilesDay || 0;
       
       return {
         day,
         date: dateStr,
-        miles,
-        type: workoutType,
-        color: workout.color,
-        isToday,
-        isCompleted,
-        isPast,
-        isSkipped,
-        title: plannedWorkout?.title || "",
+        miles: completedMilesDay,
+        type: completedMilesDay > 0 ? "easy" : "rest",
+        color: completedMilesDay > 0 ? "#FF4500" : "#3A3A3A",
+        isToday: dateStr === todayStr,
+        isCompleted: completedMilesDay > 0,
+        isPast: dateStr < todayStr,
+        isSkipped: false,
+        title: "",
       };
     });
   })();
