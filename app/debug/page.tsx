@@ -9,6 +9,7 @@ export default function DebugPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -21,6 +22,18 @@ export default function DebugPage() {
       setError(String(err));
     }
     setLoading(false);
+  };
+
+  const forceSkipDuringTravel = async () => {
+    setActionMessage("Processing...");
+    try {
+      const res = await fetch("/api/debug/workouts", { method: "POST" });
+      const json = await res.json();
+      setActionMessage(json.message || "Done!");
+      fetchData(); // Refresh data
+    } catch (err) {
+      setActionMessage("Error: " + String(err));
+    }
   };
 
   useEffect(() => {
@@ -70,10 +83,18 @@ export default function DebugPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Training Plan Debug</h1>
-          <Button onClick={fetchData} variant="outline" size="sm">
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={fetchData} variant="outline" size="sm">
+              Refresh
+            </Button>
+          </div>
         </div>
+
+        {actionMessage && (
+          <div className="p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+            <p className="text-sm text-blue-400">{actionMessage}</p>
+          </div>
+        )}
 
         {/* Life Events */}
         <Card>
@@ -131,9 +152,20 @@ export default function DebugPage() {
         {/* Workouts During Life Events - THE KEY INFO */}
         <Card className="border-amber-500">
           <CardHeader>
-            <CardTitle className="text-lg text-amber-500">
-              Workouts Still During Life Events ({workoutsDuringEvents.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg text-amber-500">
+                Workouts Still During Life Events ({workoutsDuringEvents.length})
+              </CardTitle>
+              {workoutsDuringEvents.length > 0 && (
+                <Button 
+                  onClick={forceSkipDuringTravel} 
+                  variant="destructive" 
+                  size="sm"
+                >
+                  Skip These Workouts
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {workoutsDuringEvents.length === 0 ? (
