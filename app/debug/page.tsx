@@ -71,11 +71,13 @@ export default function DebugPage() {
     byStatus[status].push(w);
   });
 
-  // Find workouts during life events
+  // Find workouts during life events (use 'date' field from API response)
   const workoutsDuringEvents = workouts.filter((w: any) => {
-    return lifeEvents.some((e: any) => 
-      w.scheduled_date >= e.start_date && w.scheduled_date <= e.end_date
-    );
+    return lifeEvents.some((e: any) => {
+      const cannotRun = !e.canRun;
+      const dateMatch = w.date >= e.start && w.date <= e.end;
+      return cannotRun && dateMatch && w.status !== "skipped";
+    });
   });
 
   return (
@@ -84,6 +86,13 @@ export default function DebugPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Training Plan Debug</h1>
           <div className="flex gap-2">
+            <Button 
+              onClick={forceSkipDuringTravel} 
+              variant="destructive" 
+              size="sm"
+            >
+              Force Skip Travel Workouts
+            </Button>
             <Button onClick={fetchData} variant="outline" size="sm">
               Refresh
             </Button>
