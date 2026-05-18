@@ -373,24 +373,24 @@ export default function TrendsPage() {
 
                 <div className="grid lg:grid-cols-3 gap-6">
                   {/* Wellness Radar */}
-                  <Card className="border-border bg-card">
+                  <Card className="border-border bg-[#1C1C1E]">
                     <CardHeader>
-                      <CardTitle className="text-lg">Wellness Score</CardTitle>
+                      <CardTitle className="text-lg text-white">Wellness Score</CardTitle>
                       <CardDescription>Overall performance across metrics</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="h-[250px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <RadarChart data={radarData}>
-                            <PolarGrid stroke="hsl(var(--border))" />
-                            <PolarAngleAxis dataKey="metric" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                            <PolarGrid stroke="#3A3A3C" />
+                            <PolarAngleAxis dataKey="metric" tick={{ fill: "#8E8E93", fontSize: 12 }} />
                             <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                             <Radar
                               name="Score"
                               dataKey="value"
-                              stroke="hsl(var(--primary))"
-                              fill="hsl(var(--primary))"
-                              fillOpacity={0.3}
+                              stroke="#30D158"
+                              fill="#30D158"
+                              fillOpacity={0.4}
                             />
                           </RadarChart>
                         </ResponsiveContainer>
