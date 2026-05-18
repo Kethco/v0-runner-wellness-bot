@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adjustWorkoutForReadiness } from "@/lib/training-plan-generator";
-import { redistributeTraining } from "@/lib/training-redistributor";
 
 // Get this week's workouts with wellness adjustments
 export async function GET(request: NextRequest) {
@@ -41,24 +40,50 @@ export async function GET(request: NextRequest) {
     .eq("status", "active")
     .maybeSingle();
 
-  // Get ALL workouts from the plan (needed for redistribution)
-  let allWorkouts: any[] = [];
-  if (plan) {
-    const { data: planWorkouts } = await supabase
-      .from("planned_workouts")
-      .select(`*, completed_run:runs(*)`)
-      .eq("plan_id", plan.id)
-      .order("scheduled_date", { ascending: true });
-    allWorkouts = planWorkouts || [];
+  // Get this week's workouts from the training plan's weekly_structure
+  let thisWeekWorkouts: any[] = [];
+  if (plan && plan.weekly_structure) {
+    // Calculate which week number we're in
+    const startDate = new Date(plan.start_date);
+    const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+    const currentWeekNumber = Math.floor(daysSinceStart / 7) + 1;
+    
+    console.log("[v0] Week API - Plan start date:", plan.start_date, "Current week number:", currentWeekNumber);
+    
+    // Find the current week in weekly_structure
+    const weekStructure = plan.weekly_structure as any[];
+    const currentWeek = weekStructure.find((w: any) => w.weekNumber === currentWeekNumber);
+    
+    console.log("[v0] Week API - Found week structure:", currentWeek ? "yes" : "no", "Workouts:", currentWeek?.workouts?.length);
+    
+    if (currentWeek && currentWeek.workouts) {
+      // Convert weekly_structure workouts to the format expected by the frontend
+      const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      
+      thisWeekWorkouts = currentWeek.workouts.map((workout: any, index: number) => {
+        // Calculate the date for this workout
+        const dayIndex = dayOrder.indexOf(workout.dayOfWeek);
+        const workoutDate = new Date(monday);
+        workoutDate.setDate(monday.getDate() + dayIndex);
+        
+        return {
+          id: `week-${currentWeekNumber}-${index}`,
+          scheduled_date: workoutDate.toISOString().split("T")[0],
+          day_of_week: workout.dayOfWeek,
+          workout_type: workout.workoutType,
+          title: workout.title,
+          description: workout.description,
+          target_miles: workout.targetMiles,
+          target_pace_zone: workout.targetPaceZone,
+          intervals: workout.intervals,
+          status: "pending",
+          completed_run: [],
+        };
+      });
+      
+      console.log("[v0] Week API - Mapped workouts:", thisWeekWorkouts.map(w => ({ date: w.scheduled_date, day: w.day_of_week, miles: w.target_miles })));
+    }
   }
-
-  // Apply redistribution to ALL workouts (same as training plan page)
-  const { adjustedWorkouts } = redistributeTraining(allWorkouts, lifeEvents || []);
-
-  // Filter to just this week's workouts AFTER redistribution
-  const thisWeekWorkouts = adjustedWorkouts.filter(w => 
-    w.scheduled_date >= mondayStr && w.scheduled_date <= sundayStr
-  );
 
   // Mark workouts that fall during life events as blocked
   const processedWorkouts = thisWeekWorkouts.map(workout => {
