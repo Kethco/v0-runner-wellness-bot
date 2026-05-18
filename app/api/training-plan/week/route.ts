@@ -87,13 +87,6 @@ export async function GET(request: NextRequest) {
 
   // Filter to the current week
   const thisWeekWorkouts = processedAllWorkouts.filter(w => w.week_number === planWeekNumber);
-  
-  console.log("[v0] Week API - planWeekNumber:", planWeekNumber);
-  console.log("[v0] Week API - thisWeekWorkouts:", thisWeekWorkouts.map(w => ({ 
-    day: w.day_of_week, 
-    miles: w.target_miles, 
-    status: w.status 
-  })));
 
   // Get today's check-in for readiness score
   const { data: todayCheckin } = await supabase

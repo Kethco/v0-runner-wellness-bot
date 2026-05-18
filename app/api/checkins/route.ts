@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
-import { generateShortCoachAdvice } from "@/lib/ai/coach";
+import { generateCoachAdvice } from "@/lib/ai/coach";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     
-    const [checkinsRes, runsRes, goalsRes, streakRes, profileRes] = await Promise.all([
+    const [checkinsRes, runsRes, goalsRes, streakRes, profileRes, trainingPlanRes, lifeEventsRes] = await Promise.all([
       supabase
         .from("checkins")
         .select("*")
@@ -168,6 +168,21 @@ export async function POST(request: NextRequest) {
         .select("first_name")
         .eq("id", user.id)
         .single(),
+      // Fetch active training plan with weekly structure
+      supabase
+        .from("training_plans")
+        .select("id, plan_type, start_date, weekly_structure")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle(),
+      // Fetch upcoming life events
+      supabase
+        .from("life_events")
+        .select("event_type, title, start_date, end_date, training_impact, can_run")
+        .eq("user_id", user.id)
+        .gte("end_date", today)
+        .order("start_date", { ascending: true })
+        .limit(5),
     ]);
 
     const recentCheckins = checkinsRes.data || [];
@@ -175,6 +190,8 @@ export async function POST(request: NextRequest) {
     const goals = goalsRes.data || [];
     const currentStreak = streakRes.data?.current_streak || 0;
     const firstName = profileRes.data?.first_name;
+    const trainingPlan = trainingPlanRes.data;
+    const lifeEvents = lifeEventsRes.data || [];
 
     // Calculate hard runs in last 3 days
     const hardRunsLast3Days = recentRuns.filter(r => {
@@ -202,19 +219,76 @@ export async function POST(request: NextRequest) {
     if (body.readiness) readinessScore += (body.readiness - 3) * 3;
     if (hardRunsLast3Days >= 2) readinessScore -= 8;
     readinessScore = Math.max(0, Math.min(100, readinessScore));
+
+    // Build training plan context for AI
+    let trainingPlanContext = undefined;
+    if (trainingPlan && trainingPlan.weekly_structure) {
+      const startDate = new Date(trainingPlan.start_date);
+      const daysSinceStart = Math.floor((new Date().getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+      const currentWeekNumber = daysSinceStart < 0 ? 1 : Math.floor(daysSinceStart / 7) + 1;
+      
+      const weekStructure = trainingPlan.weekly_structure as any[];
+      const currentWeek = weekStructure.find((w: any) => w.weekNumber === currentWeekNumber);
+      
+      if (currentWeek) {
+        // Find today's workout
+        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        const todayDayName = dayNames[new Date().getDay()];
+        const todayWorkout = currentWeek.workouts?.find((w: any) => w.dayOfWeek === todayDayName);
+        
+        // Calculate weekly progress
+        const plannedMilesThisWeek = currentWeek.workouts?.reduce((sum: number, w: any) => sum + (w.targetMiles || 0), 0) || 0;
+        const completedMilesThisWeek = recentRuns
+          .filter(r => {
+            const runDate = new Date(r.date);
+            const weekStart = new Date(startDate);
+            weekStart.setDate(weekStart.getDate() + (currentWeekNumber - 1) * 7);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            return runDate >= weekStart && runDate <= weekEnd;
+          })
+          .reduce((sum, r) => sum + Number(r.miles), 0);
+        
+        trainingPlanContext = {
+          planType: trainingPlan.plan_type,
+          currentWeek: currentWeekNumber,
+          totalWeeks: weekStructure.length,
+          weekType: currentWeek.weekType || "training",
+          weekFocus: currentWeek.weekFocus || currentWeek.theme || "",
+          todayWorkout: todayWorkout ? {
+            type: todayWorkout.workoutType,
+            title: todayWorkout.title,
+            targetMiles: todayWorkout.targetMiles,
+            description: todayWorkout.description,
+          } : undefined,
+          plannedMilesThisWeek,
+          completedMilesThisWeek,
+        };
+      }
+    }
+
+    // Build life events context for AI
+    const upcomingEvents = lifeEvents.map(event => ({
+      type: event.event_type,
+      title: event.title || event.event_type,
+      startDate: event.start_date,
+      daysAway: Math.ceil((new Date(event.start_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+      trainingImpact: event.training_impact || (event.can_run ? "reduced" : "no_training"),
+    }));
     
     const avg = (arr: (number | null | undefined)[]) => {
       const valid = arr.filter((n): n is number => n != null);
       return valid.length ? (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(1) : "3";
     };
 
-    aiAdvice = await generateShortCoachAdvice({
+    aiAdvice = await generateCoachAdvice({
       todayCheckin: {
         sleep_quality: body.sleepRating || 3,
         energy_level: body.energy || 3,
         soreness_level: body.soreness || 1,
         readiness_score: body.readiness || 3,
         overall_feeling: body.feeling,
+        notes: body.notes,
       },
       weeklyAverages: {
         sleep: avg(recentCheckins?.map(c => c.sleep_rating)),
@@ -224,7 +298,6 @@ export async function POST(request: NextRequest) {
       },
       weeklyMiles: recentRuns?.reduce((sum, r) => sum + Number(r.miles), 0) || 0,
       totalRuns: recentRuns?.length || 0,
-      // Enhanced context
       firstName,
       currentStreak,
       readinessScore: Math.round(readinessScore),
@@ -236,6 +309,8 @@ export async function POST(request: NextRequest) {
         target_value: g.target_value,
         target_date: g.target_date,
       })),
+      trainingPlan: trainingPlanContext,
+      upcomingEvents: upcomingEvents.length > 0 ? upcomingEvents : undefined,
     });
 
     // Save AI advice to database so it persists
