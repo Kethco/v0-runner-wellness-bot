@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adjustWorkoutForReadiness } from "@/lib/training-plan-generator";
+import { redistributeTraining } from "@/lib/training-redistributor";
 
 // Get this week's workouts with wellness adjustments
 export async function GET(request: NextRequest) {
@@ -22,32 +23,45 @@ export async function GET(request: NextRequest) {
   
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
+  
+  const mondayStr = monday.toISOString().split("T")[0];
+  const sundayStr = sunday.toISOString().split("T")[0];
 
-  // Get workouts for this week
-  const { data: workouts, error: workoutsError } = await supabase
-    .from("planned_workouts")
-    .select(`
-      *,
-      completed_run:runs(*)
-    `)
-    .eq("user_id", user.id)
-    .gte("scheduled_date", monday.toISOString().split("T")[0])
-    .lte("scheduled_date", sunday.toISOString().split("T")[0])
-    .order("scheduled_date", { ascending: true });
-
-  if (workoutsError) {
-    return NextResponse.json({ error: workoutsError.message }, { status: 500 });
-  }
-
-  // Get life events to check for blocked dates
+  // Get life events first
   const { data: lifeEvents } = await supabase
     .from("life_events")
     .select("start_date, end_date, event_type, can_run, training_impact")
     .eq("user_id", user.id);
 
+  // Get active training plan info
+  const { data: plan } = await supabase
+    .from("training_plans")
+    .select("id, plan_type, start_date, end_date, weekly_structure")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  // Get ALL workouts for the plan to apply redistribution
+  let allWorkouts: any[] = [];
+  if (plan) {
+    const { data: planWorkouts } = await supabase
+      .from("planned_workouts")
+      .select(`*, completed_run:runs(*)`)
+      .eq("plan_id", plan.id)
+      .order("scheduled_date", { ascending: true });
+    allWorkouts = planWorkouts || [];
+  }
+
+  // Apply redistribution to ALL workouts
+  const { adjustedWorkouts } = redistributeTraining(allWorkouts, lifeEvents || []);
+
+  // Filter to just this week's workouts
+  const thisWeekWorkouts = adjustedWorkouts.filter(w => 
+    w.scheduled_date >= mondayStr && w.scheduled_date <= sundayStr
+  );
+
   // Mark workouts that fall during life events as blocked
-  // Block if: can_run is false OR training_impact is "no_training"
-  const processedWorkouts = (workouts || []).map(workout => {
+  const processedWorkouts = thisWeekWorkouts.map(workout => {
     const blockingEvent = lifeEvents?.find(event => {
       const shouldBlock = !event.can_run || event.training_impact === "no_training";
       const inDateRange = workout.scheduled_date >= event.start_date && 

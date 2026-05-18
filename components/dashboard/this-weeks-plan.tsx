@@ -28,15 +28,6 @@ import {
   Target,
 } from "lucide-react";
 import Link from "next/link";
-import { redistributeTraining } from "@/lib/training-redistributor";
-
-interface LifeEvent {
-  start_date: string;
-  end_date: string;
-  event_type: string;
-  can_run: boolean;
-  training_impact: string;
-}
 
 const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(res => res.json());
 
@@ -108,7 +99,6 @@ const DAY_ABBREV: Record<string, string> = {
 
 export function ThisWeeksPlan() {
   const { data, error, isLoading, mutate } = useSWR<WeekData>("/api/training-plan/week", fetcher);
-  const { data: lifeEventsData } = useSWR<{ events: LifeEvent[] }>("/api/life-events", fetcher);
   const [showAdjustmentDialog, setShowAdjustmentDialog] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -157,31 +147,8 @@ export function ThisWeeksPlan() {
     return null;
   }
 
-  const { workouts: rawWorkouts, todayWorkout, todayAdjustment, plan, weekStats, readinessScore } = data;
+  const { workouts, todayWorkout, todayAdjustment, plan, weekStats, readinessScore } = data;
   const today = new Date().toISOString().split("T")[0];
-
-  // Apply redistribution to workouts based on life events
-  const lifeEvents = lifeEventsData?.events || [];
-  const { adjustedWorkouts } = redistributeTraining(rawWorkouts, lifeEvents);
-  
-  // Map adjusted workouts back and mark blocked ones
-  const workouts = rawWorkouts.map(workout => {
-    const adjusted = adjustedWorkouts.find(w => w.id === workout.id);
-    if (!adjusted) return workout;
-    
-    // Check if blocked by life event
-    const isBlocked = lifeEvents.some(event => {
-      const shouldBlock = !event.can_run || event.training_impact === "no_training";
-      const inDateRange = workout.scheduled_date >= event.start_date && 
-                          workout.scheduled_date <= event.end_date;
-      return shouldBlock && inDateRange;
-    }) || adjusted.status === "skipped";
-    
-    return {
-      ...adjusted,
-      status: isBlocked ? "skipped" : adjusted.status,
-    };
-  });
 
   const handleAcceptAdjustment = async () => {
     if (!todayAdjustment) return;
