@@ -101,6 +101,18 @@ export default function TrainingPlanPage() {
     fetcher
   );
 
+  // Fetch life events separately for client-side blocking
+  const { data: lifeEventsData } = useSWR<{ events: Array<{ 
+    start_date: string; 
+    end_date: string; 
+    event_type: string;
+    can_run: boolean;
+    training_impact: string;
+  }> }>(
+    user ? "/api/life-events" : null,
+    fetcher
+  );
+
   // Redirect if not authenticated
   if (!authLoading && !user) {
     router.push("/login");
@@ -143,7 +155,30 @@ export default function TrainingPlanPage() {
 
   const { plan, currentWeek, totalWeeks, weeklyBreakdown } = data;
   const activeWeek = selectedWeek !== null ? selectedWeek : currentWeek;
-  const weekData = weeklyBreakdown.find(w => w.weekNumber === activeWeek);
+  const processedWeekData = weeklyBreakdown.find(w => w.weekNumber === activeWeek);
+  
+  // Client-side blocking: mark workouts that fall during life events
+  const lifeEvents = lifeEventsData?.events || [];
+  const processedWeekData = processedWeekData ? {
+    ...processedWeekData,
+    workouts: processedWeekData.workouts.map(workout => {
+      const blockingEvent = lifeEvents.find(event => {
+        const shouldBlock = !event.can_run || event.training_impact === "no_training";
+        const inDateRange = workout.scheduled_date >= event.start_date && 
+                            workout.scheduled_date <= event.end_date;
+        return shouldBlock && inDateRange;
+      });
+      
+      if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
+        return {
+          ...workout,
+          status: "blocked",
+          blocked_reason: `${blockingEvent.event_type}: ${blockingEvent.start_date} - ${blockingEvent.end_date}`,
+        };
+      }
+      return workout;
+    })
+  } : null;
   
   const today = new Date().toISOString().split("T")[0];
 
@@ -240,13 +275,13 @@ export default function TrainingPlanPage() {
                 </Button>
               </div>
             </div>
-            {weekData && (
+            {processedWeekData && (
               <div className="flex items-center gap-2 mt-2">
-                <Badge className={`text-xs ${WEEK_TYPE_COLORS[weekData.weekType] || "bg-muted text-muted-foreground"}`}>
-                  {weekData.weekType.charAt(0).toUpperCase() + weekData.weekType.slice(1)} Week
+                <Badge className={`text-xs ${WEEK_TYPE_COLORS[processedWeekData.weekType] || "bg-muted text-muted-foreground"}`}>
+                  {processedWeekData.weekType.charAt(0).toUpperCase() + processedWeekData.weekType.slice(1)} Week
                 </Badge>
                 <span className="text-xs text-muted-foreground">
-                  {weekData.totalMiles.toFixed(1)} miles planned
+                  {processedWeekData.totalMiles.toFixed(1)} miles planned
                 </span>
               </div>
             )}
@@ -277,7 +312,7 @@ export default function TrainingPlanPage() {
             {/* Workouts List */}
             <div className="space-y-3">
               <AnimatePresence mode="wait">
-                {weekData?.workouts.map((workout, i) => {
+                {processedWeekData?.workouts.map((workout, i) => {
                   const workoutStyle = WORKOUT_ICONS[workout.workout_type] || WORKOUT_ICONS.easy;
                   const IconComponent = workoutStyle.icon;
                   const isToday = workout.scheduled_date === today;
