@@ -160,14 +160,19 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
         const workout = workoutsByDay[dayName];
         const workoutType = workout?.workout_type || "rest";
         const workoutIcon = WORKOUT_ICONS[workoutType] || WORKOUT_ICONS.easy;
-        const isCompleted = workout?.status === "completed";
+        const isCompleted = workout?.status === "completed" || (workout?.completed_miles && workout.completed_miles > 0);
         const isSkipped = workout?.status === "skipped" || workout?.status === "blocked";
-        const miles = workout?.target_miles || 0;
+        // Show completed miles if available, otherwise target miles
+        const completedMiles = workout?.completed_miles || 0;
+        const targetMiles = workout?.target_miles || 0;
+        const miles = completedMiles > 0 ? completedMiles : targetMiles;
         
         return {
           day: days[i],
           date: workout?.scheduled_date || "",
           miles,
+          targetMiles,
+          completedMiles,
           type: workoutType,
           color: workoutIcon.color,
           isToday: workout?.scheduled_date === todayStr,

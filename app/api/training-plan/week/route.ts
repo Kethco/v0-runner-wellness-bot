@@ -88,6 +88,43 @@ export async function GET(request: NextRequest) {
   // Filter to the current week
   const thisWeekWorkouts = processedAllWorkouts.filter(w => w.week_number === planWeekNumber);
 
+  // Get actual runs for this week to calculate completed miles
+  // Calculate the date range for this week based on plan start
+  const weekStartDate = new Date(plan.start_date);
+  weekStartDate.setDate(weekStartDate.getDate() + (planWeekNumber - 1) * 7);
+  const weekEndDate = new Date(weekStartDate);
+  weekEndDate.setDate(weekEndDate.getDate() + 6);
+  const weekStartStr = weekStartDate.toISOString().split("T")[0];
+  const weekEndStr = weekEndDate.toISOString().split("T")[0];
+
+  const { data: weekRuns } = await supabase
+    .from("runs")
+    .select("id, date, miles, run_type")
+    .eq("user_id", user.id)
+    .gte("date", weekStartStr)
+    .lte("date", weekEndStr);
+
+  // Create a map of runs by date for easy lookup
+  const runsByDate: Record<string, { miles: number; run_type: string }[]> = {};
+  (weekRuns || []).forEach(run => {
+    if (!runsByDate[run.date]) runsByDate[run.date] = [];
+    runsByDate[run.date].push({ miles: run.miles, run_type: run.run_type });
+  });
+
+  // Attach run data to workouts and mark completed
+  const workoutsWithRuns = thisWeekWorkouts.map(workout => {
+    const runsOnDate = runsByDate[workout.scheduled_date] || [];
+    const completedMilesForDay = runsOnDate.reduce((sum, r) => sum + Number(r.miles), 0);
+    const isCompleted = completedMilesForDay > 0;
+    
+    return {
+      ...workout,
+      completed_miles: completedMilesForDay,
+      runs: runsOnDate,
+      status: isCompleted ? "completed" : workout.status,
+    };
+  });
+
   // Get today's check-in for readiness score
   const { data: todayCheckin } = await supabase
     .from("checkins")
@@ -118,7 +155,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Find today's workout and apply adjustments if needed
-  let todayWorkout = thisWeekWorkouts?.find(w => w.scheduled_date === todayStr);
+  let todayWorkout = workoutsWithRuns?.find(w => w.scheduled_date === todayStr);
   let todayAdjustment = null;
   
   if (todayWorkout && todayWorkout.status !== "blocked" && readinessScore !== null && readinessScore <= 3) {
@@ -144,19 +181,16 @@ export async function GET(request: NextRequest) {
   }
 
   // Calculate weekly stats (exclude blocked workouts from planned)
-  const plannedMiles = thisWeekWorkouts?.reduce((sum, w) => {
+  const plannedMiles = workoutsWithRuns?.reduce((sum, w) => {
     if (w.status === "blocked") return sum;
     return sum + (w.target_miles || 0);
   }, 0) || 0;
-  const completedMiles = thisWeekWorkouts?.reduce((sum, w) => {
-    if (w.status === "completed" && w.completed_run) {
-      return sum + (w.completed_run.miles || 0);
-    }
-    return sum;
-  }, 0) || 0;
+  
+  // Calculate completed miles from actual runs this week
+  const completedMiles = (weekRuns || []).reduce((sum, r) => sum + Number(r.miles), 0);
 
   return NextResponse.json({
-    workouts: thisWeekWorkouts || [],
+    workouts: workoutsWithRuns || [],
     todayWorkout,
     todayAdjustment,
     readinessScore,
