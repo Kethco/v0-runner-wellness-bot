@@ -159,6 +159,9 @@ export default function TrainingPlanPage() {
   
   // Client-side blocking: mark workouts that fall during life events
   const lifeEvents = lifeEventsData?.events || [];
+  console.log("[v0] Life events loaded:", lifeEvents.length, lifeEvents);
+  console.log("[v0] Week data workouts:", weekData?.workouts?.map(w => ({ date: w.scheduled_date, type: w.workout_type })));
+  
   const processedWeekData = weekData ? {
     ...weekData,
     workouts: weekData.workouts.map(workout => {
@@ -166,10 +169,12 @@ export default function TrainingPlanPage() {
         const shouldBlock = !event.can_run || event.training_impact === "no_training";
         const inDateRange = workout.scheduled_date >= event.start_date && 
                             workout.scheduled_date <= event.end_date;
+        console.log("[v0] Checking workout", workout.scheduled_date, "against event", event.start_date, "-", event.end_date, "shouldBlock:", shouldBlock, "inRange:", inDateRange);
         return shouldBlock && inDateRange;
       });
       
       if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
+        console.log("[v0] BLOCKING workout on", workout.scheduled_date);
         return {
           ...workout,
           status: "blocked",
