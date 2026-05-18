@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
@@ -16,22 +16,22 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 export function Checkout({ productId }: { productId: string }) {
   const [isLoading, setIsLoading] = useState(true)
+  const checkoutRef = useRef<HTMLDivElement>(null)
 
   const fetchClientSecret = useCallback(
     async () => {
       const secret = await startCheckoutSession(productId)
+      // Hide loading spinner once we have the client secret
+      // Stripe will render shortly after
+      setTimeout(() => setIsLoading(false), 500)
       return secret
     },
     [productId],
   )
 
-  const handleComplete = useCallback(() => {
-    setIsLoading(false)
-  }, [])
-
   return (
-    <div id="checkout" className="w-full relative min-h-[400px]">
-      {/* Loading spinner - shows until Stripe is ready */}
+    <div id="checkout" className="w-full relative min-h-[400px]" ref={checkoutRef}>
+      {/* Loading spinner - shows until Stripe client secret is fetched */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
           <div className="flex flex-col items-center gap-3">
@@ -43,14 +43,9 @@ export function Checkout({ productId }: { productId: string }) {
       
       <EmbeddedCheckoutProvider
         stripe={stripePromise}
-        options={{ 
-          fetchClientSecret,
-          onComplete: handleComplete,
-        }}
+        options={{ fetchClientSecret }}
       >
-        <EmbeddedCheckout 
-          className={isLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}
-        />
+        <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>
     </div>
   )
