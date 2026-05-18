@@ -259,96 +259,54 @@ export function ThisWeeksPlan() {
             <Progress value={weekStats.completionPercent} className="h-2" />
           </div>
 
-          {/* Weekly Workout Strip */}
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-            {(() => {
-              // Generate all 7 days of the week (Monday to Sunday)
-              const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+          {/* Weekly Workout Strip - All 7 days */}
+          <div className="grid grid-cols-7 gap-1">
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((dayAbbr, index) => {
+              // Calculate date for this day
               const todayDate = new Date();
               const dayOfWeek = todayDate.getDay();
               const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
               const monday = new Date(todayDate);
               monday.setDate(todayDate.getDate() + mondayOffset);
               
-              console.log("[v0] Generating week days, monday:", monday.toISOString().split("T")[0], "workouts count:", workouts.length);
+              const date = new Date(monday);
+              date.setDate(monday.getDate() + index);
+              const dateStr = date.toISOString().split("T")[0];
               
-              return weekDays.map((dayName, index) => {
-                const date = new Date(monday);
-                date.setDate(monday.getDate() + index);
-                const dateStr = date.toISOString().split("T")[0];
-                
-                // Find workout for this day
-                const workout = workouts.find(w => w.scheduled_date === dateStr);
-                
-                const isToday = dateStr === today;
-                const isPast = dateStr < today;
-                const isRest = !workout || workout.workout_type === "rest";
-                const isCompleted = workout?.status === "completed";
-                const isSkipped = workout?.status === "skipped" || workout?.status === "blocked";
-                const colors = workout ? (WORKOUT_TYPE_COLORS[workout.workout_type] || WORKOUT_TYPE_COLORS.easy) : WORKOUT_TYPE_COLORS.easy;
+              // Find workout for this day
+              const workout = workouts.find(w => w.scheduled_date === dateStr);
+              
+              const isToday = dateStr === today;
+              const isRest = !workout || workout.workout_type === "rest";
+              const isCompleted = workout?.status === "completed";
+              const isSkipped = workout?.status === "skipped" || workout?.status === "blocked";
 
-                return (
-                  <motion.div
-                    key={dateStr}
-                    className={`relative shrink-0 w-[52px] rounded-xl p-2 text-center transition-all ${
-                      isToday
-                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                        : ""
-                    } ${
-                      isCompleted
-                        ? "bg-green-500/15 border border-green-500/30"
-                        : isSkipped
-                        ? "bg-red-500/10 border border-red-500/30"
-                        : isRest
-                        ? "bg-muted/30 border border-border"
-                        : colors.bg + " border border-transparent"
-                    }`}
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    {/* Day label */}
-                    <p className={`text-[10px] font-medium mb-1 ${
-                      isToday ? "text-primary" : "text-muted-foreground"
-                    }`}>
-                      {DAY_ABBREV[dayName]}
-                    </p>
-
-                    {/* Workout icon/status */}
-                    <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center mb-1 ${
-                      isCompleted
-                        ? "bg-green-500"
-                        : isSkipped
-                        ? "bg-red-500/20"
-                        : isRest
-                        ? "bg-muted"
-                        : colors.bg
-                    }`}>
-                      {isCompleted ? (
-                        <CheckCircle2 className="w-4 h-4 text-white" />
-                      ) : isSkipped ? (
-                        <SkipForward className="w-3 h-3 text-red-500" />
-                      ) : isRest ? (
-                        <span className="text-xs text-muted-foreground">-</span>
-                      ) : (
-                        <Zap className={`w-4 h-4 ${colors.text}`} />
-                      )}
-                    </div>
-
-                    {/* Miles */}
-                    <p className={`text-xs font-semibold ${
-                      isCompleted
-                        ? "text-green-500"
-                        : isSkipped
-                        ? "text-red-500/70 line-through"
-                        : isRest
-                        ? "text-muted-foreground"
-                        : colors.text
-                    }`}>
-                      {isRest ? "Rest" : `${workout?.target_miles || 0}`}
-                    </p>
-                  </motion.div>
-                );
-              });
-            })()}
+              return (
+                <div
+                  key={dateStr}
+                  className={`flex flex-col items-center justify-center p-2 rounded-lg text-center ${
+                    isToday ? "ring-2 ring-primary" : ""
+                  } ${
+                    isCompleted
+                      ? "bg-green-500/15"
+                      : isSkipped
+                      ? "bg-red-500/10"
+                      : isRest
+                      ? "bg-muted/30"
+                      : "bg-primary/10"
+                  }`}
+                >
+                  <p className={`text-[10px] font-medium ${isToday ? "text-primary" : "text-muted-foreground"}`}>
+                    {dayAbbr}
+                  </p>
+                  <p className={`text-sm font-bold mt-1 ${
+                    isCompleted ? "text-green-500" : isSkipped ? "text-red-500 line-through" : isRest ? "text-muted-foreground" : "text-foreground"
+                  }`}>
+                    {isRest ? "-" : workout?.target_miles || 0}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           {/* Today's Workout Details */}
