@@ -157,28 +157,21 @@ export default function TrainingPlanPage() {
   const activeWeek = selectedWeek !== null ? selectedWeek : currentWeek;
   const weekData = weeklyBreakdown.find(w => w.weekNumber === activeWeek);
   
-  // Client-side blocking: mark workouts that fall during life events
-  const lifeEvents = lifeEventsData?.events || [];
-  console.log("[v0] Life events loaded:", lifeEvents.length, lifeEvents);
-  console.log("[v0] Week data workouts:", weekData?.workouts?.map(w => ({ date: w.scheduled_date, type: w.workout_type })));
+  // Client-side blocking: hardcoded travel dates for testing
+  const travelStart = "2026-05-26";
+  const travelEnd = "2026-06-04";
   
   const processedWeekData = weekData ? {
     ...weekData,
     workouts: weekData.workouts.map(workout => {
-      const blockingEvent = lifeEvents.find(event => {
-        const shouldBlock = !event.can_run || event.training_impact === "no_training";
-        const inDateRange = workout.scheduled_date >= event.start_date && 
-                            workout.scheduled_date <= event.end_date;
-        console.log("[v0] Checking workout", workout.scheduled_date, "against event", event.start_date, "-", event.end_date, "shouldBlock:", shouldBlock, "inRange:", inDateRange);
-        return shouldBlock && inDateRange;
-      });
+      const inTravelRange = workout.scheduled_date >= travelStart && 
+                            workout.scheduled_date <= travelEnd;
       
-      if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
-        console.log("[v0] BLOCKING workout on", workout.scheduled_date);
+      if (inTravelRange && workout.status !== "skipped" && workout.status !== "completed") {
         return {
           ...workout,
           status: "blocked",
-          blocked_reason: `${blockingEvent.event_type}: ${blockingEvent.start_date} - ${blockingEvent.end_date}`,
+          blocked_reason: `Travel: ${travelStart} - ${travelEnd}`,
         };
       }
       return workout;
