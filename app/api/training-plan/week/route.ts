@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adjustWorkoutForReadiness } from "@/lib/training-plan-generator";
 import { redistributeTraining } from "@/lib/training-redistributor";
 
-// Get this week's workouts with wellness adjustments
+// Get this week's workouts with wellness adjustments and redistribution
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   
