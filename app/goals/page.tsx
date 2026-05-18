@@ -213,6 +213,8 @@ function GoalsPageContent() {
 
       if (response.ok) {
         const goalData = await response.json();
+        console.log("[v0] Goal created, response data:", JSON.stringify(goalData));
+        console.log("[v0] createTrainingPlan:", createTrainingPlan, "goalId:", goalData.goal?.id);
         
         // Create training plan if requested
         if (createTrainingPlan && goalData.goal?.id) {
