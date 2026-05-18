@@ -337,9 +337,6 @@ return (
         {/* Weekly Wellness Summary (shows Sun/Mon) */}
         <WeeklySummary />
 
-        {/* Achievement Badges */}
-        <AchievementBadges />
-
         {/* Wellness Metrics */}
         {todayCheckin && (
           <motion.div
@@ -481,6 +478,9 @@ return (
             </div>
           </motion.div>
         )}
+
+        {/* Achievement Badges */}
+        <AchievementBadges />
 
         {/* Personal Records Card */}
         <PersonalRecordsCard />
