@@ -261,73 +261,92 @@ export function ThisWeeksPlan() {
 
           {/* Weekly Workout Strip */}
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-            {workouts.map((workout) => {
-              const isToday = workout.scheduled_date === today;
-              const isPast = workout.scheduled_date < today;
-              const colors = WORKOUT_TYPE_COLORS[workout.workout_type] || WORKOUT_TYPE_COLORS.easy;
-              const isCompleted = workout.status === "completed";
-              const isSkipped = workout.status === "skipped";
-              const isRest = workout.workout_type === "rest";
+            {(() => {
+              // Generate all 7 days of the week (Monday to Sunday)
+              const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+              const todayDate = new Date();
+              const dayOfWeek = todayDate.getDay();
+              const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+              const monday = new Date(todayDate);
+              monday.setDate(todayDate.getDate() + mondayOffset);
+              
+              return weekDays.map((dayName, index) => {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + index);
+                const dateStr = date.toISOString().split("T")[0];
+                
+                // Find workout for this day
+                const workout = workouts.find(w => w.scheduled_date === dateStr);
+                
+                const isToday = dateStr === today;
+                const isPast = dateStr < today;
+                const isRest = !workout || workout.workout_type === "rest";
+                const isCompleted = workout?.status === "completed";
+                const isSkipped = workout?.status === "skipped" || workout?.status === "blocked";
+                const colors = workout ? (WORKOUT_TYPE_COLORS[workout.workout_type] || WORKOUT_TYPE_COLORS.easy) : WORKOUT_TYPE_COLORS.easy;
 
-              return (
-                <motion.div
-                  key={workout.id}
-                  className={`relative shrink-0 w-[52px] rounded-xl p-2 text-center transition-all ${
-                    isToday
-                      ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                      : ""
-                  } ${
-                    isCompleted
-                      ? "bg-green-500/15 border border-green-500/30"
-                      : isSkipped
-                      ? "bg-muted/50 border border-border"
-                      : colors.bg + " border border-transparent"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  {/* Day label */}
-                  <p className={`text-[10px] font-medium mb-1 ${
-                    isToday ? "text-primary" : "text-muted-foreground"
-                  }`}>
-                    {DAY_ABBREV[workout.day_of_week]}
-                  </p>
+                return (
+                  <motion.div
+                    key={dateStr}
+                    className={`relative shrink-0 w-[52px] rounded-xl p-2 text-center transition-all ${
+                      isToday
+                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                        : ""
+                    } ${
+                      isCompleted
+                        ? "bg-green-500/15 border border-green-500/30"
+                        : isSkipped
+                        ? "bg-red-500/10 border border-red-500/30"
+                        : isRest
+                        ? "bg-muted/30 border border-border"
+                        : colors.bg + " border border-transparent"
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    {/* Day label */}
+                    <p className={`text-[10px] font-medium mb-1 ${
+                      isToday ? "text-primary" : "text-muted-foreground"
+                    }`}>
+                      {DAY_ABBREV[dayName]}
+                    </p>
 
-                  {/* Workout icon/status */}
-                  <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center mb-1 ${
-                    isCompleted
-                      ? "bg-green-500"
-                      : isSkipped
-                      ? "bg-muted"
-                      : isRest
-                      ? "bg-muted"
-                      : colors.bg
-                  }`}>
-                    {isCompleted ? (
-                      <CheckCircle2 className="w-4 h-4 text-white" />
-                    ) : isSkipped ? (
-                      <SkipForward className="w-3 h-3 text-muted-foreground" />
-                    ) : isRest ? (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    ) : (
-                      <Zap className={`w-4 h-4 ${colors.text}`} />
-                    )}
-                  </div>
+                    {/* Workout icon/status */}
+                    <div className={`w-8 h-8 mx-auto rounded-full flex items-center justify-center mb-1 ${
+                      isCompleted
+                        ? "bg-green-500"
+                        : isSkipped
+                        ? "bg-red-500/20"
+                        : isRest
+                        ? "bg-muted"
+                        : colors.bg
+                    }`}>
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-4 h-4 text-white" />
+                      ) : isSkipped ? (
+                        <SkipForward className="w-3 h-3 text-red-500" />
+                      ) : isRest ? (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      ) : (
+                        <Zap className={`w-4 h-4 ${colors.text}`} />
+                      )}
+                    </div>
 
-                  {/* Miles */}
-                  <p className={`text-xs font-semibold ${
-                    isCompleted
-                      ? "text-green-500"
-                      : isSkipped
-                      ? "text-muted-foreground line-through"
-                      : colors.text
-                  }`}>
-                    {isRest ? "Rest" : `${workout.target_miles || 0}mi`}
-                  </p>
-
-                  {/* Workout type on hover tooltip could go here */}
-                </motion.div>
-              );
-            })}
+                    {/* Miles */}
+                    <p className={`text-xs font-semibold ${
+                      isCompleted
+                        ? "text-green-500"
+                        : isSkipped
+                        ? "text-red-500/70 line-through"
+                        : isRest
+                        ? "text-muted-foreground"
+                        : colors.text
+                    }`}>
+                      {isRest ? "Rest" : `${workout?.target_miles || 0}`}
+                    </p>
+                  </motion.div>
+                );
+              });
+            })()}
           </div>
 
           {/* Today's Workout Details */}
