@@ -138,11 +138,10 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
   // Check if we have an active training plan
   const hasPlan = planData?.plan && planData?.workouts?.length > 0;
-
+  
   // Calculate progress based on plan or manual goal
   const plannedMiles = hasPlan ? planData!.weekStats.plannedMiles : weeklyGoal;
   const completedMiles = hasPlan ? planData!.weekStats.completedMiles : weeklyMiles;
-  const progressPercent = plannedMiles > 0 ? Math.min((completedMiles / plannedMiles) * 100, 100) : 0;
 
   // Build chart data - always show all 7 days
   const chartData = (() => {
@@ -195,6 +194,12 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
   })();
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
+  
+  // Calculate total planned miles from chartData (sum of all workout days)
+  const totalPlannedMiles = chartData.reduce((sum, d) => sum + d.miles, 0);
+  // Use API weekStats for completed, but chartData total for planned (more accurate)
+  const displayPlannedMiles = hasPlan ? Math.max(totalPlannedMiles, planData!.weekStats.plannedMiles) : weeklyGoal;
+  const progressPercent = displayPlannedMiles > 0 ? Math.min((completedMiles / displayPlannedMiles) * 100, 100) : 0;
 
   // Handle adjustment actions
   const handleAcceptAdjustment = async () => {
@@ -249,7 +254,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   {completedMiles.toFixed(1)}
                 </motion.span>
                 <span className="text-[#AEAEB2] text-lg font-semibold">
-                  / {plannedMiles.toFixed(0)} mi
+                  / {displayPlannedMiles.toFixed(0)} mi
                 </span>
               </div>
               {hasPlan && planData?.plan?.weekType && (
@@ -347,57 +352,72 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
           )}
 
           {/* Weekly Workout Strip */}
-          <div className="flex items-end justify-between gap-1.5">
+          <div className="flex items-end justify-between gap-1">
             {chartData.map((day, i) => {
-              // Minimum bar height of 12px for rest days so they're always visible
-              const barHeight = day.miles > 0 ? Math.max((day.miles / maxMiles) * 56, 16) : 12;
+              // Use logarithmic scale for better visualization when there's a big difference
+              // This makes smaller bars more visible while keeping larger bars prominent
+              const normalizedMiles = day.miles > 0 ? Math.log(day.miles + 1) / Math.log(maxMiles + 1) : 0;
+              const barHeight = day.miles > 0 ? Math.max(normalizedMiles * 48 + 16, 20) : 16;
               
               return (
-                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center">
-                  {/* Miles label - show dash for rest days */}
-                  <span className={`text-[10px] font-bold mb-1 ${
-                    day.isSkipped ? "text-red-500 line-through" : day.isToday ? "text-[#FF6B00]" : day.isCompleted ? "text-[#30D158]" : "text-[#6E6E73]"
+                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[36px]">
+                  {/* Miles or Rest label */}
+                  <span className={`text-[10px] font-bold mb-1 whitespace-nowrap ${
+                    day.isSkipped ? "text-red-500 line-through" 
+                    : day.isToday ? "text-[#FF6B00]" 
+                    : day.isCompleted ? "text-[#30D158]" 
+                    : day.miles === 0 ? "text-[#6E6E73]"
+                    : "text-[#AEAEB2]"
                   }`}>
-                    {day.miles > 0 ? day.miles.toFixed(1) : "-"}
+                    {day.miles > 0 ? `${day.miles.toFixed(1)}` : "Rest"}
                   </span>
                   
                   {/* Bar */}
-                  <div className="w-full h-14 flex items-end justify-center">
+                  <div className="w-full h-16 flex items-end justify-center">
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: barHeight }}
                       transition={{ duration: 0.5, delay: i * 0.05 }}
-                      className={`w-full max-w-[24px] rounded-t-md ${
+                      className={`w-full max-w-[28px] rounded-t-md ${
                         day.isCompleted 
                           ? "bg-[#30D158]" 
                           : day.isSkipped
-                          ? "bg-red-500/30"
-                          : day.isToday 
+                          ? "bg-red-500/40"
+                          : day.isToday && day.miles > 0
                           ? "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/40"
+                          : day.isPast && day.miles === 0
+                          ? "bg-[#2A2A2A]"
                           : day.isPast 
                           ? "bg-[#3A3A3A]"
                           : day.miles > 0
-                          ? "bg-[#FF4500]/40"
+                          ? "bg-[#FF4500]/50"
                           : "bg-[#2A2A2A]"
                       }`}
-                      style={!day.isCompleted && !day.isSkipped && !day.isToday && !day.isPast && day.miles > 0 ? { backgroundColor: `${day.color}40` } : {}}
                     />
                   </div>
                   
                   {/* Day label */}
-                  <span className={`text-[10px] font-bold mt-1 ${
-                    day.isToday ? "text-[#FF6B00]" : day.isCompleted ? "text-[#30D158]" : day.isSkipped ? "text-red-500" : "text-[#6E6E73]"
+                  <span className={`text-[11px] font-bold mt-1 ${
+                    day.isToday ? "text-[#FF6B00]" 
+                    : day.isCompleted ? "text-[#30D158]" 
+                    : day.isSkipped ? "text-red-500" 
+                    : "text-[#6E6E73]"
                   }`}>
                     {day.day}
                   </span>
                   
-                  {/* Completion indicator */}
-                  {day.isCompleted && (
-                    <CheckCircle2 className="w-3 h-3 text-[#30D158] -mt-0.5" />
-                  )}
-                  {day.isSkipped && (
-                    <SkipForward className="w-3 h-3 text-red-500 -mt-0.5" />
-                  )}
+                  {/* Status indicator */}
+                  <div className="h-4 flex items-center justify-center">
+                    {day.isCompleted && (
+                      <CheckCircle2 className="w-3 h-3 text-[#30D158]" />
+                    )}
+                    {day.isSkipped && (
+                      <SkipForward className="w-3 h-3 text-red-500" />
+                    )}
+                    {day.isToday && !day.isCompleted && !day.isSkipped && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B00]" />
+                    )}
+                  </div>
                 </div>
               );
             })}
