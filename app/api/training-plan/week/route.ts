@@ -23,9 +23,6 @@ export async function GET(request: NextRequest) {
   
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
-  
-  const mondayStr = monday.toISOString().split("T")[0];
-  const sundayStr = sunday.toISOString().split("T")[0];
 
   // Get life events first
   const { data: lifeEvents } = await supabase
@@ -44,7 +41,7 @@ export async function GET(request: NextRequest) {
   // Get this week's workouts from the training plan's weekly_structure
   let allWorkouts: any[] = [];
   let weekMonday = monday;
-  let currentWeekNumber = 1;
+  let planWeekNumber = 1;
   
   if (plan && plan.weekly_structure) {
     const startDate = new Date(plan.start_date);
@@ -54,13 +51,13 @@ export async function GET(request: NextRequest) {
     
     // If plan hasn't started yet, show week 1 with the plan's start date
     if (daysSinceStart < 0) {
-      currentWeekNumber = 1;
+      planWeekNumber = 1;
       const planStartDay = startDate.getDay();
       const planMondayOffset = planStartDay === 0 ? -6 : 1 - planStartDay;
       weekMonday = new Date(startDate);
       weekMonday.setDate(startDate.getDate() + planMondayOffset);
     } else {
-      currentWeekNumber = Math.floor(daysSinceStart / 7) + 1;
+      planWeekNumber = Math.floor(daysSinceStart / 7) + 1;
     }
     
     // Get ALL weeks' workouts for redistribution (same as training plan page)
@@ -130,7 +127,7 @@ export async function GET(request: NextRequest) {
       todayCheckin.readiness,
       todayCheckin.energy,
       todayCheckin.sleep_rating,
-      todayCheckin.soreness ? 6 - todayCheckin.soreness : null, // Invert soreness
+      todayCheckin.soreness ? 6 - todayCheckin.soreness : null,
     ].filter((s): s is number => s != null);
     
     if (scores.length > 0) {
@@ -140,9 +137,8 @@ export async function GET(request: NextRequest) {
 
   // Get current week plan details from the already-fetched plan
   let currentWeekPlan = null;
-  
   if (plan && plan.weekly_structure && Array.isArray(plan.weekly_structure)) {
-    currentWeekPlan = plan.weekly_structure.find((w: { weekNumber: number }) => w.weekNumber === currentWeekNumber);
+    currentWeekPlan = plan.weekly_structure.find((w: { weekNumber: number }) => w.weekNumber === planWeekNumber);
   }
 
   // Find today's workout and apply adjustments if needed
@@ -153,7 +149,7 @@ export async function GET(request: NextRequest) {
     const { adjustedWorkout, recommendation } = adjustWorkoutForReadiness(
       {
         dayOfWeek: todayWorkout.day_of_week,
-        workoutType: todayWorkout.workout_type,
+        workoutType: todayWorkout.workoutType,
         title: todayWorkout.title,
         description: todayWorkout.description,
         targetMiles: todayWorkout.target_miles,
@@ -191,7 +187,7 @@ export async function GET(request: NextRequest) {
     plan: plan ? {
       id: plan.id,
       planType: plan.plan_type,
-      currentWeek: currentWeekNumber,
+      currentWeek: planWeekNumber,
       weekFocus: currentWeekPlan?.focus || null,
       weekType: currentWeekPlan?.weekType || null,
     } : null,
@@ -240,7 +236,6 @@ export async function PATCH(request: NextRequest) {
       if (!newDate) {
         return NextResponse.json({ error: "New date required for reschedule" }, { status: 400 });
       }
-      // Get the original date first
       const { data: originalWorkout } = await supabase
         .from("planned_workouts")
         .select("scheduled_date, original_date")
@@ -256,7 +251,6 @@ export async function PATCH(request: NextRequest) {
       break;
     
     case "accept_adjustment":
-      // Accept AI-suggested adjustment
       updates.status = "modified";
       updates.adjustment_reason = "low_readiness";
       updates.adjusted_at = new Date().toISOString();
