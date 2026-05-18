@@ -145,14 +145,16 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
   // Build chart data - always show all 7 days
   const chartData = (() => {
-    const days = ["M", "T", "W", "T", "F", "S", "S"];
-    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const days = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
     
     // Calculate Monday of current week
     const weekStart = new Date(today);
     const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     weekStart.setDate(today.getDate() + mondayOffset);
+    
+    console.log("[v0] Today:", todayStr, "Monday:", weekStart.toISOString().split("T")[0]);
+    console.log("[v0] planData.workouts:", planData?.workouts?.map(w => ({ date: w.scheduled_date, miles: w.target_miles })));
     
     return days.map((day, i) => {
       const date = new Date(weekStart);
