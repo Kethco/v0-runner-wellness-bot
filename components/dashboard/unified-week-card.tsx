@@ -196,6 +196,8 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
 
+  console.log("[v0] chartData:", chartData.length, "days", chartData.map(d => ({ day: d.day, date: d.date, miles: d.miles })));
+
   // Handle adjustment actions
   const handleAcceptAdjustment = async () => {
     if (!planData?.todayAdjustment) return;
