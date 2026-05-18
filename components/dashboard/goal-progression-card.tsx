@@ -1,6 +1,7 @@
 "use client";
 
 import useSWR from "swr";
+import { motion } from "framer-motion";
 import { Target, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Calendar, Activity } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -170,34 +171,64 @@ export function GoalProgressionCard() {
   }
 
   return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
     <Card className={cn("bg-card border-border p-4 relative overflow-hidden", borderColor)}>
       {/* Status banner */}
-      <div className={cn("absolute top-0 left-0 right-0 h-1", bgColor.replace("/10", ""))} />
+      <motion.div 
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className={cn("absolute top-0 left-0 right-0 h-1 origin-left", bgColor.replace("/10", ""))} 
+      />
       
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <motion.div 
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="flex items-center justify-between mb-4"
+      >
         <div className="flex items-center gap-2">
-          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", bgColor)}>
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+            className={cn("w-8 h-8 rounded-lg flex items-center justify-center", bgColor)}
+          >
             {goalStatus === "on_track" && <CheckCircle2 className={cn("w-4 h-4", statusColor)} />}
             {goalStatus === "at_risk" && <AlertTriangle className={cn("w-4 h-4", statusColor)} />}
             {goalStatus === "behind" && <TrendingDown className={cn("w-4 h-4", statusColor)} />}
-          </div>
+          </motion.div>
           <div>
             <p className="text-sm font-bold">{activeGoal.race_name || activeGoal.distance}</p>
             <p className={cn("text-xs font-medium", statusColor)}>{statusMessage}</p>
           </div>
         </div>
         {daysUntilRace !== null && daysUntilRace > 0 && (
-          <div className="text-right">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="text-right"
+          >
             <p className="text-2xl font-black">{daysUntilRace}</p>
             <p className="text-[10px] text-muted-foreground uppercase">days left</p>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
 
       {/* Progress metrics */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-secondary/50 rounded-lg p-3">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="bg-secondary/50 rounded-lg p-3"
+        >
           <div className="flex items-center gap-1 mb-1">
             <Activity className="w-3 h-3 text-muted-foreground" />
             <p className="text-[10px] text-muted-foreground uppercase">Weekly Avg</p>
@@ -206,8 +237,13 @@ export function GoalProgressionCard() {
           <p className="text-[10px] text-muted-foreground">
             Target: {expectedWeeklyMiles > 0 ? `${expectedWeeklyMiles} mi` : `~${peakWeeklyTarget.toFixed(0)} mi peak`}
           </p>
-        </div>
-        <div className="bg-secondary/50 rounded-lg p-3">
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="bg-secondary/50 rounded-lg p-3"
+        >
           <div className="flex items-center gap-1 mb-1">
             <TrendingUp className="w-3 h-3 text-muted-foreground" />
             <p className="text-[10px] text-muted-foreground uppercase">This Week</p>
@@ -216,12 +252,17 @@ export function GoalProgressionCard() {
           <p className="text-[10px] text-muted-foreground">
             {weekStats?.completedMiles?.toFixed(1) || 0} / {weekStats?.plannedMiles?.toFixed(1) || 0} mi
           </p>
-        </div>
+        </motion.div>
       </div>
 
       {/* Life events impact */}
       {blockedDaysRemaining > 0 && (
-        <div className={cn("rounded-lg p-3 mb-3", bgColor, borderColor, "border")}>
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+          className={cn("rounded-lg p-3 mb-3", bgColor, borderColor, "border")}
+        >
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-amber-500" />
             <div>
@@ -231,24 +272,32 @@ export function GoalProgressionCard() {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Confidence bar */}
       <div>
         <div className="flex items-center justify-between mb-1">
           <p className="text-[10px] text-muted-foreground uppercase">Training Readiness</p>
-          <p className={cn("text-xs font-bold", statusColor)}>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.5 }}
+            className={cn("text-xs font-bold", statusColor)}
+          >
             {Math.round(adjustedProgress * 100)}%
-          </p>
+          </motion.p>
         </div>
         <div className="h-2 bg-secondary rounded-full overflow-hidden">
-          <div
-            className={cn("h-full rounded-full transition-all", bgColor.replace("/10", ""))}
-            style={{ width: `${Math.min(100, Math.round(adjustedProgress * 100))}%` }}
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(100, Math.round(adjustedProgress * 100))}%` }}
+            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+            className={cn("h-full rounded-full", bgColor.replace("/10", ""))}
           />
         </div>
       </div>
     </Card>
+    </motion.div>
   );
 }

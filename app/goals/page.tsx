@@ -309,65 +309,8 @@ return (
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-[70px]">
-        {/* Goal Progression Card - Shows training progress toward goal */}
-        <div className="mb-6">
-          <GoalProgressionCard />
-        </div>
-        
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          {/* Header with Progress Ring */}
-          <div className="flex items-center gap-4">
-            {/* Progress Ring */}
-            <div className="relative w-16 h-16">
-              <svg className="w-16 h-16 transform -rotate-90">
-                {/* Background circle */}
-                <circle
-                  cx="32"
-                  cy="32"
-                  r="28"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  className="text-[#2A2A2A]"
-                />
-                {/* Progress circle */}
-                <circle
-                  cx="32"
-                  cy="32"
-                  r="28"
-                  fill="none"
-                  stroke="url(#progressGradient)"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(completedGoalsCount / Math.max(goals.length, 1)) * 175.9} 175.9`}
-                  className="transition-all duration-500"
-                />
-                <defs>
-                  <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#FF4500" />
-                    <stop offset="100%" stopColor="#FFD700" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              {/* Center text */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-lg font-bold text-foreground">{completedGoalsCount}</span>
-                <span className="text-[9px] text-muted-foreground">of {goals.length}</span>
-              </div>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Race Goals</h1>
-              <p className="text-muted-foreground text-sm">
-                {goals.length === 0 
-                  ? "Set your first race target" 
-                  : completedGoalsCount === goals.length && goals.length > 0
-                    ? "All goals completed!"
-                    : `${goals.length - completedGoalsCount} active goal${goals.length - completedGoalsCount !== 1 ? 's' : ''}`
-                }
-              </p>
-            </div>
-          </div>
+        {/* Add Goal Button - Top */}
+        <div className="flex justify-end mb-4">
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
               setIsDialogOpen(open);
               if (open) setSaveError(null);
@@ -548,6 +491,11 @@ return (
               </DialogFooter>
             </DialogContent>
           </Dialog>
+        </div>
+
+        {/* Goal Progression Card - Shows training progress toward goal */}
+        <div className="mb-6">
+          <GoalProgressionCard />
         </div>
 
         {isUnauthorized ? (
