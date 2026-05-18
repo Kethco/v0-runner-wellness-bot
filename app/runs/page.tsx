@@ -7,10 +7,26 @@ import { Navbar } from "@/components/dashboard/navbar";
 import { LogRunModal } from "@/components/dashboard/log-run-modal";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Flame, TrendingUp, ChevronLeft, ChevronRight, Activity, Zap, Route } from "lucide-react";
+import { Calendar, Clock, Flame, TrendingUp, ChevronLeft, ChevronRight, Activity, Zap, Route, Trash2, Edit2, MoreVertical } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { EmptyState } from "@/components/empty-state";
 import { RunsPageSkeleton } from "@/components/skeletons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -44,9 +60,29 @@ type ViewMode = "recent" | "calendar";
 export default function RunsPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("recent");
+  const [deleteRunId, setDeleteRunId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { data, mutate, isLoading } = useSWR<{ runs: Run[]; weeklyTotal: number }>("/api/runs?days=90", fetcher);
   
   const runs = data?.runs || [];
+
+  const handleDeleteRun = async () => {
+    if (!deleteRunId) return;
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/runs/${deleteRunId}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        mutate();
+      }
+    } catch (error) {
+      console.error("Failed to delete run:", error);
+    } finally {
+      setIsDeleting(false);
+      setDeleteRunId(null);
+    }
+  };
   
   // Calculate stats
   const stats = useMemo(() => {
@@ -310,7 +346,7 @@ export default function RunsPage() {
                   return (
                     <Card
                       key={run.id}
-                      className="bg-[#141414] border-[#2A2A2A] p-4 mb-2 hover:border-[#3A3A3A] transition-all"
+                      className="bg-[#141414] border-[#2A2A2A] p-4 mb-2 hover:border-[#3A3A3A] transition-all group"
                     >
                       <div className="flex items-start gap-3">
                         {/* Run Type Badge */}
@@ -324,9 +360,32 @@ export default function RunsPage() {
                             <p className="text-lg font-bold text-white">
                               {run.miles.toFixed(2)} <span className="text-sm font-normal text-[#6E6E73]">miles</span>
                             </p>
-                            {run.pace && (
-                              <span className="text-sm text-[#8E8E93]">{run.pace}/mi</span>
-                            )}
+                            <div className="flex items-center gap-2">
+                              {run.pace && (
+                                <span className="text-sm text-[#8E8E93]">{run.pace}/mi</span>
+                              )}
+                              {/* Actions Menu */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-[#6E6E73] hover:text-white"
+                                  >
+                                    <MoreVertical className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-[#2A2A2A]">
+                                  <DropdownMenuItem 
+                                    className="text-red-500 focus:text-red-500 focus:bg-red-500/10 cursor-pointer"
+                                    onClick={() => setDeleteRunId(run.id)}
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Run
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
                           
                           <div className="flex items-center gap-3 mt-1">
@@ -358,6 +417,31 @@ export default function RunsPage() {
         </div>
       </main>
       )}
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteRunId} onOpenChange={(open) => !open && setDeleteRunId(null)}>
+        <AlertDialogContent className="bg-[#1A1A1A] border-[#2A2A2A]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Run?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[#8E8E93]">
+              This action cannot be undone. This will permanently delete this run from your history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-[#2A2A2A] border-[#3A3A3A] text-white hover:bg-[#3A3A3A]">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteRun}
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
       <BottomNav />
     </div>
   );
