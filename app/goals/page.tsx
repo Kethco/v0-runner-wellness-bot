@@ -235,7 +235,9 @@ function GoalsPageContent() {
             });
             const planResult = await planResponse.json();
             console.log("[v0] Training plan response:", planResponse.status, planResult);
-            if (!planResponse.ok) {
+            if (planResponse.ok) {
+              console.log("[v0] Training plan created successfully!");
+            } else {
               console.error("[v0] Training plan error:", planResult.error);
               // Show error to user if plan creation fails
               if (planResult.error?.includes("at least 4 weeks")) {

@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const fetcher = (url: string) => fetch(url).then(res => res.json());
+const fetcher = (url: string) => fetch(url, { credentials: 'include' }).then(res => res.json());
 
 interface Workout {
   id: string;
