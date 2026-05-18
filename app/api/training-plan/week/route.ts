@@ -12,19 +12,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get date range for this week (Monday to Sunday)
   const today = new Date();
-  const dayOfWeek = today.getDay();
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + mondayOffset);
-  monday.setHours(0, 0, 0, 0);
-  
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
+  const todayStr = today.toISOString().split("T")[0];
 
-  // Get life events first
+  // Get life events
   const { data: lifeEvents } = await supabase
     .from("life_events")
     .select("start_date, end_date, event_type, can_run, training_impact")
@@ -38,83 +29,73 @@ export async function GET(request: NextRequest) {
     .eq("status", "active")
     .maybeSingle();
 
-  // Get this week's workouts from the training plan's weekly_structure
-  let allWorkouts: any[] = [];
-  let weekMonday = monday;
-  let planWeekNumber = 1;
-  
-  if (plan && plan.weekly_structure) {
-    const startDate = new Date(plan.start_date);
-    const todayMs = today.getTime();
-    const startMs = startDate.getTime();
-    const daysSinceStart = Math.floor((todayMs - startMs) / (24 * 60 * 60 * 1000));
-    
-    // If plan hasn't started yet, show week 1 with the plan's start date
-    if (daysSinceStart < 0) {
-      planWeekNumber = 1;
-      const planStartDay = startDate.getDay();
-      const planMondayOffset = planStartDay === 0 ? -6 : 1 - planStartDay;
-      weekMonday = new Date(startDate);
-      weekMonday.setDate(startDate.getDate() + planMondayOffset);
-    } else {
-      planWeekNumber = Math.floor(daysSinceStart / 7) + 1;
-    }
-    
-    // Get ALL weeks' workouts for redistribution (same as training plan page)
-    const weekStructure = plan.weekly_structure as any[];
-    const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    
-    weekStructure.forEach((week: any) => {
-      if (week.workouts) {
-        // Calculate Monday for this week
-        const weekStartDate = new Date(plan.start_date);
-        weekStartDate.setDate(weekStartDate.getDate() + (week.weekNumber - 1) * 7);
-        const weekDay = weekStartDate.getDay();
-        const weekMondayOffset = weekDay === 0 ? -6 : 1 - weekDay;
-        const weekMon = new Date(weekStartDate);
-        weekMon.setDate(weekStartDate.getDate() + weekMondayOffset);
-        
-        week.workouts.forEach((workout: any, index: number) => {
-          const dayIndex = dayOrder.indexOf(workout.dayOfWeek);
-          const workoutDate = new Date(weekMon);
-          workoutDate.setDate(weekMon.getDate() + dayIndex);
-          
-          allWorkouts.push({
-            id: `week-${week.weekNumber}-${index}`,
-            scheduled_date: workoutDate.toISOString().split("T")[0],
-            day_of_week: workout.dayOfWeek,
-            workout_type: workout.workoutType,
-            title: workout.title,
-            description: workout.description,
-            target_miles: workout.targetMiles,
-            target_duration_minutes: workout.targetDurationMinutes || null,
-            target_pace_zone: workout.targetPaceZone,
-            intervals: workout.intervals,
-            status: "pending",
-            week_number: week.weekNumber,
-            completed_run: [],
-          });
-        });
-      }
+  if (!plan) {
+    return NextResponse.json({
+      workouts: [],
+      todayWorkout: null,
+      todayAdjustment: null,
+      readinessScore: null,
+      plan: null,
+      weekStats: { plannedMiles: 0, completedMiles: 0, completionPercent: 0 },
     });
   }
-  
-  // Apply redistribution (same logic as training plan page)
+
+  // Calculate current week number
+  const startDate = new Date(plan.start_date);
+  const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+  const planWeekNumber = daysSinceStart < 0 ? 1 : Math.floor(daysSinceStart / 7) + 1;
+
+  // Get ALL workouts from planned_workouts table (same as training-plan API)
+  const { data: allWorkouts } = await supabase
+    .from("planned_workouts")
+    .select("*")
+    .eq("plan_id", plan.id)
+    .order("scheduled_date", { ascending: true });
+
+  if (!allWorkouts || allWorkouts.length === 0) {
+    return NextResponse.json({
+      workouts: [],
+      todayWorkout: null,
+      todayAdjustment: null,
+      readinessScore: null,
+      plan: { id: plan.id, planType: plan.plan_type, currentWeek: planWeekNumber },
+      weekStats: { plannedMiles: 0, completedMiles: 0, completionPercent: 0 },
+    });
+  }
+
+  // Apply redistribution (same as training plan page does on client side)
   const { adjustedWorkouts } = redistributeTraining(allWorkouts, lifeEvents || []);
+
+  // Mark blocked workouts (same as training plan page)
+  const processedAllWorkouts = adjustedWorkouts.map(workout => {
+    const blockingEvent = lifeEvents?.find(event => {
+      const shouldBlock = !event.can_run || event.training_impact === "no_training";
+      const inDateRange = workout.scheduled_date >= event.start_date && 
+                          workout.scheduled_date <= event.end_date;
+      return shouldBlock && inDateRange;
+    });
+    
+    if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
+      return {
+        ...workout,
+        status: "blocked",
+        blocked_reason: `${blockingEvent.event_type}: ${blockingEvent.start_date} - ${blockingEvent.end_date}`,
+      };
+    }
+    return workout;
+  });
+
+  // Filter to the current week
+  const thisWeekWorkouts = processedAllWorkouts.filter(w => w.week_number === planWeekNumber);
   
-  // Calculate this week's Monday based on plan start
-  const thisWeekMondayStr = weekMonday.toISOString().split("T")[0];
-  const thisWeekSundayDate = new Date(weekMonday);
-  thisWeekSundayDate.setDate(weekMonday.getDate() + 6);
-  const thisWeekSundayStr = thisWeekSundayDate.toISOString().split("T")[0];
-  
-  // Filter to just this week's workouts AFTER redistribution
-  const processedWorkouts = adjustedWorkouts.filter(w => 
-    w.scheduled_date >= thisWeekMondayStr && w.scheduled_date <= thisWeekSundayStr
-  );
+  console.log("[v0] Week API - planWeekNumber:", planWeekNumber);
+  console.log("[v0] Week API - thisWeekWorkouts:", thisWeekWorkouts.map(w => ({ 
+    day: w.day_of_week, 
+    miles: w.target_miles, 
+    status: w.status 
+  })));
 
   // Get today's check-in for readiness score
-  const todayStr = today.toISOString().split("T")[0];
   const { data: todayCheckin } = await supabase
     .from("checkins")
     .select("readiness, energy, soreness, sleep_rating")
@@ -144,14 +125,14 @@ export async function GET(request: NextRequest) {
   }
 
   // Find today's workout and apply adjustments if needed
-  let todayWorkout = processedWorkouts?.find(w => w.scheduled_date === todayStr);
+  let todayWorkout = thisWeekWorkouts?.find(w => w.scheduled_date === todayStr);
   let todayAdjustment = null;
   
   if (todayWorkout && todayWorkout.status !== "blocked" && readinessScore !== null && readinessScore <= 3) {
     const { adjustedWorkout, recommendation } = adjustWorkoutForReadiness(
       {
         dayOfWeek: todayWorkout.day_of_week,
-        workoutType: todayWorkout.workoutType,
+        workoutType: todayWorkout.workout_type,
         title: todayWorkout.title,
         description: todayWorkout.description,
         targetMiles: todayWorkout.target_miles,
@@ -170,11 +151,11 @@ export async function GET(request: NextRequest) {
   }
 
   // Calculate weekly stats (exclude blocked workouts from planned)
-  const plannedMiles = processedWorkouts?.reduce((sum, w) => {
+  const plannedMiles = thisWeekWorkouts?.reduce((sum, w) => {
     if (w.status === "blocked") return sum;
     return sum + (w.target_miles || 0);
   }, 0) || 0;
-  const completedMiles = processedWorkouts?.reduce((sum, w) => {
+  const completedMiles = thisWeekWorkouts?.reduce((sum, w) => {
     if (w.status === "completed" && w.completed_run) {
       return sum + (w.completed_run.miles || 0);
     }
@@ -182,7 +163,7 @@ export async function GET(request: NextRequest) {
   }, 0) || 0;
 
   return NextResponse.json({
-    workouts: processedWorkouts || [],
+    workouts: thisWeekWorkouts || [],
     todayWorkout,
     todayAdjustment,
     readinessScore,
