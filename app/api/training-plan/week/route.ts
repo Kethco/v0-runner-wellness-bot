@@ -42,16 +42,18 @@ export async function GET(request: NextRequest) {
   // Get life events to check for blocked dates
   const { data: lifeEvents } = await supabase
     .from("life_events")
-    .select("start_date, end_date, event_type, can_run")
+    .select("start_date, end_date, event_type, can_run, training_impact")
     .eq("user_id", user.id);
 
   // Mark workouts that fall during life events as blocked
+  // Block if: can_run is false OR training_impact is "no_training"
   const processedWorkouts = (workouts || []).map(workout => {
-    const blockingEvent = lifeEvents?.find(event => 
-      !event.can_run && 
-      workout.scheduled_date >= event.start_date && 
-      workout.scheduled_date <= event.end_date
-    );
+    const blockingEvent = lifeEvents?.find(event => {
+      const shouldBlock = !event.can_run || event.training_impact === "no_training";
+      const inDateRange = workout.scheduled_date >= event.start_date && 
+                          workout.scheduled_date <= event.end_date;
+      return shouldBlock && inDateRange;
+    });
     
     if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
       return {

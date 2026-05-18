@@ -391,7 +391,12 @@ export function LifeEventsManager() {
               <Label>Training Impact</Label>
               <Select
                 value={newEvent.trainingImpact}
-                onValueChange={(v) => setNewEvent({ ...newEvent, trainingImpact: v })}
+                onValueChange={(v) => setNewEvent({ 
+                  ...newEvent, 
+                  trainingImpact: v,
+                  // Auto-set canRun to false when "no_training" is selected
+                  canRun: v === "no_training" ? false : newEvent.canRun
+                })}
               >
                 <SelectTrigger className="bg-secondary border-border">
                   <SelectValue />
