@@ -82,15 +82,14 @@ export async function POST() {
     return NextResponse.json({ error: "No active plan" });
   }
 
-  // Get all life events where can_run is false
+  // Get ALL life events (not just where can_run is false)
   const { data: events } = await supabase
     .from("life_events")
     .select("*")
-    .eq("user_id", user.id)
-    .eq("can_run", false);
+    .eq("user_id", user.id);
 
   if (!events || events.length === 0) {
-    return NextResponse.json({ message: "No life events where running is blocked" });
+    return NextResponse.json({ message: "No life events found" });
   }
 
   let totalUpdated = 0;

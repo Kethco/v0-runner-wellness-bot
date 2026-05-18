@@ -90,32 +90,27 @@ export function LifeEventsManager() {
   });
 
   const handleResyncPlan = async () => {
-    console.log("[v0] Resync button clicked");
     setIsResyncing(true);
     try {
-      console.log("[v0] Calling /api/training-plan/resync");
-      const response = await fetch("/api/training-plan/resync");
+      // Call the direct skip endpoint
+      const response = await fetch("/api/debug/workouts", { method: "POST" });
       const result = await response.json();
-      console.log("[v0] Resync response:", response.status, result);
       
-      // Collect all adjustments from all events
-      const allAdjustments: typeof adjustmentResult = { adjustments: [] };
-      for (const eventResult of result.results || []) {
-        console.log("[v0] Event result:", eventResult);
-        if (eventResult.adjustments?.length > 0) {
-          allAdjustments.adjustments.push(...eventResult.adjustments);
-        }
-      }
-      
-      console.log("[v0] Total adjustments:", allAdjustments.adjustments.length);
-      if (allAdjustments.adjustments.length > 0) {
-        setAdjustmentResult(allAdjustments);
+      if (result.updates && result.updates.length > 0) {
+        setAdjustmentResult({
+          adjustments: result.updates.map((u: any) => ({
+            workoutId: u.date,
+            originalDate: u.date,
+            newDate: null,
+            action: "skipped",
+            reason: `${u.type} workout skipped for life event`,
+          }))
+        });
       } else {
-        alert("No workouts needed rescheduling. Your plan may already be adjusted, or there are no workouts during your life events.");
+        alert(result.message || "No workouts to skip");
       }
     } catch (err) {
-      console.error("[v0] Failed to resync:", err);
-      alert("Failed to resync plan. Check console for details.");
+      alert("Failed to update plan");
     }
     setIsResyncing(false);
   };
