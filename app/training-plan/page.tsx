@@ -155,13 +155,13 @@ export default function TrainingPlanPage() {
 
   const { plan, currentWeek, totalWeeks, weeklyBreakdown } = data;
   const activeWeek = selectedWeek !== null ? selectedWeek : currentWeek;
-  const processedWeekData = weeklyBreakdown.find(w => w.weekNumber === activeWeek);
+  const weekData = weeklyBreakdown.find(w => w.weekNumber === activeWeek);
   
   // Client-side blocking: mark workouts that fall during life events
   const lifeEvents = lifeEventsData?.events || [];
-  const processedWeekData = processedWeekData ? {
-    ...processedWeekData,
-    workouts: processedWeekData.workouts.map(workout => {
+  const processedWeekData = weekData ? {
+    ...weekData,
+    workouts: weekData.workouts.map(workout => {
       const blockingEvent = lifeEvents.find(event => {
         const shouldBlock = !event.can_run || event.training_impact === "no_training";
         const inDateRange = workout.scheduled_date >= event.start_date && 
