@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Navbar } from "@/components/navbar";
+import { Navbar } from "@/components/dashboard/navbar";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
