@@ -24,7 +24,9 @@ export function RaceCountdown() {
     ?.filter(g => g.target_date && new Date(g.target_date) > new Date())
     ?.sort((a, b) => new Date(a.target_date).getTime() - new Date(b.target_date).getTime())[0];
 
-  const targetDate = activeGoal?.target_date ? new Date(activeGoal.target_date) : null;
+  // Store target date string to avoid creating new Date objects on each render
+  const targetDateStr = activeGoal?.target_date || null;
+  const targetDate = targetDateStr ? new Date(targetDateStr) : null;
   const daysUntilRace = targetDate 
     ? Math.ceil((targetDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
@@ -34,11 +36,13 @@ export function RaceCountdown() {
 
   // Update countdown every second
   useEffect(() => {
-    if (!targetDate) return;
+    if (!targetDateStr) return;
+
+    const target = new Date(targetDateStr);
 
     const updateCountdown = () => {
       const now = new Date().getTime();
-      const distance = targetDate.getTime() - now;
+      const distance = target.getTime() - now;
 
       if (distance > 0) {
         setTimeLeft({
@@ -53,7 +57,7 @@ export function RaceCountdown() {
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, [targetDateStr]);
 
   if (!shouldShow || !activeGoal) return null;
 
