@@ -169,7 +169,7 @@ return (
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF4500] to-[#FF6B00] p-[2px]">
                 <div className="w-full h-full rounded-full bg-[#1A1A1A] flex items-center justify-center">
                   <span className="text-lg font-bold bg-gradient-to-br from-[#FF4500] to-[#FFD700] bg-clip-text text-transparent">
-                    {userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                    {userName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                   </span>
                 </div>
               </div>
@@ -591,7 +591,7 @@ function ExpandableAdvice({ advice }: { advice?: string }) {
 }
 
 function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: { 
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   label: string;
   value: number;
   color: string;
