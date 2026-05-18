@@ -101,9 +101,6 @@ export async function GET(request: NextRequest) {
     .select("id, date, miles, run_type")
     .eq("user_id", user.id)
     .or(`and(date.gte.${minWorkoutDate},date.lte.${maxWorkoutDate}),date.eq.${todayStr}`);
-  
-  console.log("[v0] Week API - todayStr:", todayStr, "minWorkoutDate:", minWorkoutDate, "maxWorkoutDate:", maxWorkoutDate);
-  console.log("[v0] Week API - weekRuns:", weekRuns);
 
   // Create a map of runs by date for easy lookup
   const runsByDate: Record<string, { miles: number; run_type: string }[]> = {};

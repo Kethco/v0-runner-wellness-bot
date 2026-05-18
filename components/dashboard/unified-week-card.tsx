@@ -143,85 +143,89 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
   const plannedMiles = hasPlan ? planData!.weekStats.plannedMiles : weeklyGoal;
   const completedMiles = hasPlan ? planData!.weekStats.completedMiles : weeklyMiles;
 
-  // Build chart data - use workouts from API if available, otherwise show current week
+  // Build chart data - ALWAYS show current calendar week (Mon-Sun containing today)
+  // Overlay plan workouts and completed runs on matching dates
   const chartData = (() => {
     const days = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
     const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     
-    // If we have plan workouts, use their dates directly
-    if (hasPlan && planData?.workouts && planData.workouts.length > 0) {
-      // Create a map of day_of_week to workout
-      const workoutsByDay: Record<string, any> = {};
-      planData.workouts.forEach(w => {
-        workoutsByDay[w.day_of_week] = w;
-      });
-      
-      return dayNames.map((dayName, i) => {
-        const workout = workoutsByDay[dayName];
-        const workoutType = workout?.workout_type || "rest";
-        const workoutIcon = WORKOUT_ICONS[workoutType] || WORKOUT_ICONS.easy;
-        const isCompleted = workout?.status === "completed" || (workout?.completed_miles && workout.completed_miles > 0);
-        const isSkipped = workout?.status === "skipped" || workout?.status === "blocked";
-        // Show completed miles if available, otherwise target miles
-        const completedMiles = workout?.completed_miles || 0;
-        const targetMiles = workout?.target_miles || 0;
-        const miles = completedMiles > 0 ? completedMiles : targetMiles;
-        
-        return {
-          day: days[i],
-          date: workout?.scheduled_date || "",
-          miles,
-          targetMiles,
-          completedMiles,
-          type: workoutType,
-          color: workoutIcon.color,
-          isToday: workout?.scheduled_date === todayStr,
-          isCompleted,
-          isPast: workout?.scheduled_date ? workout.scheduled_date < todayStr : false,
-          isSkipped,
-          title: workout?.title || "",
-        };
-      });
-    }
-    
-    // Fallback: generate current week dates
+    // Calculate current calendar week (Monday to Sunday)
     const weekStart = new Date(today);
     const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     weekStart.setDate(today.getDate() + mondayOffset);
+    weekStart.setHours(0, 0, 0, 0);
+    
+    // Create a map of workouts by scheduled_date from the plan
+    const workoutsByDate: Record<string, any> = {};
+    if (hasPlan && planData?.workouts) {
+      planData.workouts.forEach(w => {
+        if (w.scheduled_date) {
+          workoutsByDate[w.scheduled_date] = w;
+        }
+      });
+    }
     
     return days.map((day, i) => {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
       const dateStr = date.toISOString().split("T")[0];
       
+      // Check if there's a planned workout for this date
+      const workout = workoutsByDate[dateStr];
+      
+      // Check for completed runs on this date from runsData prop
       const dayRuns = runsData.filter(r => r.date === dateStr);
-      const completedMilesDay = dayRuns.reduce((sum, r) => sum + r.miles, 0);
+      const completedMilesFromRuns = dayRuns.reduce((sum, r) => sum + r.miles, 0);
+      
+      // Use workout completed_miles if available, otherwise use runsData
+      const completedMiles = workout?.completed_miles || completedMilesFromRuns;
+      const targetMiles = workout?.target_miles || 0;
+      
+      // Determine workout type and status
+      const workoutType = workout?.workout_type || (completedMiles > 0 ? "easy" : "rest");
+      const workoutIcon = WORKOUT_ICONS[workoutType] || WORKOUT_ICONS.easy;
+      const isCompleted = completedMiles > 0;
+      const isSkipped = workout?.status === "skipped" || workout?.status === "blocked";
+      const isRestDay = workoutType === "rest" && targetMiles === 0 && completedMiles === 0;
+      
+      // Show completed miles if any, otherwise target miles
+      const miles = completedMiles > 0 ? completedMiles : targetMiles;
       
       return {
         day,
         date: dateStr,
-        miles: completedMilesDay,
-        type: completedMilesDay > 0 ? "easy" : "rest",
-        color: completedMilesDay > 0 ? "#FF4500" : "#3A3A3A",
+        miles,
+        targetMiles,
+        completedMiles,
+        type: workoutType,
+        color: workoutIcon.color,
         isToday: dateStr === todayStr,
-        isCompleted: completedMilesDay > 0,
+        isCompleted,
         isPast: dateStr < todayStr,
-        isSkipped: false,
-        title: "",
+        isSkipped,
+        isRestDay,
+        title: workout?.title || "",
       };
     });
   })();
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
   
-  // Calculate total planned miles from chartData (exclude blocked/skipped workouts)
+  // Calculate totals from chartData for accurate display
   const totalPlannedMiles = chartData.reduce((sum, d) => {
-    if (d.isSkipped) return sum; // Skip blocked workouts
-    return sum + d.miles;
+    if (d.isSkipped) return sum;
+    return sum + (d.targetMiles || 0);
   }, 0);
-  // Use the calculated total for display
-  const displayPlannedMiles = hasPlan ? totalPlannedMiles : weeklyGoal;
+  
+  const totalCompletedMiles = chartData.reduce((sum, d) => sum + (d.completedMiles || 0), 0);
+  
+  // Use chartData totals for display (more accurate for current calendar week)
+  const displayPlannedMiles = totalPlannedMiles > 0 ? totalPlannedMiles : weeklyGoal;
+  const displayCompletedMiles = totalCompletedMiles;
+  const progressPercent = displayPlannedMiles > 0 
+    ? Math.min(100, Math.round((displayCompletedMiles / displayPlannedMiles) * 100))
+    : 0;
   const progressPercent = displayPlannedMiles > 0 ? Math.min((completedMiles / displayPlannedMiles) * 100, 100) : 0;
 
   // Handle adjustment actions
@@ -274,7 +278,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   animate={{ opacity: 1 }}
                   className="text-5xl font-black text-white"
                 >
-                  {completedMiles.toFixed(1)}
+                  {displayCompletedMiles.toFixed(1)}
                 </motion.span>
                 <span className="text-[#AEAEB2] text-lg font-semibold">
                   / {displayPlannedMiles.toFixed(0)} mi
