@@ -210,10 +210,13 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
   
-  // Calculate total planned miles from chartData (sum of all workout days)
-  const totalPlannedMiles = chartData.reduce((sum, d) => sum + d.miles, 0);
-  // Use API weekStats for completed, but chartData total for planned (more accurate)
-  const displayPlannedMiles = hasPlan ? Math.max(totalPlannedMiles, planData!.weekStats.plannedMiles) : weeklyGoal;
+  // Calculate total planned miles from chartData (exclude blocked/skipped workouts)
+  const totalPlannedMiles = chartData.reduce((sum, d) => {
+    if (d.isSkipped) return sum; // Skip blocked workouts
+    return sum + d.miles;
+  }, 0);
+  // Use the calculated total for display
+  const displayPlannedMiles = hasPlan ? totalPlannedMiles : weeklyGoal;
   const progressPercent = displayPlannedMiles > 0 ? Math.min((completedMiles / displayPlannedMiles) * 100, 100) : 0;
 
   // Handle adjustment actions
