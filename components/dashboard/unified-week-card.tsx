@@ -153,9 +153,6 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     weekStart.setDate(today.getDate() + mondayOffset);
     
-    console.log("[v0] Today:", todayStr, "Monday:", weekStart.toISOString().split("T")[0]);
-    console.log("[v0] planData.workouts:", planData?.workouts?.map(w => ({ date: w.scheduled_date, miles: w.target_miles })));
-    
     return days.map((day, i) => {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);

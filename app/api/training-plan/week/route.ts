@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adjustWorkoutForReadiness } from "@/lib/training-plan-generator";
+import { redistributeTraining } from "@/lib/training-redistributor";
 
 // Get this week's workouts with wellness adjustments
 export async function GET(request: NextRequest) {
@@ -40,21 +41,27 @@ export async function GET(request: NextRequest) {
     .eq("status", "active")
     .maybeSingle();
 
-  // Get this week's workouts directly from the plan
-  let workouts: any[] = [];
+  // Get ALL workouts from the plan (needed for redistribution)
+  let allWorkouts: any[] = [];
   if (plan) {
     const { data: planWorkouts } = await supabase
       .from("planned_workouts")
       .select(`*, completed_run:runs(*)`)
       .eq("plan_id", plan.id)
-      .gte("scheduled_date", mondayStr)
-      .lte("scheduled_date", sundayStr)
       .order("scheduled_date", { ascending: true });
-    workouts = planWorkouts || [];
+    allWorkouts = planWorkouts || [];
   }
 
+  // Apply redistribution to ALL workouts (same as training plan page)
+  const { adjustedWorkouts } = redistributeTraining(allWorkouts, lifeEvents || []);
+
+  // Filter to just this week's workouts AFTER redistribution
+  const thisWeekWorkouts = adjustedWorkouts.filter(w => 
+    w.scheduled_date >= mondayStr && w.scheduled_date <= sundayStr
+  );
+
   // Mark workouts that fall during life events as blocked
-  const processedWorkouts = workouts.map(workout => {
+  const processedWorkouts = thisWeekWorkouts.map(workout => {
     const blockingEvent = lifeEvents?.find(event => {
       const shouldBlock = !event.can_run || event.training_impact === "no_training";
       const inDateRange = workout.scheduled_date >= event.start_date && 
