@@ -102,9 +102,28 @@ export function ThisWeeksPlan() {
   const [showAdjustmentDialog, setShowAdjustmentDialog] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Don't render if no active plan
+  // Show prompt to create a plan if none exists
   if (!isLoading && (!data?.plan || !data?.workouts?.length)) {
-    return null;
+    return (
+      <Card className="border-border bg-card overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+        <CardContent className="py-8 text-center relative">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Calendar className="w-7 h-7 text-primary" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">No Training Plan Active</h3>
+          <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto">
+            Create a race goal with a training plan to see your personalized weekly workouts here.
+          </p>
+          <Link href="/goals">
+            <Button size="sm" className="gap-2">
+              <Target className="w-4 h-4" />
+              Set Up Training Plan
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (isLoading) {

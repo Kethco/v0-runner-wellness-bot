@@ -650,6 +650,9 @@ return (
     </Card>
   )}
 
+  {/* Life Events Manager - Plan around life */}
+  <LifeEventsManager />
+
   {/* Active Goal */}
   {activeGoal && (
   <Card className="mb-8 border-primary/50 bg-gradient-to-br from-primary/10 to-transparent">
@@ -870,9 +873,6 @@ return (
                 </CardContent>
               </Card>
             </div>
-            
-            {/* Life Events Manager */}
-            <LifeEventsManager />
           </>
         )}
       </main>
