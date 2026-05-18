@@ -5,12 +5,21 @@ import { motion } from "framer-motion";
 import { Play, ChevronRight } from "lucide-react";
 import { CheckInModal } from "./checkin-modal";
 
+interface TodayWorkout {
+  id: string;
+  title: string;
+  workout_type: string;
+  target_miles: number;
+  description?: string;
+}
+
 interface CheckInCardProps {
   streak?: number;
   hasCheckedInToday?: boolean;
+  todayWorkout?: TodayWorkout | null;
 }
 
-export function CheckInCard({ streak = 0, hasCheckedInToday = false }: CheckInCardProps) {
+export function CheckInCard({ streak = 0, hasCheckedInToday = false, todayWorkout }: CheckInCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (hasCheckedInToday) return null;
@@ -52,7 +61,7 @@ export function CheckInCard({ streak = 0, hasCheckedInToday = false }: CheckInCa
         </div>
       </motion.div>
 
-      <CheckInModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      <CheckInModal open={isModalOpen} onOpenChange={setIsModalOpen} todayWorkout={todayWorkout} />
     </>
   );
 }

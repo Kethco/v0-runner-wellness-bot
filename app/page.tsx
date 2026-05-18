@@ -60,6 +60,10 @@ export default function Dashboard() {
   const { data: profileData, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher);
   const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher);
   const { data: streakData, mutate: mutateStreak } = useSWR(user ? "/api/streak" : null, fetcher);
+  const { data: weekPlanData } = useSWR(user ? "/api/training-plan/week" : null, fetcher);
+  
+  // Get today's workout from the week plan
+  const todayWorkout = weekPlanData?.todayWorkout;
   
   // Ref for milestone tracking
   const prevProgressRef = useRef<number>(0);
@@ -489,11 +493,12 @@ return (
       {showCheckinModal && (
         <CheckInModal 
           isOpen={showCheckinModal} 
-onClose={() => {
-      setShowCheckinModal(false);
-      mutateCheckins();
-      mutateStreak();
-      }}
+          onClose={() => {
+            setShowCheckinModal(false);
+            mutateCheckins();
+            mutateStreak();
+          }}
+          todayWorkout={todayWorkout}
         />
       )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Moon, Smile, Zap, Activity, Target, ChevronLeft, Check, Loader2 } from "lucide-react";
+import { Moon, Smile, Zap, Activity, Target, ChevronLeft, Check, Loader2, SkipForward, AlertTriangle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,11 +13,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { celebrateCheckin } from "@/lib/celebrations";
 
+interface TodayWorkout {
+  id: string;
+  title: string;
+  workout_type: string;
+  target_miles: number;
+  description?: string;
+}
+
 interface CheckInModalProps {
   isOpen?: boolean;
   onClose?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  todayWorkout?: TodayWorkout | null;
 }
 
 const STEPS = [
@@ -78,7 +87,7 @@ const STEPS = [
   },
 ];
 
-export function CheckInModal({ isOpen, onClose, open, onOpenChange }: CheckInModalProps) {
+export function CheckInModal({ isOpen, onClose, open, onOpenChange, todayWorkout }: CheckInModalProps) {
   const isModalOpen = isOpen ?? open ?? false;
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) onClose?.();
@@ -90,6 +99,8 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange }: CheckInMod
   const [isComplete, setIsComplete] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiAdvice, setAiAdvice] = useState<string | null>(null);
+  const [showWorkoutActions, setShowWorkoutActions] = useState(false);
+  const [skippingWorkout, setSkippingWorkout] = useState(false);
 
   const step = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
@@ -146,18 +157,31 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange }: CheckInMod
       
       // Celebrate the check-in
       celebrateCheckin();
+      setIsComplete(true);
+      setAiAdvice(receivedAdvice);
+      
+      // Determine if we should show workout actions based on wellness
+      // Show if: energy is low (1-2), soreness is high (3-4), readiness is low (No/Maybe), or sleep is poor
+      const sleepPoor = ["Poor"].includes(answers.sleep);
+      const energyLow = Number(answers.energy) <= 2;
+      const sorenessHigh = ["Moderate", "High"].includes(answers.soreness);
+      const readinessLow = ["No", "Maybe"].includes(answers.readiness);
+      const wellnessIsPoor = (sleepPoor || energyLow || sorenessHigh || readinessLow) && todayWorkout && todayWorkout.workout_type !== "rest";
+      setShowWorkoutActions(!!wellnessIsPoor);
       
       setTimeout(() => {
-        onOpenChange(false);
-        setCurrentStep(0);
-        setAnswers({});
-        setNotes("");
-        setIsComplete(false);
-        setIsSubmitting(false);
-        setAiAdvice(null);
-        // Refresh the page to show updated data
-        window.location.reload();
-      }, receivedAdvice ? 5000 : 2000); // Show longer if AI advice is present
+        if (!showWorkoutActions) {
+          handleOpenChange(false);
+          setCurrentStep(0);
+          setAnswers({});
+          setNotes("");
+          setIsComplete(false);
+          setIsSubmitting(false);
+          setAiAdvice(null);
+          setShowWorkoutActions(false);
+          window.location.reload();
+        }
+      }, receivedAdvice ? 8000 : 3000); // Show longer if AI advice or workout actions present
     } catch (error) {
       console.error("[v0] Check-in error:", error);
       alert("Failed to submit check-in. Please try again.");
@@ -178,13 +202,43 @@ const handleClose = () => {
     setAnswers({});
     setNotes("");
     setIsComplete(false);
+    setShowWorkoutActions(false);
+  };
+
+  const handleSkipWorkout = async () => {
+    if (!todayWorkout) return;
+    setSkippingWorkout(true);
+    try {
+      const response = await fetch(`/api/training-plan/week`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "skip",
+          workoutId: todayWorkout.id,
+          reason: "Low wellness - " + [
+            answers.sleep === "Poor" ? "poor sleep" : null,
+            Number(answers.energy) <= 2 ? "low energy" : null,
+            ["Moderate", "High"].includes(answers.soreness) ? "high soreness" : null,
+            ["No", "Maybe"].includes(answers.readiness) ? "not ready" : null,
+          ].filter(Boolean).join(", "),
+        }),
+      });
+      if (response.ok) {
+        handleOpenChange(false);
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Failed to skip workout:", error);
+    } finally {
+      setSkippingWorkout(false);
+    }
   };
 
   if (isComplete) {
     return (
       <Dialog open={isModalOpen} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md bg-card border-border">
-          <div className="flex flex-col items-center justify-center py-8">
+          <div className="flex flex-col items-center justify-center py-6">
             <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
               <Check className="w-8 h-8 text-primary" />
             </div>
@@ -192,10 +246,52 @@ const handleClose = () => {
             <p className="text-muted-foreground text-sm text-center mb-4">
               Great job staying consistent. Keep it up!
             </p>
+            
             {aiAdvice && (
-              <div className="w-full bg-primary/10 border border-primary/20 rounded-lg p-4 mt-2">
+              <div className="w-full bg-primary/10 border border-primary/20 rounded-lg p-4 mb-4">
                 <p className="text-xs font-bold uppercase tracking-wider text-primary mb-2">AI Coach Says</p>
                 <p className="text-sm text-foreground">{aiAdvice}</p>
+              </div>
+            )}
+            
+            {showWorkoutActions && todayWorkout && (
+              <div className="w-full bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                <div className="flex items-start gap-3 mb-3">
+                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-500">Low Wellness Detected</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Today&apos;s workout: {todayWorkout.title} ({todayWorkout.target_miles} mi)
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                    onClick={handleSkipWorkout}
+                    disabled={skippingWorkout}
+                  >
+                    {skippingWorkout ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                    ) : (
+                      <SkipForward className="w-4 h-4 mr-1" />
+                    )}
+                    Skip Today
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      handleClose();
+                      window.location.reload();
+                    }}
+                  >
+                    Do Workout
+                  </Button>
+                </div>
               </div>
             )}
           </div>
