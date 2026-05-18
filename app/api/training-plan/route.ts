@@ -64,11 +64,37 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: workoutsError.message }, { status: 500 });
   }
 
+  // Get life events to mark blocked workouts
+  const { data: lifeEvents } = await supabase
+    .from("life_events")
+    .select("start_date, end_date, event_type, can_run")
+    .eq("user_id", user.id);
+
+  // Mark workouts that fall during life events as blocked
+  const processedWorkouts = (workouts || []).map(workout => {
+    const blockingEvent = lifeEvents?.find(event => 
+      !event.can_run && 
+      workout.scheduled_date >= event.start_date && 
+      workout.scheduled_date <= event.end_date
+    );
+    
+    if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
+      return {
+        ...workout,
+        status: "blocked",
+        blocked_reason: `${blockingEvent.event_type}: ${blockingEvent.start_date} - ${blockingEvent.end_date}`,
+      };
+    }
+    return workout;
+  });
+
   // Group workouts by week
   const weeklyBreakdown = [];
   for (let week = 1; week <= totalWeeks; week++) {
-    const weekWorkouts = workouts?.filter(w => w.week_number === week) || [];
-    const totalMiles = weekWorkouts.reduce((sum, w) => sum + (w.target_miles || 0), 0);
+    const weekWorkouts = processedWorkouts?.filter(w => w.week_number === week) || [];
+    const totalMiles = weekWorkouts
+      .filter(w => w.status !== "blocked")
+      .reduce((sum, w) => sum + (w.target_miles || 0), 0);
     
     // Determine week type based on position in plan
     let weekType = "base";
@@ -89,7 +115,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({ 
     plan,
-    workouts,
+    workouts: processedWorkouts,
     currentWeek,
     totalWeeks,
     weeklyBreakdown,

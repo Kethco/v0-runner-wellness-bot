@@ -25,6 +25,7 @@ import {
   Clock,
   MapPin,
   Loader2,
+  X,
 } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(res => res.json());
@@ -281,6 +282,7 @@ export default function TrainingPlanPage() {
                   const isToday = workout.scheduled_date === today;
                   const isPast = workout.scheduled_date < today;
                   const isCompleted = workout.status === "completed";
+                  const isBlocked = workout.status === "blocked";
                   const isRest = workout.workout_type === "rest";
 
                   return (
@@ -291,7 +293,9 @@ export default function TrainingPlanPage() {
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ delay: i * 0.05 }}
                       className={`p-4 rounded-xl border transition-all ${
-                        isToday
+                        isBlocked
+                          ? "bg-red-500/10 border-red-500/30 opacity-60"
+                          : isToday
                           ? "bg-[#FF4500]/10 border-[#FF4500]/30 ring-1 ring-[#FF4500]"
                           : isCompleted
                           ? "bg-[#30D158]/10 border-[#30D158]/30"
@@ -302,10 +306,12 @@ export default function TrainingPlanPage() {
                         {/* Icon */}
                         <div
                           className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                            isCompleted ? "bg-[#30D158]" : workoutStyle.bg
+                            isBlocked ? "bg-red-500/20" : isCompleted ? "bg-[#30D158]" : workoutStyle.bg
                           }`}
                         >
-                          {isCompleted ? (
+                          {isBlocked ? (
+                            <X className="w-5 h-5 text-red-500" />
+                          ) : isCompleted ? (
                             <CheckCircle2 className="w-5 h-5 text-white" />
                           ) : (
                             <IconComponent className="w-5 h-5" style={{ color: workoutStyle.color }} />
@@ -315,10 +321,15 @@ export default function TrainingPlanPage() {
                         {/* Content */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className={`text-sm font-semibold ${isCompleted ? "text-[#30D158]" : "text-foreground"}`}>
+                            <p className={`text-sm font-semibold ${
+                              isBlocked ? "text-red-500" : isCompleted ? "text-[#30D158]" : "text-foreground"
+                            }`}>
                               {workout.day_of_week}
                             </p>
-                            {isToday && (
+                            {isBlocked && (
+                              <Badge className="text-[10px] h-4 bg-red-500/20 text-red-500">Blocked</Badge>
+                            )}
+                            {isToday && !isBlocked && (
                               <Badge className="text-[10px] h-4 bg-[#FF4500] text-white">Today</Badge>
                             )}
                             {isCompleted && (
@@ -327,12 +338,18 @@ export default function TrainingPlanPage() {
                           </div>
                           
                           <p className={`text-base font-medium mt-0.5 ${
-                            isRest ? "text-muted-foreground" : "text-foreground"
+                            isBlocked ? "text-red-500/70 line-through" : isRest ? "text-muted-foreground" : "text-foreground"
                           }`}>
                             {workout.title}
                           </p>
                           
-                          {!isRest && (
+                          {isBlocked && workout.blocked_reason && (
+                            <p className="text-xs text-red-500/70 mt-1">
+                              {workout.blocked_reason}
+                            </p>
+                          )}
+                          
+                          {!isRest && !isBlocked && (
                             <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                               {workout.target_miles && (
                                 <span className="flex items-center gap-1">

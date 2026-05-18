@@ -39,6 +39,30 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: workoutsError.message }, { status: 500 });
   }
 
+  // Get life events to check for blocked dates
+  const { data: lifeEvents } = await supabase
+    .from("life_events")
+    .select("start_date, end_date, event_type, can_run")
+    .eq("user_id", user.id);
+
+  // Mark workouts that fall during life events as blocked
+  const processedWorkouts = (workouts || []).map(workout => {
+    const blockingEvent = lifeEvents?.find(event => 
+      !event.can_run && 
+      workout.scheduled_date >= event.start_date && 
+      workout.scheduled_date <= event.end_date
+    );
+    
+    if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
+      return {
+        ...workout,
+        status: "blocked",
+        blocked_reason: `${blockingEvent.event_type}: ${blockingEvent.start_date} - ${blockingEvent.end_date}`,
+      };
+    }
+    return workout;
+  });
+
   // Get today's check-in for readiness score
   const todayStr = today.toISOString().split("T")[0];
   const { data: todayCheckin } = await supabase
@@ -86,10 +110,10 @@ export async function GET(request: NextRequest) {
   }
 
   // Find today's workout and apply adjustments if needed
-  let todayWorkout = workouts?.find(w => w.scheduled_date === todayStr);
+  let todayWorkout = processedWorkouts?.find(w => w.scheduled_date === todayStr);
   let todayAdjustment = null;
   
-  if (todayWorkout && readinessScore !== null && readinessScore <= 3) {
+  if (todayWorkout && todayWorkout.status !== "blocked" && readinessScore !== null && readinessScore <= 3) {
     const { adjustedWorkout, recommendation } = adjustWorkoutForReadiness(
       {
         dayOfWeek: todayWorkout.day_of_week,
@@ -111,9 +135,12 @@ export async function GET(request: NextRequest) {
     };
   }
 
-  // Calculate weekly stats
-  const plannedMiles = workouts?.reduce((sum, w) => sum + (w.target_miles || 0), 0) || 0;
-  const completedMiles = workouts?.reduce((sum, w) => {
+  // Calculate weekly stats (exclude blocked workouts from planned)
+  const plannedMiles = processedWorkouts?.reduce((sum, w) => {
+    if (w.status === "blocked") return sum;
+    return sum + (w.target_miles || 0);
+  }, 0) || 0;
+  const completedMiles = processedWorkouts?.reduce((sum, w) => {
     if (w.status === "completed" && w.completed_run) {
       return sum + (w.completed_run.miles || 0);
     }
@@ -121,7 +148,7 @@ export async function GET(request: NextRequest) {
   }, 0) || 0;
 
   return NextResponse.json({
-    workouts: workouts || [],
+    workouts: processedWorkouts || [],
     todayWorkout,
     todayAdjustment,
     readinessScore,
