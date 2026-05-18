@@ -89,16 +89,6 @@ export async function GET(request: NextRequest) {
   const thisWeekWorkouts = processedAllWorkouts.filter(w => w.week_number === planWeekNumber);
 
   // Get actual runs for this week to calculate completed miles
-  // Use TODAY's calendar week (Monday-Sunday) for runs, not plan week
-  const today = new Date();
-  const dayOfWeek = today.getDay();
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-  const calendarWeekStart = new Date(today);
-  calendarWeekStart.setDate(today.getDate() + mondayOffset);
-  calendarWeekStart.setHours(0, 0, 0, 0);
-  const calendarWeekEnd = new Date(calendarWeekStart);
-  calendarWeekEnd.setDate(calendarWeekStart.getDate() + 6);
-  
   // For runs, use the scheduled_date range from the workouts being displayed
   // This handles both current week (plan started) and preview week (plan not started)
   const workoutDates = thisWeekWorkouts.map(w => w.scheduled_date).filter(Boolean);
