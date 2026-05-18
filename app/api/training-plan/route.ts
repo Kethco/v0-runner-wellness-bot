@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { generateTrainingPlan, TrainingPlanConfig } from "@/lib/training-plan-generator";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -10,13 +10,15 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get active training plan with related workouts
+  const { searchParams } = new URL(request.url);
+  const includeWorkouts = searchParams.get("includeWorkouts") === "true";
+
+  // Get active training plan
   const { data: plan, error } = await supabase
     .from("training_plans")
     .select(`
       *,
-      goal:goals(*),
-      workouts:planned_workouts(*)
+      goal:goals(*)
     `)
     .eq("user_id", user.id)
     .eq("status", "active")
@@ -28,7 +30,70 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ plan });
+  if (!plan) {
+    return NextResponse.json({ plan: null });
+  }
+
+  // Calculate current week
+  const startDate = new Date(plan.start_date);
+  const today = new Date();
+  const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const currentWeek = Math.max(1, Math.floor(daysSinceStart / 7) + 1);
+  
+  // Calculate total weeks
+  const endDate = new Date(plan.end_date);
+  const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const totalWeeks = Math.ceil(totalDays / 7);
+
+  if (!includeWorkouts) {
+    return NextResponse.json({ 
+      plan,
+      currentWeek,
+      totalWeeks,
+    });
+  }
+
+  // Get all workouts for this plan
+  const { data: workouts, error: workoutsError } = await supabase
+    .from("planned_workouts")
+    .select("*")
+    .eq("plan_id", plan.id)
+    .order("scheduled_date", { ascending: true });
+
+  if (workoutsError) {
+    return NextResponse.json({ error: workoutsError.message }, { status: 500 });
+  }
+
+  // Group workouts by week
+  const weeklyBreakdown = [];
+  for (let week = 1; week <= totalWeeks; week++) {
+    const weekWorkouts = workouts?.filter(w => w.week_number === week) || [];
+    const totalMiles = weekWorkouts.reduce((sum, w) => sum + (w.target_miles || 0), 0);
+    
+    // Determine week type based on position in plan
+    let weekType = "base";
+    const weekPercent = week / totalWeeks;
+    if (weekPercent <= 0.3) weekType = "base";
+    else if (weekPercent <= 0.6) weekType = "build";
+    else if (weekPercent <= 0.85) weekType = "peak";
+    else if (weekPercent < 1) weekType = "taper";
+    else weekType = "race";
+
+    weeklyBreakdown.push({
+      weekNumber: week,
+      weekType,
+      totalMiles,
+      workouts: weekWorkouts,
+    });
+  }
+
+  return NextResponse.json({ 
+    plan,
+    workouts,
+    currentWeek,
+    totalWeeks,
+    weeklyBreakdown,
+  });
 }
 
 export async function POST(request: NextRequest) {

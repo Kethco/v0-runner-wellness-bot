@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Activity, Flame, Play, Target, Brain, User, TrendingUp, Moon, Battery, Heart, Gauge, ChevronRight, Zap, Sparkles, Edit2, Check, X } from "lucide-react";
+import { Activity, Flame, Play, Target, Brain, User, TrendingUp, Moon, Battery, Heart, Gauge, ChevronRight, Zap, Sparkles, Check, X } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import useSWR from "swr";
 import Link from "next/link";
@@ -25,7 +25,7 @@ import { WeeklySummary } from "@/components/dashboard/weekly-summary";
 import { AchievementBadges } from "@/components/dashboard/achievement-badges";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { PersonalRecordsCard } from "@/components/dashboard/personal-records";
-import { ThisWeeksPlan } from "@/components/dashboard/this-weeks-plan";
+import { UnifiedWeekCard } from "@/components/dashboard/unified-week-card";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -143,22 +143,6 @@ export default function Dashboard() {
     );
   }
 
-  // Chart data for last 7 days
-  const chartData = last7Days.map(dateStr => {
-    // Normalize run dates to YYYY-MM-DD format for comparison
-    const dayRuns = runs.filter((r: { date: string }) => {
-      const runDate = r.date?.split('T')[0]; // Handle both "2024-01-15" and "2024-01-15T00:00:00" formats
-      return runDate === dateStr;
-    });
-    const miles = dayRuns.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const localDate = new Date(year, month - 1, day);
-    const dayLabel = localDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-    return { date: dateStr, miles, day: dayLabel };
-  });
-
-  const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
-
 return (
   <div className={`min-h-screen bg-background text-foreground pb-20 ${showTrialBanner ? "pt-10" : ""}`}>
       {/* Onboarding for new users */}
@@ -265,113 +249,12 @@ return (
       </header>
 
       <main className="px-5 py-6 space-y-6 mt-[165px]">
-        {/* Hero Stats Card with Animated Border */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="goal-card-border relative overflow-hidden p-6"
-        >
-          {/* Inner glow effect */}
-          <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#FF4500] rounded-full blur-[100px] opacity-30" />
-          
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <p className="text-[#AEAEB2] text-sm font-semibold uppercase tracking-wider">This Week</p>
-                <div className="flex items-baseline gap-2 mt-2">
-                  <motion.span 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-6xl font-black text-white"
-                  >
-                    {weeklyMiles.toFixed(1)}
-                  </motion.span>
-                  <button 
-                    onClick={() => { setNewGoalValue(String(weeklyGoal)); setShowGoalModal(true); }}
-                    className="text-[#AEAEB2] text-xl font-semibold hover:text-[#FF4500] transition-colors flex items-center gap-1"
-                  >
-                    / {weeklyGoal} mi
-                    <Edit2 className="w-3 h-3 opacity-50" />
-                  </button>
-                </div>
-              </div>
-              
-              {/* Progress Ring */}
-              <div className="relative w-24 h-24 flex-shrink-0">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="40" stroke="#2A2A2A" strokeWidth="10" fill="none" />
-                  <motion.circle
-                    cx="50" cy="50" r="40"
-                    stroke="url(#gradient)"
-                    strokeWidth="10"
-                    fill="none"
-                    strokeLinecap="round"
-                    initial={{ strokeDasharray: "0 251" }}
-                    animate={{ strokeDasharray: `${progressPercent * 2.51} 251` }}
-                    transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
-                  />
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#FF4500" />
-                      <stop offset="100%" stopColor="#FFD700" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.span 
-                    className="text-2xl font-black text-white"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <CountUp target={Math.round(progressPercent)} />%
-                  </motion.span>
-                </div>
-              </div>
-            </div>
-
-            {/* Weekly Bar Chart */}
-            <div className="flex items-end justify-between gap-2 mt-2">
-              {chartData.map((day) => {
-                const isToday = day.date === todayStr;
-                // Calculate bar height in pixels (max 80px)
-                const barHeightPx = day.miles > 0 ? Math.max((day.miles / maxMiles) * 80, 8) : 4;
-                
-                return (
-                  <div key={day.date} className="flex-1 flex flex-col items-center">
-                    {/* Miles label above bar */}
-                    <span
-                      className={`text-[10px] font-bold mb-1 ${
-                        isToday ? "text-[#FF6B00]" : "text-[#8E8E93]"
-                      }`}
-                    >
-                      {day.miles > 0 ? day.miles.toFixed(1) : "0"}
-                    </span>
-                    
-                    {/* Bar */}
-                    <div className="w-full h-20 flex items-end justify-center">
-                      <div
-                        style={{ height: `${barHeightPx}px` }}
-                        className={`w-full max-w-[28px] rounded-t-md transition-all duration-500 ${
-                          isToday 
-                            ? "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/40" 
-                            : "bg-[#FF4500]/60"
-                        }`}
-                      />
-                    </div>
-                    
-                    {/* Day label */}
-                    <span className={`text-[9px] font-bold mt-1.5 ${
-                      isToday ? "text-[#FF6B00]" : "text-[#AEAEB2]"
-                    }`}>
-                      {day.day}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </motion.div>
+        {/* Unified This Week Card */}
+        <UnifiedWeekCard 
+          weeklyMiles={weeklyMiles} 
+          weeklyGoal={weeklyGoal} 
+          runsData={runs.map((r: { date: string; miles: number }) => ({ date: r.date, miles: r.miles }))}
+        />
 
         {/* Action Buttons */}
         <motion.div 
@@ -443,9 +326,6 @@ return (
 
         {/* Readiness Score Card */}
         <ReadinessScore />
-
-        {/* This Week's Training Plan */}
-        <ThisWeeksPlan />
 
         {/* Recovery Card (shows when readiness is low) */}
         <RecoveryCard />
@@ -754,34 +634,6 @@ function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: {
       </div>
     </motion.div>
   );
-}
-
-function CountUp({ target }: { target: number }) {
-  const [count, setCount] = useState(0);
-  
-  useEffect(() => {
-    if (target === 0) return;
-    
-    const duration = 1500;
-    const steps = 30;
-    const increment = target / steps;
-    const stepDuration = duration / steps;
-    let current = 0;
-    
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) {
-        setCount(target);
-        clearInterval(timer);
-      } else {
-        setCount(Math.round(current));
-      }
-    }, stepDuration);
-    
-    return () => clearInterval(timer);
-  }, [target]);
-  
-  return <>{count}</>;
 }
 
 function getGreeting() {
