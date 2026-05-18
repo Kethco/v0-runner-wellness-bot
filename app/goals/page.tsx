@@ -464,11 +464,17 @@ return (
                       <Label className="text-xs">Current Weekly Miles</Label>
                       <Input
                         type="number"
-                        value={trainingPlanConfig.currentWeeklyMiles}
-                        onChange={(e) => setTrainingPlanConfig({
-                          ...trainingPlanConfig,
-                          currentWeeklyMiles: parseInt(e.target.value) || 15
-                        })}
+                        min="0"
+                        max="150"
+                        value={trainingPlanConfig.currentWeeklyMiles || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setTrainingPlanConfig({
+                            ...trainingPlanConfig,
+                            currentWeeklyMiles: val === "" ? 0 : parseInt(val)
+                          });
+                        }}
+                        placeholder="e.g. 20"
                         className="h-9 text-sm bg-secondary border-border"
                       />
                     </div>
