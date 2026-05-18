@@ -89,20 +89,31 @@ export async function GET(request: NextRequest) {
   const thisWeekWorkouts = processedAllWorkouts.filter(w => w.week_number === planWeekNumber);
 
   // Get actual runs for this week to calculate completed miles
-  // Calculate the date range for this week based on plan start
-  const weekStartDate = new Date(plan.start_date);
-  weekStartDate.setDate(weekStartDate.getDate() + (planWeekNumber - 1) * 7);
-  const weekEndDate = new Date(weekStartDate);
-  weekEndDate.setDate(weekEndDate.getDate() + 6);
-  const weekStartStr = weekStartDate.toISOString().split("T")[0];
-  const weekEndStr = weekEndDate.toISOString().split("T")[0];
-
+  // Use TODAY's calendar week (Monday-Sunday) for runs, not plan week
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const calendarWeekStart = new Date(today);
+  calendarWeekStart.setDate(today.getDate() + mondayOffset);
+  calendarWeekStart.setHours(0, 0, 0, 0);
+  const calendarWeekEnd = new Date(calendarWeekStart);
+  calendarWeekEnd.setDate(calendarWeekStart.getDate() + 6);
+  
+  // For runs, use the scheduled_date range from the workouts being displayed
+  // This handles both current week (plan started) and preview week (plan not started)
+  const workoutDates = thisWeekWorkouts.map(w => w.scheduled_date).filter(Boolean);
+  const minWorkoutDate = workoutDates.length > 0 ? workoutDates.sort()[0] : todayStr;
+  const maxWorkoutDate = workoutDates.length > 0 ? workoutDates.sort().reverse()[0] : todayStr;
+  
+  // Also fetch runs for TODAY regardless of plan week (for immediate feedback)
   const { data: weekRuns } = await supabase
     .from("runs")
     .select("id, date, miles, run_type")
     .eq("user_id", user.id)
-    .gte("date", weekStartStr)
-    .lte("date", weekEndStr);
+    .or(`and(date.gte.${minWorkoutDate},date.lte.${maxWorkoutDate}),date.eq.${todayStr}`);
+  
+  console.log("[v0] Week API - todayStr:", todayStr, "minWorkoutDate:", minWorkoutDate, "maxWorkoutDate:", maxWorkoutDate);
+  console.log("[v0] Week API - weekRuns:", weekRuns);
 
   // Create a map of runs by date for easy lookup
   const runsByDate: Record<string, { miles: number; run_type: string }[]> = {};

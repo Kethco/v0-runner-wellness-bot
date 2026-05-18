@@ -234,7 +234,7 @@ return (
           <div className="flex items-center gap-4 mt-2 ml-[60px]">
             <div className="flex items-center gap-1.5 text-xs">
               <TrendingUp className="w-3 h-3 text-[#30D158]" />
-              <span className="text-[#8E8E93]">{weeklyMiles.toFixed(1)} mi this week</span>
+              <span className="text-[#8E8E93]">{(weekPlanData?.weekStats?.completedMiles ?? weeklyMiles).toFixed(1)} mi this week</span>
             </div>
             {currentStreak > 0 && (
               <div className="flex items-center gap-1.5 text-xs">
