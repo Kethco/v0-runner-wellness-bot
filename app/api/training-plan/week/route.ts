@@ -103,8 +103,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Get active training plan info
-  const { data: plan } = await supabase
+  // Get active training plan info for week calculation
+  const { data: planInfo } = await supabase
     .from("training_plans")
     .select("id, plan_type, start_date, end_date, weekly_structure")
     .eq("user_id", user.id)
@@ -115,13 +115,13 @@ export async function GET(request: NextRequest) {
   let currentWeekNumber: number | null = null;
   let currentWeekPlan = null;
   
-  if (plan) {
-    const startDate = new Date(plan.start_date);
+  if (planInfo) {
+    const startDate = new Date(planInfo.start_date);
     const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
     currentWeekNumber = Math.floor(daysSinceStart / 7) + 1;
     
-    if (plan.weekly_structure && Array.isArray(plan.weekly_structure)) {
-      currentWeekPlan = plan.weekly_structure.find((w: { weekNumber: number }) => w.weekNumber === currentWeekNumber);
+    if (planInfo.weekly_structure && Array.isArray(planInfo.weekly_structure)) {
+      currentWeekPlan = planInfo.weekly_structure.find((w: { weekNumber: number }) => w.weekNumber === currentWeekNumber);
     }
   }
 
