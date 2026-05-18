@@ -28,9 +28,10 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get all users with phone numbers who haven't checked in today
+    // Get today's date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split("T")[0];
 
     // Get users with phones who have morning notifications enabled (or not explicitly disabled)
     // Default to sending if notification_morning is null (new users)
@@ -56,10 +57,62 @@ export async function GET(request: NextRequest) {
     // Send reminders to users who haven't checked in
     let sent = 0;
     let skipped = 0;
+    let skippedRestDay = 0;
+    let skippedLifeEvent = 0;
 
     for (const profile of profiles || []) {
       if (checkedInUserIds.has(profile.id)) {
         skipped++;
+        continue;
+      }
+
+      // Check if today is a rest day for this user
+      const { data: todayWorkout } = await supabase
+        .from("planned_workouts")
+        .select("workout_type, status")
+        .eq("scheduled_date", todayStr)
+        .eq("status", "planned")
+        .maybeSingle();
+      
+      // Also check via training plan
+      if (!todayWorkout) {
+        const { data: plan } = await supabase
+          .from("training_plans")
+          .select("id")
+          .eq("user_id", profile.id)
+          .eq("status", "active")
+          .maybeSingle();
+        
+        if (plan) {
+          const { data: workout } = await supabase
+            .from("planned_workouts")
+            .select("workout_type, status")
+            .eq("plan_id", plan.id)
+            .eq("scheduled_date", todayStr)
+            .maybeSingle();
+          
+          if (workout?.workout_type === "rest") {
+            skippedRestDay++;
+            continue;
+          }
+        }
+      } else if (todayWorkout.workout_type === "rest") {
+        skippedRestDay++;
+        continue;
+      }
+
+      // Check if today falls within a blocking life event
+      const { data: blockingEvent } = await supabase
+        .from("life_events")
+        .select("id")
+        .eq("user_id", profile.id)
+        .lte("start_date", todayStr)
+        .gte("end_date", todayStr)
+        .or("can_run.eq.false,training_impact.eq.no_training")
+        .maybeSingle();
+
+      if (blockingEvent) {
+        skippedLifeEvent++;
         continue;
       }
 
@@ -73,12 +126,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log(`[Cron] Daily reminders sent: ${sent}, skipped: ${skipped}`);
+    console.log(`[Cron] Daily reminders sent: ${sent}, skipped (already checked in): ${skipped}, skipped (rest day): ${skippedRestDay}, skipped (life event): ${skippedLifeEvent}`);
 
     return NextResponse.json({
       success: true,
       sent,
       skipped,
+      skippedRestDay,
+      skippedLifeEvent,
       total: profiles?.length || 0,
     });
   } catch (error) {
