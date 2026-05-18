@@ -378,21 +378,62 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
           <div className="flex items-end justify-between gap-1">
             {chartData.map((day, i) => {
               // Use logarithmic scale for better visualization when there's a big difference
-              // This makes smaller bars more visible while keeping larger bars prominent
               const normalizedMiles = day.miles > 0 ? Math.log(day.miles + 1) / Math.log(maxMiles + 1) : 0;
               const barHeight = day.miles > 0 ? Math.max(normalizedMiles * 48 + 16, 20) : 16;
+              
+              // Determine bar style based on status
+              const isRestDay = day.type === "rest" && day.miles === 0;
+              const isLifeEventBlocked = day.isSkipped && day.miles > 0; // Has miles but blocked
+              
+              // Bar color logic with clear visual distinction
+              const getBarClasses = () => {
+                if (day.isCompleted) {
+                  // Completed - solid green
+                  return "bg-[#30D158]";
+                }
+                if (isLifeEventBlocked) {
+                  // Life event blocked - amber with stripe pattern
+                  return "bg-gradient-to-t from-amber-600/60 to-amber-500/40 border-l-2 border-amber-500";
+                }
+                if (day.isSkipped && !isLifeEventBlocked) {
+                  // Skipped (user chose to skip) - red muted
+                  return "bg-red-500/40";
+                }
+                if (isRestDay) {
+                  // Rest day - dark gray with subtle border
+                  return "bg-[#1A1A1A] border border-[#3A3A3A] border-dashed";
+                }
+                if (day.isToday && day.miles > 0) {
+                  // Today (pending) - bright orange gradient
+                  return "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/40";
+                }
+                if (day.isPast && day.miles > 0) {
+                  // Past but not completed - muted
+                  return "bg-[#3A3A3A]";
+                }
+                if (day.miles > 0) {
+                  // Future planned - semi-transparent orange
+                  return "bg-[#FF4500]/50";
+                }
+                // Default rest/empty
+                return "bg-[#2A2A2A]";
+              };
+              
+              // Label color logic
+              const getLabelColor = () => {
+                if (isLifeEventBlocked) return "text-amber-500 line-through";
+                if (day.isSkipped) return "text-red-500 line-through";
+                if (day.isCompleted) return "text-[#30D158]";
+                if (day.isToday) return "text-[#FF6B00]";
+                if (isRestDay) return "text-[#6E6E73]";
+                return "text-[#AEAEB2]";
+              };
               
               return (
                 <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[36px]">
                   {/* Miles or Rest label */}
-                  <span className={`text-[10px] font-bold mb-1 whitespace-nowrap ${
-                    day.isSkipped ? "text-red-500 line-through" 
-                    : day.isToday ? "text-[#FF6B00]" 
-                    : day.isCompleted ? "text-[#30D158]" 
-                    : day.miles === 0 ? "text-[#6E6E73]"
-                    : "text-[#AEAEB2]"
-                  }`}>
-                    {day.miles > 0 ? `${day.miles.toFixed(1)}` : "Rest"}
+                  <span className={`text-[10px] font-bold mb-1 whitespace-nowrap ${getLabelColor()}`}>
+                    {isRestDay ? "Rest" : isLifeEventBlocked ? `${day.miles.toFixed(1)}` : day.miles > 0 ? `${day.miles.toFixed(1)}` : "Rest"}
                   </span>
                   
                   {/* Bar */}
@@ -401,21 +442,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                       initial={{ height: 0 }}
                       animate={{ height: barHeight }}
                       transition={{ duration: 0.5, delay: i * 0.05 }}
-                      className={`w-full max-w-[28px] rounded-t-md ${
-                        day.isCompleted 
-                          ? "bg-[#30D158]" 
-                          : day.isSkipped
-                          ? "bg-red-500/40"
-                          : day.isToday && day.miles > 0
-                          ? "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/40"
-                          : day.isPast && day.miles === 0
-                          ? "bg-[#2A2A2A]"
-                          : day.isPast 
-                          ? "bg-[#3A3A3A]"
-                          : day.miles > 0
-                          ? "bg-[#FF4500]/50"
-                          : "bg-[#2A2A2A]"
-                      }`}
+                      className={`w-full max-w-[28px] rounded-t-md ${getBarClasses()}`}
                     />
                   </div>
                   
@@ -423,6 +450,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   <span className={`text-[11px] font-bold mt-1 ${
                     day.isToday ? "text-[#FF6B00]" 
                     : day.isCompleted ? "text-[#30D158]" 
+                    : isLifeEventBlocked ? "text-amber-500"
                     : day.isSkipped ? "text-red-500" 
                     : "text-[#6E6E73]"
                   }`}>
@@ -434,7 +462,10 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                     {day.isCompleted && (
                       <CheckCircle2 className="w-3 h-3 text-[#30D158]" />
                     )}
-                    {day.isSkipped && (
+                    {isLifeEventBlocked && (
+                      <Calendar className="w-3 h-3 text-amber-500" />
+                    )}
+                    {day.isSkipped && !isLifeEventBlocked && (
                       <SkipForward className="w-3 h-3 text-red-500" />
                     )}
                     {day.isToday && !day.isCompleted && !day.isSkipped && (
