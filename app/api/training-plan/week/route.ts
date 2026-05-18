@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { adjustWorkoutForReadiness } from "@/lib/training-plan-generator";
-import { redistributeTraining } from "@/lib/training-redistributor";
 
 // Get this week's workouts with wellness adjustments
 export async function GET(request: NextRequest) {
@@ -33,7 +32,7 @@ export async function GET(request: NextRequest) {
     .select("start_date, end_date, event_type, can_run, training_impact")
     .eq("user_id", user.id);
 
-  // Get active training plan info
+  // Get active training plan
   const { data: plan } = await supabase
     .from("training_plans")
     .select("id, plan_type, start_date, end_date, weekly_structure")
@@ -41,27 +40,21 @@ export async function GET(request: NextRequest) {
     .eq("status", "active")
     .maybeSingle();
 
-  // Get ALL workouts for the plan to apply redistribution
-  let allWorkouts: any[] = [];
+  // Get this week's workouts directly from the plan
+  let workouts: any[] = [];
   if (plan) {
     const { data: planWorkouts } = await supabase
       .from("planned_workouts")
       .select(`*, completed_run:runs(*)`)
       .eq("plan_id", plan.id)
+      .gte("scheduled_date", mondayStr)
+      .lte("scheduled_date", sundayStr)
       .order("scheduled_date", { ascending: true });
-    allWorkouts = planWorkouts || [];
+    workouts = planWorkouts || [];
   }
 
-  // Apply redistribution to ALL workouts
-  const { adjustedWorkouts } = redistributeTraining(allWorkouts, lifeEvents || []);
-
-  // Filter to just this week's workouts
-  const thisWeekWorkouts = adjustedWorkouts.filter(w => 
-    w.scheduled_date >= mondayStr && w.scheduled_date <= sundayStr
-  );
-
   // Mark workouts that fall during life events as blocked
-  const processedWorkouts = thisWeekWorkouts.map(workout => {
+  const processedWorkouts = workouts.map(workout => {
     const blockingEvent = lifeEvents?.find(event => {
       const shouldBlock = !event.can_run || event.training_impact === "no_training";
       const inDateRange = workout.scheduled_date >= event.start_date && 
