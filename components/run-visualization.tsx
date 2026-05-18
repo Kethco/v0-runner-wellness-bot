@@ -62,26 +62,58 @@ export function RunVisualization({ onComplete }: { onComplete?: () => void }) {
   const step = script[currentStep];
   const totalDuration = script.reduce((sum, s) => sum + s.duration, 0);
 
-  // Voice guidance
+  // Voice guidance - soothing, human-like voice
   const speak = useCallback((text: string) => {
     if (!voiceEnabled || typeof window === "undefined") return;
     
     window.speechSynthesis?.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.8;
-    utterance.pitch = 0.95;
-    utterance.volume = 0.8;
+    // Slower rate for a calm, soothing delivery
+    utterance.rate = 0.75;
+    // Slightly lower pitch for warmth
+    utterance.pitch = 0.85;
+    // Softer volume for gentleness
+    utterance.volume = 0.75;
     
+    // Get available voices and prioritize natural-sounding ones
     const voices = window.speechSynthesis?.getVoices() || [];
-    const preferredVoice = voices.find(v => 
-      v.name.includes("Samantha") || 
-      v.name.includes("Karen") || 
-      v.name.includes("Google UK English Female") ||
-      v.lang.startsWith("en")
-    );
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
+    
+    // Priority order for most human-like voices
+    const preferredVoiceNames = [
+      "Samantha", // macOS - very natural
+      "Karen", // macOS Australian - warm
+      "Moira", // macOS Irish - soothing
+      "Fiona", // macOS Scottish
+      "Google UK English Female", // Chrome - natural
+      "Google US English Female",
+      "Microsoft Zira", // Windows - clear
+      "Microsoft Aria", // Windows 11 - natural
+    ];
+    
+    let selectedVoice = null;
+    for (const name of preferredVoiceNames) {
+      selectedVoice = voices.find(v => v.name.includes(name));
+      if (selectedVoice) break;
+    }
+    
+    // Fallback to any English female voice
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => 
+        v.lang.startsWith("en") && 
+        (v.name.toLowerCase().includes("female") || 
+         v.name.includes("Zira") || 
+         v.name.includes("Samantha"))
+      );
+    }
+    
+    // Final fallback to any English voice
+    if (!selectedVoice) {
+      selectedVoice = voices.find(v => v.lang.startsWith("en"));
+    }
+    
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
     }
     
     window.speechSynthesis?.speak(utterance);
