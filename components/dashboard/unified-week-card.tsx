@@ -144,51 +144,52 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
   const completedMiles = hasPlan ? planData!.weekStats.completedMiles : weeklyMiles;
   const progressPercent = plannedMiles > 0 ? Math.min((completedMiles / plannedMiles) * 100, 100) : 0;
 
-  // Build chart data - either from plan or from runs
+  // Build chart data - always show all 7 days
   const chartData = (() => {
-    if (hasPlan && planData?.workouts) {
-      return planData.workouts.map(w => {
-        const workout = WORKOUT_ICONS[w.workout_type] || WORKOUT_ICONS.easy;
-        const isToday = w.scheduled_date === todayStr;
-        const isCompleted = w.status === "completed";
-        const isPast = w.scheduled_date < todayStr;
-        
-        return {
-          day: DAY_ABBREV[w.day_of_week],
-          date: w.scheduled_date,
-          miles: w.target_miles || 0,
-          type: w.workout_type,
-          color: workout.color,
-          isToday,
-          isCompleted,
-          isPast,
-          title: w.title,
-        };
-      });
-    }
-    
-    // Fallback to simple weekly view
     const days = ["M", "T", "W", "T", "F", "S", "S"];
+    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    
+    // Calculate Monday of current week
     const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - today.getDay() + 1);
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    weekStart.setDate(today.getDate() + mondayOffset);
     
     return days.map((day, i) => {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
       const dateStr = date.toISOString().split("T")[0];
+      
+      // Check if there's a planned workout for this day
+      const plannedWorkout = hasPlan && planData?.workouts 
+        ? planData.workouts.find(w => w.scheduled_date === dateStr)
+        : null;
+      
+      // Check for completed runs on this day
       const dayRuns = runsData.filter(r => r.date === dateStr);
-      const miles = dayRuns.reduce((sum, r) => sum + r.miles, 0);
+      const completedMilesDay = dayRuns.reduce((sum, r) => sum + r.miles, 0);
+      
+      const workoutType = plannedWorkout?.workout_type || (completedMilesDay > 0 ? "easy" : "rest");
+      const workout = WORKOUT_ICONS[workoutType] || WORKOUT_ICONS.easy;
+      const isToday = dateStr === todayStr;
+      const isCompleted = plannedWorkout?.status === "completed" || completedMilesDay > 0;
+      const isPast = dateStr < todayStr;
+      const isSkipped = plannedWorkout?.status === "skipped" || plannedWorkout?.status === "blocked";
+      
+      // Use planned miles if available, otherwise completed miles
+      const miles = plannedWorkout?.target_miles || completedMilesDay || 0;
       
       return {
         day,
         date: dateStr,
         miles,
-        type: miles > 0 ? "easy" : "rest",
-        color: miles > 0 ? "#FF4500" : "#3A3A3A",
-        isToday: dateStr === todayStr,
-        isCompleted: miles > 0,
-        isPast: dateStr < todayStr,
-        title: "",
+        type: workoutType,
+        color: workout.color,
+        isToday,
+        isCompleted,
+        isPast,
+        isSkipped,
+        title: plannedWorkout?.title || "",
       };
     });
   })();
@@ -353,7 +354,9 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               return (
                 <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center">
                   {/* Miles label */}
-                  <span className={`text-[9px] font-bold mb-1 ${day.isToday ? "text-[#FF6B00]" : "text-[#6E6E73]"}`}>
+                  <span className={`text-[9px] font-bold mb-1 ${
+                    day.isSkipped ? "text-red-500 line-through" : day.isToday ? "text-[#FF6B00]" : "text-[#6E6E73]"
+                  }`}>
                     {day.miles > 0 ? day.miles.toFixed(1) : ""}
                   </span>
                   
@@ -366,19 +369,23 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                       className={`w-full max-w-[24px] rounded-t-md ${
                         day.isCompleted 
                           ? "bg-[#30D158]" 
+                          : day.isSkipped
+                          ? "bg-red-500/30"
                           : day.isToday 
                           ? "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/40"
                           : day.isPast 
                           ? "bg-[#3A3A3A]"
-                          : "bg-[#FF4500]/40"
+                          : day.miles > 0
+                          ? "bg-[#FF4500]/40"
+                          : "bg-[#2A2A2A]"
                       }`}
-                      style={!day.isCompleted && !day.isToday && !day.isPast && day.miles > 0 ? { backgroundColor: `${day.color}40` } : {}}
+                      style={!day.isCompleted && !day.isSkipped && !day.isToday && !day.isPast && day.miles > 0 ? { backgroundColor: `${day.color}40` } : {}}
                     />
                   </div>
                   
                   {/* Day label */}
                   <span className={`text-[9px] font-bold mt-1 ${
-                    day.isToday ? "text-[#FF6B00]" : day.isCompleted ? "text-[#30D158]" : "text-[#6E6E73]"
+                    day.isToday ? "text-[#FF6B00]" : day.isCompleted ? "text-[#30D158]" : day.isSkipped ? "text-red-500" : "text-[#6E6E73]"
                   }`}>
                     {day.day}
                   </span>
@@ -386,6 +393,9 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   {/* Completion indicator */}
                   {day.isCompleted && (
                     <CheckCircle2 className="w-3 h-3 text-[#30D158] -mt-0.5" />
+                  )}
+                  {day.isSkipped && (
+                    <SkipForward className="w-3 h-3 text-red-500 -mt-0.5" />
                   )}
                 </div>
               );
