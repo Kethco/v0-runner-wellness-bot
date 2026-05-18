@@ -196,8 +196,6 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
   const maxMiles = Math.max(...chartData.map(d => d.miles), 1);
 
-  console.log("[v0] chartData:", chartData.length, "days", chartData.map(d => ({ day: d.day, date: d.date, miles: d.miles })));
-
   // Handle adjustment actions
   const handleAcceptAdjustment = async () => {
     if (!planData?.todayAdjustment) return;
@@ -351,15 +349,16 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
           {/* Weekly Workout Strip */}
           <div className="flex items-end justify-between gap-1.5">
             {chartData.map((day, i) => {
-              const barHeight = day.miles > 0 ? Math.max((day.miles / maxMiles) * 56, 8) : 4;
+              // Minimum bar height of 12px for rest days so they're always visible
+              const barHeight = day.miles > 0 ? Math.max((day.miles / maxMiles) * 56, 16) : 12;
               
               return (
                 <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center">
-                  {/* Miles label */}
-                  <span className={`text-[9px] font-bold mb-1 ${
-                    day.isSkipped ? "text-red-500 line-through" : day.isToday ? "text-[#FF6B00]" : "text-[#6E6E73]"
+                  {/* Miles label - show dash for rest days */}
+                  <span className={`text-[10px] font-bold mb-1 ${
+                    day.isSkipped ? "text-red-500 line-through" : day.isToday ? "text-[#FF6B00]" : day.isCompleted ? "text-[#30D158]" : "text-[#6E6E73]"
                   }`}>
-                    {day.miles > 0 ? day.miles.toFixed(1) : ""}
+                    {day.miles > 0 ? day.miles.toFixed(1) : "-"}
                   </span>
                   
                   {/* Bar */}
@@ -386,7 +385,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   </div>
                   
                   {/* Day label */}
-                  <span className={`text-[9px] font-bold mt-1 ${
+                  <span className={`text-[10px] font-bold mt-1 ${
                     day.isToday ? "text-[#FF6B00]" : day.isCompleted ? "text-[#30D158]" : day.isSkipped ? "text-red-500" : "text-[#6E6E73]"
                   }`}>
                     {day.day}
