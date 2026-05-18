@@ -87,9 +87,11 @@ export async function GET(request: NextRequest) {
             title: workout.title,
             description: workout.description,
             target_miles: workout.targetMiles,
+            target_duration_minutes: workout.targetDurationMinutes || null,
             target_pace_zone: workout.targetPaceZone,
             intervals: workout.intervals,
             status: "pending",
+            week_number: week.weekNumber,
             completed_run: [],
           });
         });
