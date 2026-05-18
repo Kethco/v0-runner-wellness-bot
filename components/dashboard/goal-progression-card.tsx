@@ -110,13 +110,32 @@ export function GoalProgressionCard() {
     : null;
 
   const weeksUntilRace = daysUntilRace ? Math.ceil(daysUntilRace / 7) : null;
-  const totalMilesLast90Days = runsData?.runs?.reduce((sum, r) => sum + Number(r.miles), 0) || 0;
-  const weeklyAverage = totalMilesLast90Days / 12;
-  const expectedWeeklyMiles = weeklyBreakdown?.find(w => w.weekNumber === currentWeek)?.totalMiles || 0;
+  
+  // Calculate weekly average based on actual weeks with data
+  const runs = runsData?.runs || [];
+  const totalMilesLast90Days = runs.reduce((sum, r) => sum + Number(r.miles), 0);
+  
+  // Get unique weeks from runs to calculate actual average
+  const weeksWithRuns = new Set(runs.map(r => {
+    const d = new Date(r.date);
+    const startOfYear = new Date(d.getFullYear(), 0, 1);
+    return Math.ceil(((d.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7);
+  })).size;
+  
+  const weeklyAverage = weeksWithRuns > 0 ? totalMilesLast90Days / Math.max(weeksWithRuns, 1) : 0;
+  
+  // Get current week's target from the plan, or calculate based on race distance
+  const expectedWeeklyMiles = weeklyBreakdown?.find(w => w.weekNumber === currentWeek)?.totalMiles 
+    || weekStats?.plannedMiles 
+    || 0;
+  
+  // Peak weekly target for the training plan (typically 2.5-3x race distance for marathons, less for shorter)
+  const raceDistance = activeGoal?.distance ? RACE_DISTANCES[activeGoal.distance] || 26.2 : 26.2;
+  const peakWeeklyTarget = raceDistance <= 6.2 ? raceDistance * 4 : raceDistance <= 13.1 ? raceDistance * 3 : raceDistance * 2.5;
 
   const thisWeekCompliance = weekStats && weekStats.plannedMiles > 0
     ? Math.round((weekStats.completedMiles / weekStats.plannedMiles) * 100)
-    : 100;
+    : 0;
 
   const today = new Date().toISOString().split("T")[0];
   const blockedDaysRemaining = lifeEvents
@@ -128,9 +147,9 @@ export function GoalProgressionCard() {
       return days + Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     }, 0);
 
-  const raceDistance = activeGoal?.distance ? RACE_DISTANCES[activeGoal.distance] || 26.2 : 26.2;
-  const peakWeeklyTarget = raceDistance * 2.5;
-  const currentProgress = weeklyAverage / peakWeeklyTarget;
+  const currentProgress = expectedWeeklyMiles > 0 
+    ? weeklyAverage / expectedWeeklyMiles 
+    : weeklyAverage / peakWeeklyTarget;
   const trainingDaysLost = blockedDaysRemaining;
   const adjustedProgress = currentProgress * (1 - (trainingDaysLost / (weeksUntilRace || 12) / 7) * 0.5);
 
@@ -333,7 +352,7 @@ export function GoalProgressionCard() {
                 {weeklyAverage.toFixed(1)} <span className="text-sm font-normal text-[#6E6E73]">mi</span>
               </p>
               <p className="text-[11px] text-[#6E6E73] mt-1">
-                Target: {expectedWeeklyMiles > 0 ? `${expectedWeeklyMiles} mi` : `~${peakWeeklyTarget.toFixed(0)} mi peak`}
+                Target: {expectedWeeklyMiles > 0 ? `${expectedWeeklyMiles.toFixed(0)} mi/wk` : `~${peakWeeklyTarget.toFixed(0)} mi peak wk`}
               </p>
             </motion.div>
 
