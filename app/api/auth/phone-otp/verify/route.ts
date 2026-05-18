@@ -3,10 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 import { verifyOtpToken } from "../send/route";
 import { Pool } from "pg";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 // Direct Postgres connection to fix trigger issues
 let triggerFixed = false;
@@ -95,6 +97,8 @@ export async function POST(request: NextRequest) {
       
       // Fix the database trigger before creating user
       await ensureTriggerFixed();
+      
+      const supabase = getSupabaseAdmin();
       
       // Strategy: Create user with minimal data, then update profile manually
       // This avoids trigger issues by not relying on the trigger at all
