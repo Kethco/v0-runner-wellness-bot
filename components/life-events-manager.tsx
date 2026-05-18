@@ -206,17 +206,15 @@ export function LifeEventsManager() {
             <CardTitle className="text-base">Life Events</CardTitle>
           </div>
           <div className="flex items-center gap-1">
-            {upcomingEvents.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                onClick={handleResyncPlan}
-                disabled={isResyncing}
-              >
-                {isResyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Resync Plan"}
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleResyncPlan}
+              disabled={isResyncing}
+            >
+              {isResyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Resync Plan"}
+            </Button>
             <Button
               variant="ghost"
               size="sm"
