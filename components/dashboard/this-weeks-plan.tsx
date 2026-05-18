@@ -270,6 +270,8 @@ export function ThisWeeksPlan() {
               const monday = new Date(todayDate);
               monday.setDate(todayDate.getDate() + mondayOffset);
               
+              console.log("[v0] Generating week days, monday:", monday.toISOString().split("T")[0], "workouts count:", workouts.length);
+              
               return weekDays.map((dayName, index) => {
                 const date = new Date(monday);
                 date.setDate(monday.getDate() + index);
