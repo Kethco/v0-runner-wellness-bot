@@ -42,29 +42,41 @@ export async function GET(request: NextRequest) {
 
   // Get this week's workouts from the training plan's weekly_structure
   let thisWeekWorkouts: any[] = [];
+  let weekMonday = monday; // Default to current week's Monday
+  
   if (plan && plan.weekly_structure) {
     // Calculate which week number we're in
     const startDate = new Date(plan.start_date);
-    const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
-    const currentWeekNumber = Math.floor(daysSinceStart / 7) + 1;
+    const todayMs = today.getTime();
+    const startMs = startDate.getTime();
+    const daysSinceStart = Math.floor((todayMs - startMs) / (24 * 60 * 60 * 1000));
     
-    console.log("[v0] Week API - Plan start date:", plan.start_date, "Current week number:", currentWeekNumber);
+    // If plan hasn't started yet, show week 1 with the plan's start date
+    let currentWeekNumber: number;
+    if (daysSinceStart < 0) {
+      currentWeekNumber = 1;
+      // Calculate the Monday of the plan's first week
+      const planStartDay = startDate.getDay();
+      const planMondayOffset = planStartDay === 0 ? -6 : 1 - planStartDay;
+      weekMonday = new Date(startDate);
+      weekMonday.setDate(startDate.getDate() + planMondayOffset);
+    } else {
+      currentWeekNumber = Math.floor(daysSinceStart / 7) + 1;
+    }
     
     // Find the current week in weekly_structure
     const weekStructure = plan.weekly_structure as any[];
     const currentWeek = weekStructure.find((w: any) => w.weekNumber === currentWeekNumber);
-    
-    console.log("[v0] Week API - Found week structure:", currentWeek ? "yes" : "no", "Workouts:", currentWeek?.workouts?.length);
     
     if (currentWeek && currentWeek.workouts) {
       // Convert weekly_structure workouts to the format expected by the frontend
       const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
       
       thisWeekWorkouts = currentWeek.workouts.map((workout: any, index: number) => {
-        // Calculate the date for this workout
+        // Calculate the date for this workout based on weekMonday
         const dayIndex = dayOrder.indexOf(workout.dayOfWeek);
-        const workoutDate = new Date(monday);
-        workoutDate.setDate(monday.getDate() + dayIndex);
+        const workoutDate = new Date(weekMonday);
+        workoutDate.setDate(weekMonday.getDate() + dayIndex);
         
         return {
           id: `week-${currentWeekNumber}-${index}`,
@@ -80,8 +92,6 @@ export async function GET(request: NextRequest) {
           completed_run: [],
         };
       });
-      
-      console.log("[v0] Week API - Mapped workouts:", thisWeekWorkouts.map(w => ({ date: w.scheduled_date, day: w.day_of_week, miles: w.target_miles })));
     }
   }
 
