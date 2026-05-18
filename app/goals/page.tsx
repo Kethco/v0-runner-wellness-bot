@@ -216,8 +216,13 @@ function GoalsPageContent() {
         
         // Create training plan if requested
         if (createTrainingPlan && goalData.goal?.id) {
+          console.log("[v0] Creating training plan for goal:", goalData.goal.id, {
+            raceDistance: newGoal.distance,
+            raceDate: newGoal.raceDate,
+            config: trainingPlanConfig
+          });
           try {
-            await fetch("/api/training-plan", {
+            const planResponse = await fetch("/api/training-plan", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -228,8 +233,17 @@ function GoalsPageContent() {
                 ...trainingPlanConfig,
               }),
             });
+            const planResult = await planResponse.json();
+            console.log("[v0] Training plan response:", planResponse.status, planResult);
+            if (!planResponse.ok) {
+              console.error("[v0] Training plan error:", planResult.error);
+              // Show error to user if plan creation fails
+              if (planResult.error?.includes("at least 4 weeks")) {
+                alert("Training plan requires at least 4 weeks until race day. Goal was saved without a training plan.");
+              }
+            }
           } catch (planErr) {
-            console.error("Failed to create training plan:", planErr);
+            console.error("[v0] Failed to create training plan:", planErr);
           }
         }
         
