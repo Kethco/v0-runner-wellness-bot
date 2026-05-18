@@ -57,15 +57,17 @@ export async function rescheduleForLifeEvent(
     return { success: false, adjustments: [], errors: ["No active training plan found"] };
   }
 
-  // Get workouts that fall within the event dates
+  // Get workouts that fall within the event dates (include planned and rescheduled statuses)
   const { data: affectedWorkouts, error: workoutsError } = await supabase
     .from("planned_workouts")
     .select("*")
     .eq("plan_id", plan.id)
     .gte("scheduled_date", event.start_date)
     .lte("scheduled_date", event.end_date)
-    .eq("status", "planned")
+    .in("status", ["planned", "rescheduled", "modified"])
     .order("scheduled_date", { ascending: true });
+
+  console.log("[v0] Affected workouts found:", affectedWorkouts?.length, affectedWorkouts?.map(w => ({ id: w.id, date: w.scheduled_date, status: w.status })));
 
   if (workoutsError) {
     return { success: false, adjustments: [], errors: [workoutsError.message] };
@@ -102,6 +104,7 @@ export async function rescheduleForLifeEvent(
 
       if (newDate) {
         // Reschedule before the event
+        console.log("[v0] Attempting to reschedule workout", workout.id, "from", workout.scheduled_date, "to", newDate);
         const { error: updateError } = await supabase
           .from("planned_workouts")
           .update({
@@ -114,6 +117,7 @@ export async function rescheduleForLifeEvent(
           })
           .eq("id", workout.id);
 
+        console.log("[v0] Update result:", updateError ? `ERROR: ${updateError.message}` : "SUCCESS");
         if (!updateError) {
           scheduledDates.add(newDate);
           scheduledDates.delete(workout.scheduled_date);
