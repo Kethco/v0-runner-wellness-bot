@@ -226,7 +226,6 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
   const progressPercent = displayPlannedMiles > 0 
     ? Math.min(100, Math.round((displayCompletedMiles / displayPlannedMiles) * 100))
     : 0;
-  const progressPercent = displayPlannedMiles > 0 ? Math.min((completedMiles / displayPlannedMiles) * 100, 100) : 0;
 
   // Handle adjustment actions
   const handleAcceptAdjustment = async () => {
