@@ -34,6 +34,7 @@ import {
   Calendar,
   X,
   Loader2,
+  ArrowRight,
 } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -68,6 +69,16 @@ export function LifeEventsManager() {
   const { data, error, isLoading, mutate } = useSWR<{ events: LifeEvent[] }>("/api/life-events", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isResyncing, setIsResyncing] = useState(false);
+  const [adjustmentResult, setAdjustmentResult] = useState<{
+    adjustments: Array<{
+      workoutId: string;
+      originalDate: string;
+      newDate: string | null;
+      action: string;
+      reason: string;
+    }>;
+  } | null>(null);
   const [newEvent, setNewEvent] = useState({
     eventType: "travel",
     title: "",
@@ -77,6 +88,29 @@ export function LifeEventsManager() {
     canRun: true,
     notes: "",
   });
+
+  const handleResyncPlan = async () => {
+    setIsResyncing(true);
+    try {
+      const response = await fetch("/api/training-plan/resync");
+      const result = await response.json();
+      
+      // Collect all adjustments from all events
+      const allAdjustments: typeof adjustmentResult = { adjustments: [] };
+      for (const eventResult of result.results || []) {
+        if (eventResult.adjustments?.length > 0) {
+          allAdjustments.adjustments.push(...eventResult.adjustments);
+        }
+      }
+      
+      if (allAdjustments.adjustments.length > 0) {
+        setAdjustmentResult(allAdjustments);
+      }
+    } catch (err) {
+      console.error("Failed to resync:", err);
+    }
+    setIsResyncing(false);
+  };
 
   const events = data?.events || [];
   
@@ -99,7 +133,14 @@ export function LifeEventsManager() {
       });
 
       if (response.ok) {
+        const result = await response.json();
         mutate();
+        
+        // Show adjustment results if workouts were rescheduled
+        if (result.adjustments?.adjustments?.length > 0) {
+          setAdjustmentResult(result.adjustments);
+        }
+        
         setNewEvent({
           eventType: "travel",
           title: "",
@@ -164,14 +205,27 @@ export function LifeEventsManager() {
             </div>
             <CardTitle className="text-base">Life Events</CardTitle>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={() => setIsDialogOpen(true)}
-          >
-            <Plus className="w-3 h-3 mr-1" /> Add
-          </Button>
+          <div className="flex items-center gap-1">
+            {upcomingEvents.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                onClick={handleResyncPlan}
+                disabled={isResyncing}
+              >
+                {isResyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : "Resync Plan"}
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <Plus className="w-3 h-3 mr-1" /> Add
+            </Button>
+          </div>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
           Mark travel, illness, or busy periods so your plan can adapt
@@ -377,6 +431,70 @@ export function LifeEventsManager() {
             >
               {isSaving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Add Event
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Adjustment Results Dialog */}
+      <Dialog open={!!adjustmentResult} onOpenChange={() => setAdjustmentResult(null)}>
+        <DialogContent className="sm:max-w-md bg-[#1C1C1E] border-[#2A2A2A]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-green-500" />
+              </div>
+              Training Plan Adjusted
+            </DialogTitle>
+            <DialogDescription>
+              Your workouts have been automatically rescheduled around your life event.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {adjustmentResult && (
+            <div className="space-y-3 py-4 max-h-[300px] overflow-y-auto">
+              {adjustmentResult.adjustments.map((adj, i) => (
+                <motion.div
+                  key={adj.workoutId}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`p-3 rounded-lg border ${
+                    adj.action === "rescheduled" 
+                      ? "bg-blue-500/10 border-blue-500/30" 
+                      : adj.action === "reduced"
+                      ? "bg-amber-500/10 border-amber-500/30"
+                      : "bg-red-500/10 border-red-500/30"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <Badge variant="secondary" className={`text-[10px] ${
+                      adj.action === "rescheduled" 
+                        ? "bg-blue-500/20 text-blue-400" 
+                        : adj.action === "reduced"
+                        ? "bg-amber-500/20 text-amber-400"
+                        : "bg-red-500/20 text-red-400"
+                    }`}>
+                      {adj.action === "rescheduled" ? "Moved" : adj.action === "reduced" ? "Reduced" : "Skipped"}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(adj.originalDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-foreground">{adj.reason}</p>
+                  {adj.newDate && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      → Moved to {new Date(adj.newDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                    </p>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button onClick={() => setAdjustmentResult(null)} className="w-full">
+              Got it
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { rescheduleForLifeEvent } from "@/lib/training-plan-adjuster";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -84,30 +85,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // If there's an active training plan, adjust affected workouts
-  const { data: plan } = await supabase
-    .from("training_plans")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (plan) {
-    // Mark workouts during this event as needing review
-    await supabase
-      .from("planned_workouts")
-      .update({
-        adjustment_reason: eventType,
-        adjusted_at: new Date().toISOString(),
-        adjusted_by: "system",
-      })
-      .eq("plan_id", plan.id)
-      .gte("scheduled_date", startDate)
-      .lte("scheduled_date", endDate)
-      .eq("status", "planned");
+  // Automatically reschedule affected workouts
+  let adjustmentResult = null;
+  if (!canRun || trainingImpact === "reduced" || trainingImpact === "none") {
+    adjustmentResult = await rescheduleForLifeEvent(user.id, {
+      id: event.id,
+      start_date: startDate,
+      end_date: endDate,
+      event_type: eventType,
+      training_impact: trainingImpact,
+      can_run: canRun,
+    });
   }
 
-  return NextResponse.json({ event }, { status: 201 });
+  return NextResponse.json({ 
+    event, 
+    adjustments: adjustmentResult 
+  }, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {
