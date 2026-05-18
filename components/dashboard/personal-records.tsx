@@ -229,8 +229,8 @@ export function PersonalRecordsCard() {
                     onClick={() => setSelectedPR(pr)}
                     className={`relative rounded-xl p-3 text-center transition-all cursor-pointer group ${
                       hasPR 
-                        ? "bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border-2 border-amber-500/40" 
-                        : "bg-[#1A1A1A] border-2 border-dashed border-[#3A3A3A] hover:border-amber-500/30"
+                        ? "bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border-2 border-amber-400/60" 
+                        : "bg-[#1A1A1A] border-2 border-dashed border-[#5A5A5A] hover:border-amber-500/50"
                     }`}
                   >
                     {/* Glow effect for earned PRs */}
@@ -246,10 +246,10 @@ export function PersonalRecordsCard() {
                     <div className={`relative w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${
                       hasPR 
                         ? "bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/40" 
-                        : "bg-[#2A2A2A] group-hover:bg-[#3A3A3A]"
+                        : "bg-[#2A2A2A] border border-[#4A4A4A] group-hover:bg-[#3A3A3A]"
                     }`}>
                       <Icon className={`w-5 h-5 ${
-                        hasPR ? "text-white" : "text-[#6E6E73] group-hover:text-amber-500/70"
+                        hasPR ? "text-white" : "text-white/60 group-hover:text-amber-400"
                       }`} />
                       
                       {/* Pulse ring for unearned */}
@@ -264,7 +264,7 @@ export function PersonalRecordsCard() {
 
                     {/* Distance Label */}
                     <p className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                      hasPR ? "text-amber-400" : "text-[#6E6E73] group-hover:text-white/70"
+                      hasPR ? "text-amber-300" : "text-white/70 group-hover:text-white"
                     }`}>
                       {pr.shortName}
                     </p>
@@ -280,7 +280,7 @@ export function PersonalRecordsCard() {
                         {pr.time}
                       </motion.p>
                     ) : (
-                      <p className="text-[10px] text-[#4A4A4A] group-hover:text-amber-500/70 transition-colors">
+                      <p className="text-[10px] text-white/50 group-hover:text-amber-400 transition-colors">
                         Set it!
                       </p>
                     )}
