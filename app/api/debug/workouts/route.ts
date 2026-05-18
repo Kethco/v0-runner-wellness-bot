@@ -127,6 +127,7 @@ export async function POST() {
     });
 
     // Update each workout to skipped using service client (bypasses RLS)
+    const errors: string[] = [];
     for (const workout of workoutsInRange) {
       const { error: updateError } = await serviceClient
         .from("planned_workouts")
@@ -138,7 +139,9 @@ export async function POST() {
         })
         .eq("id", workout.id);
 
-      if (!updateError) {
+      if (updateError) {
+        errors.push(`${workout.id}: ${updateError.message}`);
+      } else {
         totalUpdated++;
         updates.push({
           date: workout.scheduled_date,
@@ -146,6 +149,13 @@ export async function POST() {
           action: "skipped",
         });
       }
+    }
+    if (errors.length > 0) {
+      return NextResponse.json({
+        message: `Update errors occurred`,
+        errors,
+        debug: { workoutsInRange: workoutsInRange.length }
+      });
     }
   }
 
