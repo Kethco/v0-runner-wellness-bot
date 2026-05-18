@@ -6,7 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Navbar } from "@/components/dashboard/navbar";
+import { redistributeTraining, getRedistributionMessage } from "@/lib/training-redistributor";
 import { BottomNav } from "@/components/bottom-nav";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
@@ -43,6 +45,7 @@ interface Workout {
   status: string;
   week_number: number;
   blocked_reason?: string;
+  adjustment_note?: string;
 }
 
 interface TrainingPlan {
@@ -155,33 +158,49 @@ export default function TrainingPlanPage() {
 
   const { plan, currentWeek, totalWeeks, weeklyBreakdown } = data;
   const activeWeek = selectedWeek !== null ? selectedWeek : currentWeek;
+  
+  // Get life events for blocking and redistribution
+  const lifeEvents = lifeEventsData?.events || [];
+  
+  // Get all workouts across all weeks for redistribution calculation
+  const allWorkouts = weeklyBreakdown.flatMap(w => w.workouts);
+  
+  // Apply smart redistribution across the entire plan
+  const { adjustedWorkouts, summary: redistributionSummary } = redistributeTraining(
+    allWorkouts,
+    lifeEvents
+  );
+  
+  // Get the adjusted workouts for the active week
   const weekData = weeklyBreakdown.find(w => w.weekNumber === activeWeek);
-  
-  // Client-side blocking: hardcoded travel dates for testing
-  const travelStart = "2026-05-26";
-  const travelEnd = "2026-06-04";
-  
   const processedWeekData = weekData ? {
     ...weekData,
-    workouts: weekData.workouts.map(workout => {
-      const inTravelRange = workout.scheduled_date >= travelStart && 
-                            workout.scheduled_date <= travelEnd;
+    workouts: weekData.workouts.map(originalWorkout => {
+      // Find the adjusted version of this workout
+      const adjusted = adjustedWorkouts.find(w => w.id === originalWorkout.id);
+      if (!adjusted) return originalWorkout;
       
-      console.log("[v0] Processing:", workout.scheduled_date, "status:", workout.status, "inRange:", inTravelRange);
+      // Check if this workout is blocked
+      const isBlocked = lifeEvents.some(event => {
+        const shouldBlock = !event.can_run || event.training_impact === "no_training";
+        const inDateRange = adjusted.scheduled_date >= event.start_date && 
+                            adjusted.scheduled_date <= event.end_date;
+        return shouldBlock && inDateRange;
+      }) || adjusted.status === "skipped";
       
-      if (inTravelRange && workout.status !== "skipped" && workout.status !== "completed") {
-        console.log("[v0] MARKING AS BLOCKED:", workout.scheduled_date);
+      if (isBlocked) {
         return {
-          ...workout,
+          ...adjusted,
           status: "blocked",
-          blocked_reason: `Travel: ${travelStart} - ${travelEnd}`,
+          blocked_reason: `Life event`,
         };
       }
-      return workout;
+      
+      return adjusted;
     })
   } : null;
   
-  console.log("[v0] Processed workouts:", processedWeekData?.workouts?.map(w => ({ date: w.scheduled_date, status: w.status })));
+  const redistributionMessage = getRedistributionMessage(redistributionSummary);
   
   const today = new Date().toISOString().split("T")[0];
 
@@ -248,6 +267,28 @@ export default function TrainingPlanPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Training Redistribution Alert */}
+        {redistributionMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Alert className={`border ${
+              redistributionSummary.redistributedMiles >= redistributionSummary.skippedMiles * 0.9
+                ? "border-green-500/30 bg-green-500/10"
+                : "border-amber-500/30 bg-amber-500/10"
+            }`}>
+              <AlertDescription className={`text-sm ${
+                redistributionSummary.redistributedMiles >= redistributionSummary.skippedMiles * 0.9
+                  ? "text-green-400"
+                  : "text-amber-400"
+              }`}>
+                {redistributionMessage}
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
 
         {/* Week Selector */}
         <Card className="border-border bg-card">
@@ -368,6 +409,9 @@ export default function TrainingPlanPage() {
                             {isBlocked && (
                               <Badge className="text-[10px] h-4 bg-red-500/20 text-red-500">Blocked</Badge>
                             )}
+                            {workout.adjustment_note && !isBlocked && (
+                              <Badge className="text-[10px] h-4 bg-blue-500/20 text-blue-400">Adjusted</Badge>
+                            )}
                             {isToday && !isBlocked && (
                               <Badge className="text-[10px] h-4 bg-[#FF4500] text-white">Today</Badge>
                             )}
@@ -381,6 +425,12 @@ export default function TrainingPlanPage() {
                           }`}>
                             {workout.title}
                           </p>
+                          
+                          {workout.adjustment_note && !isBlocked && (
+                            <p className="text-xs text-blue-400/70 mt-1">
+                              {workout.adjustment_note}
+                            </p>
+                          )}
                           
                           {isBlocked && workout.blocked_reason && (
                             <p className="text-xs text-red-500/70 mt-1">
