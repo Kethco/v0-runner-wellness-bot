@@ -193,57 +193,46 @@ export function AchievementBadges() {
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative rounded-2xl overflow-hidden"
-      >
-        {/* Subtle static gold border */}
-        <div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br from-[#FFD700]/60 via-[#FF6B00]/40 to-[#FFD700]/60" />
+      <div className="relative rounded-2xl overflow-hidden group/card transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10">
+        {/* Subtle accent border - static, no animation */}
+        <div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br from-amber-500/30 via-transparent to-amber-500/20 opacity-60 group-hover/card:opacity-100 transition-opacity duration-300" />
         
-        {/* Inner content */}
-        <div className="relative rounded-2xl bg-[#0D0D0D] m-[1px]">
+        {/* Inner content with subtle amber tint */}
+        <div className="relative rounded-2xl bg-gradient-to-br from-amber-500/[0.03] to-transparent m-[1px] backdrop-blur-sm" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
           {/* Header */}
-          <div className="p-4 border-b border-[#2A2A2A]/50">
+          <div className="p-4 border-b border-white/5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FFD700]/20 to-[#FF6B00]/10 flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-[#FFD700]" />
+                <div className="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="text-white font-bold text-lg">Achievements</h3>
-                  <p className="text-sm text-[#8E8E93]">
-                    <span className="text-[#FFD700] font-bold">{earnedCount}</span> of {badges.length} unlocked
+                  <h3 className="text-white font-semibold text-lg">Achievements</h3>
+                  <p className="text-sm text-white/50">
+                    <span className="text-amber-400 font-semibold">{earnedCount}</span> of {badges.length} unlocked
                   </p>
                 </div>
               </div>
               
-              {/* Progress ring - animates once on load only */}
-              <div className="relative w-14 h-14">
-                <svg className="w-14 h-14 -rotate-90">
-                  <circle cx="28" cy="28" r="24" fill="none" stroke="#2A2A2A" strokeWidth="4" />
+              {/* Progress ring - fills once on load */}
+              <div className="relative w-12 h-12">
+                <svg className="w-12 h-12 -rotate-90">
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
                   <motion.circle
-                    cx="28"
-                    cy="28"
-                    r="24"
+                    cx="24"
+                    cy="24"
+                    r="20"
                     fill="none"
-                    stroke="url(#achievementGradient)"
-                    strokeWidth="4"
+                    stroke="#F59E0B"
+                    strokeWidth="3"
                     strokeLinecap="round"
-                    initial={{ strokeDasharray: "0 151" }}
-                    animate={{ strokeDasharray: `${(earnedCount / badges.length) * 151} 151` }}
-                    transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+                    initial={{ strokeDasharray: "0 126" }}
+                    animate={{ strokeDasharray: `${(earnedCount / badges.length) * 126} 126` }}
+                    transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
                   />
-                  <defs>
-                    <linearGradient id="achievementGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#FFD700" />
-                      <stop offset="100%" stopColor="#FF6B00" />
-                    </linearGradient>
-                  </defs>
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-black text-[#FFD700]">{Math.round((earnedCount / badges.length) * 100)}%</span>
+                  <span className="text-sm font-bold text-amber-400">{Math.round((earnedCount / badges.length) * 100)}%</span>
                 </div>
               </div>
             </div>
@@ -251,54 +240,38 @@ export function AchievementBadges() {
 
           {/* Earned badges section */}
           {earnedBadges.length > 0 && (
-            <div className="p-4 border-b border-[#2A2A2A]/50">
-              <p className="text-xs font-semibold text-[#FFD700] uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Star className="w-3 h-3" /> Unlocked
+            <div className="p-4 border-b border-white/5">
+              <p className="text-xs font-medium text-amber-400/80 uppercase tracking-wider mb-3">
+                Unlocked
               </p>
-              <div className="flex flex-wrap gap-3">
-                {earnedBadges.map((badge, i) => (
-                  <motion.button
+              <div className="flex flex-wrap gap-2">
+                {earnedBadges.map((badge) => (
+                  <button
                     key={badge.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.05 * i, duration: 0.3 }}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedBadge(badge)}
-                    className="relative group"
+                    className="relative group/badge transition-transform duration-200 hover:scale-105"
                   >
-                    {/* Glow effect */}
-                    <motion.div
-                      className="absolute inset-0 rounded-xl blur-md"
+                    {/* Hover glow - only on hover */}
+                    <div 
+                      className="absolute inset-0 rounded-lg blur-md opacity-0 group-hover/badge:opacity-40 transition-opacity duration-200"
                       style={{ backgroundColor: badge.color }}
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 2, repeat: Infinity }}
                     />
                     
                     <div 
-                      className="relative w-14 h-14 rounded-xl flex items-center justify-center border-2"
+                      className="relative w-12 h-12 rounded-xl flex items-center justify-center border"
                       style={{
-                        backgroundColor: `${badge.color}25`,
-                        borderColor: badge.color,
-                        boxShadow: `0 4px 20px ${badge.color}40, inset 0 1px 0 rgba(255,255,255,0.1)`,
+                        backgroundColor: `${badge.color}15`,
+                        borderColor: `${badge.color}50`,
                       }}
                     >
-                      <badge.icon className="w-7 h-7" style={{ color: badge.color }} />
-                      
-                      {/* Shine effect */}
-                      <motion.div
-                        className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/20 to-transparent"
-                        initial={{ x: "-100%", y: "-100%" }}
-                        animate={{ x: "100%", y: "100%" }}
-                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                      />
+                      <badge.icon className="w-6 h-6" style={{ color: badge.color }} />
                     </div>
                     
                     {/* Tooltip */}
-                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap z-10">
                       <span className="text-[10px] bg-[#1A1A1A] px-2 py-1 rounded text-white">{badge.name}</span>
                     </div>
-                  </motion.button>
+                  </button>
                 ))}
               </div>
             </div>
@@ -307,41 +280,31 @@ export function AchievementBadges() {
           {/* Unearned badges section */}
           {unearnedBadges.length > 0 && (
             <div className="p-4">
-              <p className="text-xs font-semibold text-[#6E6E73] uppercase tracking-wider mb-3">In Progress</p>
-              <div className="flex flex-wrap gap-3">
-                {unearnedBadges.map((badge, i) => (
-                  <motion.button
+              <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">In Progress</p>
+              <div className="flex flex-wrap gap-2">
+                {unearnedBadges.map((badge) => (
+                  <button
                     key={badge.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 * i }}
-                    whileHover={{ scale: 1.05 }}
                     onClick={() => setSelectedBadge(badge)}
-                    className="relative group"
+                    className="relative group/badge transition-transform duration-200 hover:scale-105"
                   >
                     <div 
-                      className="relative w-12 h-12 rounded-xl flex items-center justify-center border"
-                      style={{
-                        backgroundColor: "#1A1A1A",
-                        borderColor: "#3A3A3A",
-                      }}
+                      className="relative w-10 h-10 rounded-lg flex items-center justify-center border border-white/10 bg-white/5"
                     >
-                      <badge.icon className="w-5 h-5 text-[#4A4A4A]" />
+                      <badge.icon className="w-5 h-5 text-white/30" />
                       
                       {/* Progress ring */}
                       {badge.progress > 0 && (
-                        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 48 48">
-                          <motion.circle 
-                            cx="24" 
-                            cy="24" 
-                            r="22" 
+                        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 40 40">
+                          <circle 
+                            cx="20" 
+                            cy="20" 
+                            r="18" 
                             fill="none" 
                             stroke={badge.color}
                             strokeWidth="2" 
                             strokeLinecap="round"
-                            initial={{ strokeDasharray: "0 138" }}
-                            animate={{ strokeDasharray: `${badge.progress * 1.38} 138` }}
-                            transition={{ duration: 1, delay: 0.2 }}
+                            strokeDasharray={`${badge.progress * 1.13} 113`}
                             opacity={0.5}
                           />
                         </svg>
@@ -350,15 +313,15 @@ export function AchievementBadges() {
                     
                     {/* Progress label */}
                     <div className="absolute -bottom-5 left-1/2 -translate-x-1/2">
-                      <span className="text-[9px] text-[#6E6E73]">{Math.round(badge.progress)}%</span>
+                      <span className="text-[9px] text-white/40">{Math.round(badge.progress)}%</span>
                     </div>
-                  </motion.button>
+                  </button>
                 ))}
               </div>
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Badge detail modal */}
       <AnimatePresence>
