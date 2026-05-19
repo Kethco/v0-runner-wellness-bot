@@ -191,10 +191,10 @@ return (
             
             {/* Greeting */}
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-[#FF6B00] uppercase tracking-wider">
+              <p className="text-[10px] font-semibold text-[#FF6B00] uppercase tracking-[0.2em] mb-0.5">
                 {greeting.text}
               </p>
-              <h1 className="text-lg font-bold text-white tracking-tight truncate">{userName}</h1>
+              <h1 className="text-xl font-black text-white tracking-tight truncate">{userName}</h1>
             </div>
             
             {/* Right side badges */}

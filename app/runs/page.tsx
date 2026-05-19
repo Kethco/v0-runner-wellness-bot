@@ -205,15 +205,15 @@ export default function RunsPage() {
             <div className="flex-shrink-0 bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-3 min-w-[100px]">
               <div className="flex items-center gap-2 mb-1">
                 <Route className="w-3.5 h-3.5 text-[#FF4500]" />
-                <span className="text-[10px] text-[#6E6E73] uppercase tracking-wider">This Week</span>
+                <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">This Week</span>
               </div>
-              <p className="text-xl font-bold text-white">{stats.weeklyMiles.toFixed(1)}<span className="text-sm font-normal text-[#6E6E73] ml-1">mi</span></p>
+              <p className="text-xl font-bold text-white">{stats.weeklyMiles.toFixed(1)}<span className="text-sm font-normal text-white/40 ml-1">mi</span></p>
             </div>
             
             <div className="flex-shrink-0 bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-3 min-w-[100px]">
               <div className="flex items-center gap-2 mb-1">
                 <Activity className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[10px] text-[#6E6E73] uppercase tracking-wider">Total Runs</span>
+                <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Total Runs</span>
               </div>
               <p className="text-xl font-bold text-white">{stats.totalRuns}</p>
             </div>
@@ -221,17 +221,17 @@ export default function RunsPage() {
             <div className="flex-shrink-0 bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-3 min-w-[100px]">
               <div className="flex items-center gap-2 mb-1">
                 <Zap className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-[10px] text-[#6E6E73] uppercase tracking-wider">Avg Pace</span>
+                <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">Avg Pace</span>
               </div>
-              <p className="text-xl font-bold text-white">{stats.avgPace}<span className="text-sm font-normal text-[#6E6E73] ml-1">/mi</span></p>
+              <p className="text-xl font-bold text-white">{stats.avgPace}<span className="text-sm font-normal text-white/40 ml-1">/mi</span></p>
             </div>
             
             <div className="flex-shrink-0 bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-3 min-w-[100px]">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
-                <span className="text-[10px] text-[#6E6E73] uppercase tracking-wider">All Time</span>
+                <span className="text-[10px] text-white/50 uppercase tracking-wider font-medium">All Time</span>
               </div>
-              <p className="text-xl font-bold text-white">{stats.totalMiles.toFixed(0)}<span className="text-sm font-normal text-[#6E6E73] ml-1">mi</span></p>
+              <p className="text-xl font-bold text-white">{stats.totalMiles.toFixed(0)}<span className="text-sm font-normal text-white/40 ml-1">mi</span></p>
             </div>
           </div>
         </motion.div>
@@ -247,7 +247,7 @@ export default function RunsPage() {
             <button
               onClick={() => setViewMode("recent")}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                viewMode === "recent" ? "bg-[#FF4500] text-white" : "text-[#6E6E73]"
+                viewMode === "recent" ? "bg-[#FF4500] text-white" : "text-white/60 hover:text-white"
               }`}
             >
               Recent
@@ -255,7 +255,7 @@ export default function RunsPage() {
             <button
               onClick={() => setViewMode("calendar")}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                viewMode === "calendar" ? "bg-[#FF4500] text-white" : "text-[#6E6E73]"
+                viewMode === "calendar" ? "bg-[#FF4500] text-white" : "text-white/60 hover:text-white"
               }`}
             >
               Monthly
@@ -264,13 +264,13 @@ export default function RunsPage() {
           
           {viewMode === "calendar" && (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8 text-[#6E6E73] hover:text-white">
+              <Button variant="ghost" size="icon" onClick={prevMonth} className="h-8 w-8 text-white/50 hover:text-white">
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="text-sm font-medium min-w-[100px] text-center">
+              <span className="text-sm font-medium min-w-[100px] text-center text-white">
                 {currentMonth.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
               </span>
-              <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8 text-[#6E6E73] hover:text-white">
+              <Button variant="ghost" size="icon" onClick={nextMonth} className="h-8 w-8 text-white/50 hover:text-white">
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -291,11 +291,11 @@ export default function RunsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-[#FF4500]">{stats.monthlyMiles.toFixed(1)}</p>
-                    <p className="text-xs text-[#6E6E73] uppercase tracking-wider">Miles</p>
+                    <p className="text-xs text-white/50 uppercase tracking-wider font-medium">Miles</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-emerald-500">{stats.monthlyRuns}</p>
-                    <p className="text-xs text-[#6E6E73] uppercase tracking-wider">Runs</p>
+                    <p className="text-xs text-white/50 uppercase tracking-wider font-medium">Runs</p>
                   </div>
                 </div>
               </Card>
@@ -329,12 +329,12 @@ export default function RunsPage() {
                       <div className="w-2 h-2 rounded-full bg-[#FF4500] animate-pulse" />
                     )}
                     <span className={`text-xs font-semibold uppercase tracking-wider ${
-                      isToday(group.date) ? "text-[#FF4500]" : "text-[#6E6E73]"
+                      isToday(group.date) ? "text-[#FF4500]" : "text-white/60"
                     }`}>
                       {formatDate(group.date)}
                     </span>
                   </div>
-                  <span className="text-xs text-[#3A3A3A]">
+                  <span className="text-xs text-white/40">
                     {group.totalMiles.toFixed(1)} mi total
                   </span>
                 </div>
@@ -358,11 +358,11 @@ export default function RunsPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between">
                             <p className="text-lg font-bold text-white">
-                              {run.miles.toFixed(2)} <span className="text-sm font-normal text-[#6E6E73]">miles</span>
+                              {run.miles.toFixed(2)} <span className="text-sm font-normal text-white/40">miles</span>
                             </p>
                             <div className="flex items-center gap-2">
                               {run.pace && (
-                                <span className="text-sm text-[#8E8E93]">{run.pace}/mi</span>
+                                <span className="text-sm text-white/60">{run.pace}/mi</span>
                               )}
                               {/* Actions Menu */}
                               <DropdownMenu>
@@ -389,22 +389,22 @@ export default function RunsPage() {
                           </div>
                           
                           <div className="flex items-center gap-3 mt-1">
-                            <span className="text-xs text-[#6E6E73]">{config.label}</span>
+                            <span className="text-xs text-white/50 font-medium">{config.label}</span>
                             {run.duration_minutes && (
-                              <span className="text-xs text-[#6E6E73] flex items-center gap-1">
+                              <span className="text-xs text-white/50 flex items-center gap-1">
                                 <Clock className="w-3 h-3" />
                                 {run.duration_minutes}min
                               </span>
                             )}
                             {run.feeling && (
-                              <span className="text-xs text-[#6E6E73]">
+                              <span className="text-xs text-white/50">
                                 Felt {run.feeling}
                               </span>
                             )}
                           </div>
                           
                           {run.notes && (
-                            <p className="text-xs text-[#4A4A4A] mt-2 line-clamp-2">{run.notes}</p>
+                            <p className="text-xs text-white/40 mt-2 line-clamp-2">{run.notes}</p>
                           )}
                         </div>
                       </div>
