@@ -757,8 +757,38 @@ return (
                                 </div>
                               </div>
                             </div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-white" suppressHydrationWarning>
+                                  {getDaysUntil(goal.target_date)}
+                                </div>
+                                <div className="text-[10px] text-white/40 uppercase tracking-wider">days</div>
+                              </div>
+                              <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                {!activeGoal && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="h-7 w-7 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                                    onClick={() => handleSetActive(goal.id)}
+                                    title="Set as active"
+                                  >
+                                    <Target className="w-3.5 h-3.5" />
+                                  </Button>
+                                )}
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-7 w-7 text-white/40 hover:text-red-400 hover:bg-red-500/10"
+                                  onClick={() => handleDeleteGoal(goal.id)}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                        ))}
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
