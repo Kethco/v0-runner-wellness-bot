@@ -442,50 +442,48 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               const isRestDay = day.type === "rest" && day.miles === 0;
               const isLifeEventBlocked = day.isSkipped && day.miles > 0;
               
-              // Bar color logic with glowing effects
+              // Bar color logic with solid colors
               const getBarStyles = () => {
                 if (day.isCompleted) {
                   return {
-                    background: 'linear-gradient(to top, #30D158, #4ADE80)',
+                    background: '#30D158',
                     boxShadow: '0 0 12px rgba(48, 209, 88, 0.5)',
                   };
                 }
                 if (isLifeEventBlocked) {
                   return {
-                    background: 'linear-gradient(to top, #F59E0B, #FBBF24)',
+                    background: '#F59E0B',
                     boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
                   };
                 }
                 if (day.isSkipped && !isLifeEventBlocked) {
                   return {
                     background: '#EF4444',
-                    opacity: 0.5,
                   };
                 }
                 if (isRestDay) {
                   return {
-                    background: '#2A2A2A',
-                    border: '1px solid #3A3A3A',
+                    background: '#3A3A3A',
                   };
                 }
                 if (day.isToday && day.miles > 0) {
                   return {
-                    background: 'linear-gradient(to top, #FF4500, #FF6B00)',
+                    background: '#FF4500',
                     boxShadow: '0 0 16px rgba(255, 69, 0, 0.6)',
                   };
                 }
                 if (day.isPast && day.miles > 0) {
                   return {
-                    background: '#4A4A4A',
+                    background: '#5A5A5A',
                   };
                 }
                 if (day.miles > 0) {
                   return {
-                    background: 'linear-gradient(to top, rgba(255,69,0,0.5), rgba(255,107,0,0.3))',
+                    background: '#FF6B00',
                   };
                 }
                 return {
-                  background: '#1C1C1E',
+                  background: '#2A2A2A',
                 };
               };
               
@@ -495,8 +493,8 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 if (day.isSkipped) return "text-red-400 line-through font-bold";
                 if (day.isCompleted) return "text-[#30D158] font-bold";
                 if (day.isToday) return "text-[#FF6B00] font-bold";
-                if (isRestDay) return "text-white/40 font-semibold";
-                return "text-white/70 font-semibold";
+                if (isRestDay) return "text-white/60 font-semibold";
+                return "text-white font-semibold";
               };
               
               return (
@@ -523,7 +521,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                     : day.isCompleted ? "text-[#30D158]" 
                     : isLifeEventBlocked ? "text-amber-400"
                     : day.isSkipped ? "text-red-400" 
-                    : "text-white/50"
+                    : "text-white"
                   }`}>
                     {day.day}
                   </span>
