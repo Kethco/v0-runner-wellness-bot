@@ -36,15 +36,28 @@ const WEATHER_CODES: Record<number, { label: string; icon: string }> = {
 // Geocoding: city name to coordinates
 async function geocodeCity(city: string): Promise<{ lat: number; lon: number; name: string } | null> {
   try {
+    // Clean up the city name - just use the first part (city name only)
+    const cleanCity = city.split(',')[0].trim();
+    
     const res = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanCity)}&count=5&language=en&format=json`
     );
     const data = await res.json();
+    
     if (data.results && data.results.length > 0) {
+      // Try to find a US result if the original query had US indicators
+      const isUSQuery = city.toLowerCase().includes('usa') || /,\s*[a-z]{2}\s*(,|$)/i.test(city);
+      let result = data.results[0];
+      
+      if (isUSQuery) {
+        const usResult = data.results.find((r: { country_code?: string }) => r.country_code === 'US');
+        if (usResult) result = usResult;
+      }
+      
       return {
-        lat: data.results[0].latitude,
-        lon: data.results[0].longitude,
-        name: data.results[0].name,
+        lat: result.latitude,
+        lon: result.longitude,
+        name: result.name,
       };
     }
     return null;
