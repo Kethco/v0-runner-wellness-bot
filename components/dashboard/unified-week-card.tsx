@@ -268,15 +268,15 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
           <div className="flex items-start justify-between mb-6">
             <div>
               <div className="flex items-center gap-2.5 mb-1.5">
-                <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em]">This Week</p>
+                <p className="text-[#AEAEB2] text-xs font-semibold uppercase tracking-[0.12em]">This Week</p>
                 {hasPlan && planData?.plan && (
-                  <Badge variant="secondary" className="text-[10px] h-5 px-2 bg-[#FF4500]/10 text-[#FF6B00] border border-[#FF4500]/20 font-semibold">
+                  <Badge variant="secondary" className="text-[10px] h-5 px-2 bg-[#FF4500]/15 text-[#FF6B00] border border-[#FF4500]/30 font-semibold">
                     Week {planData.plan.currentWeek}{planData.plan.totalWeeks ? `/${planData.plan.totalWeeks}` : ""}
                   </Badge>
                 )}
               </div>
               {/* Date range */}
-              <p className="text-[11px] text-white/30 font-medium tracking-wide mb-3">
+              <p className="text-[11px] text-[#8E8E93] font-medium tracking-wide mb-3">
                 {(() => {
                   const now = new Date();
                   const weekStart = new Date(now);
@@ -298,12 +298,12 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 >
                   {displayCompletedMiles.toFixed(1)}
                 </motion.span>
-                <span className="text-white/40 text-lg font-semibold">
+                <span className="text-[#AEAEB2] text-lg font-semibold">
                   / {displayPlannedMiles.toFixed(0)} mi
                 </span>
               </div>
               {hasPlan && planData?.plan?.weekType && (
-                <p className="text-[11px] text-white/40 mt-2 font-medium tracking-wide">
+                <p className="text-xs text-[#8E8E93] mt-2 font-medium tracking-wide">
                   <span className="text-[#FF6B00] font-semibold capitalize">{planData.plan.weekType}</span>
                   {planData.plan.weekFocus ? ` · ${planData.plan.weekFocus}` : ""}
                 </p>
@@ -313,7 +313,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
             {/* Progress Ring */}
             <div className="relative w-20 h-20 flex-shrink-0 progress-ring-glow">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.08)" strokeWidth="6" fill="none" />
+                <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.15)" strokeWidth="6" fill="none" />
                 <motion.circle
                   cx="50" cy="50" r="40"
                   stroke="url(#progress-gradient)"
@@ -374,12 +374,12 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="mb-5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/10 transition-colors"
+              className="mb-5 p-3.5 rounded-xl bg-[#1A1A1A] border border-[#3A3A3A] hover:border-[#4A4A4A] transition-colors"
             >
               <div className="flex items-center gap-3">
                 <div 
                   className="w-11 h-11 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: `${WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500"}15` }}
+                  style={{ backgroundColor: `${WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500"}20` }}
                 >
                   {(() => {
                     const IconComponent = WORKOUT_ICONS[planData.todayWorkout.workout_type]?.icon || Play;
@@ -390,12 +390,12 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   <p className="text-[13px] font-semibold text-white truncate">
                     Today · {planData.todayWorkout.title}
                   </p>
-                  <p className="text-[11px] text-white/50 truncate mt-0.5">
+                  <p className="text-[11px] text-[#AEAEB2] truncate mt-0.5">
                     {planData.todayWorkout.target_miles ? `${planData.todayWorkout.target_miles} mi` : ""} 
                     {planData.todayWorkout.target_pace_zone ? ` · ${planData.todayWorkout.target_pace_zone} pace` : ""}
                   </p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/30" />
+                <ChevronRight className="w-4 h-4 text-[#6E6E73]" />
               </div>
             </motion.div>
           )}
@@ -411,47 +411,47 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               const isRestDay = day.type === "rest" && day.miles === 0;
               const isLifeEventBlocked = day.isSkipped && day.miles > 0;
               
-              // Bar color logic with premium visual distinction
+              // Bar color logic with clear visual distinction
               const getBarClasses = () => {
                 if (day.isCompleted) {
-                  return "bg-gradient-to-t from-[#30D158] to-[#4ADE80] shadow-sm shadow-[#30D158]/30";
+                  return "bg-gradient-to-t from-[#30D158] to-[#4ADE80] shadow-md shadow-[#30D158]/40";
                 }
                 if (isLifeEventBlocked) {
-                  return "bg-gradient-to-t from-amber-600/50 to-amber-500/30";
+                  return "bg-gradient-to-t from-amber-600/70 to-amber-500/50 border border-amber-500/50";
                 }
                 if (day.isSkipped && !isLifeEventBlocked) {
-                  return "bg-red-500/30";
+                  return "bg-red-500/50 border border-red-500/40";
                 }
                 if (isRestDay) {
-                  return "bg-white/[0.04] border border-white/[0.06]";
+                  return "bg-[#2A3A4A] border border-[#3A5A6A]";
                 }
                 if (day.isToday && day.miles > 0) {
-                  return "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-md shadow-[#FF4500]/30";
+                  return "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/50";
                 }
                 if (day.isPast && day.miles > 0) {
-                  return "bg-white/20";
+                  return "bg-[#4A4A4A]";
                 }
                 if (day.miles > 0) {
-                  return "bg-[#FF4500]/40";
+                  return "bg-[#FF4500]/60";
                 }
-                return "bg-white/[0.04]";
+                return "bg-[#2A3A4A]";
               };
               
-              // Label color logic
+              // Label color logic - more visible
               const getLabelColor = () => {
-                if (isLifeEventBlocked) return "text-amber-400/80 line-through";
-                if (day.isSkipped) return "text-red-400/80 line-through";
-                if (day.isCompleted) return "text-[#30D158] font-semibold";
-                if (day.isToday) return "text-[#FF6B00] font-semibold";
-                if (isRestDay) return "text-white/30";
-                return "text-white/60";
+                if (isLifeEventBlocked) return "text-amber-400 line-through font-semibold";
+                if (day.isSkipped) return "text-red-400 line-through font-semibold";
+                if (day.isCompleted) return "text-[#30D158] font-bold";
+                if (day.isToday) return "text-[#FF6B00] font-bold";
+                if (isRestDay) return "text-[#5A8A9A]";
+                return "text-white/80";
               };
               
               return (
-                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[34px]">
+                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[36px]">
                   {/* Miles or Rest label */}
-                  <span className={`text-[10px] mb-1.5 whitespace-nowrap ${getLabelColor()}`}>
-                    {isRestDay ? "–" : day.miles > 0 ? day.miles.toFixed(1) : "–"}
+                  <span className={`text-[10px] mb-1.5 whitespace-nowrap font-semibold ${getLabelColor()}`}>
+                    {isRestDay ? "Rest" : day.miles > 0 ? day.miles.toFixed(1) : "Rest"}
                   </span>
                   
                   {/* Bar */}
@@ -460,17 +460,17 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                       initial={{ height: 0 }}
                       animate={{ height: barHeight }}
                       transition={{ duration: 0.4, delay: i * 0.04, ease: "easeOut" }}
-                      className={`w-full max-w-[26px] rounded-t-lg ${getBarClasses()}`}
+                      className={`w-full max-w-[28px] rounded-t-lg ${getBarClasses()}`}
                     />
                   </div>
                   
                   {/* Day label */}
-                  <span className={`text-[10px] font-medium mt-1.5 ${
+                  <span className={`text-[11px] font-bold mt-1.5 ${
                     day.isToday ? "text-[#FF6B00]" 
                     : day.isCompleted ? "text-[#30D158]" 
                     : isLifeEventBlocked ? "text-amber-400"
                     : day.isSkipped ? "text-red-400" 
-                    : "text-white/40"
+                    : "text-white/60"
                   }`}>
                     {day.day}
                   </span>

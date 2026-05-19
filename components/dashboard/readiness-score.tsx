@@ -67,7 +67,7 @@ export function ReadinessScore() {
                 cy="32"
                 r="28"
                 fill="none"
-                stroke="rgba(255,255,255,0.06)"
+                stroke="rgba(255,255,255,0.15)"
                 strokeWidth="5"
               />
               {/* Progress circle */}
@@ -102,7 +102,7 @@ export function ReadinessScore() {
               >
                 {score}
               </motion.span>
-              <span className="text-[8px] text-white/40 uppercase tracking-[0.15em] font-semibold">Ready</span>
+              <span className="text-[8px] text-[#AEAEB2] uppercase tracking-[0.15em] font-semibold">Ready</span>
             </div>
           </div>
 
@@ -113,15 +113,15 @@ export function ReadinessScore() {
               <span 
                 className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
                 style={{ 
-                  backgroundColor: `${readiness.color}12`,
+                  backgroundColor: `${readiness.color}20`,
                   color: readiness.color,
-                  borderColor: `${readiness.color}30`
+                  borderColor: `${readiness.color}40`
                 }}
               >
                 {readiness.label}
               </span>
             </div>
-            <p className="text-white/50 text-[13px] leading-relaxed">{readiness.advice}</p>
+            <p className="text-[#C7C7CC] text-[13px] leading-relaxed">{readiness.advice}</p>
             
             {!readiness.hasCheckedIn && (
               <Link 

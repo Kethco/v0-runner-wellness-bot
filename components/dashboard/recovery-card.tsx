@@ -172,12 +172,12 @@ export function RecoveryCard() {
       <div className="px-5 pt-5 pb-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-white font-bold text-base flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#AF52DE]/15 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-[#AF52DE]/20 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-[#AF52DE]" />
             </div>
             Recovery Focus
           </h3>
-          <span className="text-[10px] text-white/40 bg-white/[0.04] px-2.5 py-1 rounded-full font-medium border border-white/[0.06]">
+          <span className="text-[10px] text-[#AEAEB2] bg-[#2A2A2A] px-2.5 py-1 rounded-full font-medium border border-[#3A3A3A]">
             {tips.filter(t => t.priority === "high").length} priorities
           </span>
         </div>
@@ -189,20 +189,20 @@ export function RecoveryCard() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.08 }}
-              className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors"
+              className="flex items-center gap-3 p-3 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#3A3A3A] transition-colors"
             >
               <div 
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: `${tip.color}12` }}
+                style={{ backgroundColor: `${tip.color}20` }}
               >
                 <tip.icon className="w-4.5 h-4.5" style={{ color: tip.color }} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white font-semibold text-[13px]">{tip.title}</p>
-                <p className="text-white/40 text-[11px] truncate">{tip.description}</p>
+                <p className="text-[#AEAEB2] text-[11px] truncate">{tip.description}</p>
               </div>
               {tip.priority === "high" && (
-                <span className="text-[9px] text-[#FF9500] bg-[#FF9500]/10 px-2 py-0.5 rounded-full font-bold border border-[#FF9500]/20">
+                <span className="text-[9px] text-[#FF9500] bg-[#FF9500]/15 px-2 py-0.5 rounded-full font-bold border border-[#FF9500]/30">
                   Priority
                 </span>
               )}
@@ -213,7 +213,7 @@ export function RecoveryCard() {
       
       {/* Rest day message if applicable */}
       {!hasRunToday && (
-        <div className="px-5 py-3 bg-[#30D158]/8 border-t border-[#30D158]/15">
+        <div className="px-5 py-3 bg-[#30D158]/12 border-t border-[#30D158]/25">
           <div className="flex items-center gap-2">
             <Heart className="w-3.5 h-3.5 text-[#30D158]" />
             <p className="text-[#30D158] text-[12px] font-medium">

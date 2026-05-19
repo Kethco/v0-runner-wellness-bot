@@ -40,7 +40,7 @@ function getValueLabel(value: number | undefined, maxValue: number, inverted?: b
 export function WellnessOrbs({ checkin, hasCheckedIn }: WellnessOrbsProps) {
   return (
     <div className="space-y-4">
-      <h3 className="text-[11px] font-semibold text-white/40 uppercase tracking-[0.15em]">Today&apos;s Wellness</h3>
+      <h3 className="text-[11px] font-semibold text-[#AEAEB2] uppercase tracking-[0.12em]">Today&apos;s Wellness</h3>
       
       <div className="grid grid-cols-4 gap-2">
         {METRICS.map((metric, index) => {
@@ -65,8 +65,8 @@ export function WellnessOrbs({ checkin, hasCheckedIn }: WellnessOrbsProps) {
                 className="relative w-[60px] h-[60px] rounded-full flex items-center justify-center"
                 style={{
                   background: hasValue 
-                    ? `radial-gradient(circle at 35% 35%, ${metric.color}25, ${metric.color}08 70%, transparent)`
-                    : 'rgba(255,255,255,0.03)',
+                    ? `radial-gradient(circle at 35% 35%, ${metric.color}35, ${metric.color}12 70%, transparent)`
+                    : 'rgba(255,255,255,0.06)',
                 }}
               >
                 {/* Progress ring */}
@@ -76,7 +76,7 @@ export function WellnessOrbs({ checkin, hasCheckedIn }: WellnessOrbsProps) {
                     cy="30"
                     r="26"
                     fill="none"
-                    stroke="rgba(255,255,255,0.06)"
+                    stroke="rgba(255,255,255,0.15)"
                     strokeWidth="3"
                   />
                   {hasValue && (
@@ -102,15 +102,15 @@ export function WellnessOrbs({ checkin, hasCheckedIn }: WellnessOrbsProps) {
                 {/* Icon */}
                 <metric.Icon 
                   className="w-5 h-5 z-10" 
-                  style={{ color: hasValue ? metric.color : 'rgba(255,255,255,0.2)' }}
+                  style={{ color: hasValue ? metric.color : 'rgba(255,255,255,0.4)' }}
                 />
               </motion.div>
               
               {/* Labels */}
-              <span className="text-[9px] text-white/35 mt-1.5 uppercase tracking-wider font-medium">{metric.label}</span>
+              <span className="text-[9px] text-[#8E8E93] mt-1.5 uppercase tracking-wider font-medium">{metric.label}</span>
               <span 
                 className="text-[11px] font-bold" 
-                style={{ color: hasValue ? metric.color : 'rgba(255,255,255,0.2)' }}
+                style={{ color: hasValue ? metric.color : 'rgba(255,255,255,0.4)' }}
               >
                 {hasCheckedIn ? getValueLabel(value, metric.maxValue, metric.inverted) : "—"}
               </span>
