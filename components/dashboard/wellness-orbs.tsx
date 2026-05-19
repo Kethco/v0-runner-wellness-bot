@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Moon, Zap, Activity, Target } from "lucide-react";
+import { Moon, Battery, Heart, Gauge } from "lucide-react";
 
 interface Checkin {
   sleep_rating?: number;
@@ -16,38 +16,38 @@ interface WellnessOrbsProps {
 }
 
 const METRICS = [
-  { key: "sleep_rating", label: "Sleep", Icon: Moon, color: "#AF52DE", maxValue: 5 },
-  { key: "energy", label: "Energy", Icon: Zap, color: "#34C759", maxValue: 5 },
-  { key: "soreness", label: "Sore", Icon: Activity, color: "#FF6B6B", maxValue: 5, inverted: true },
-  { key: "readiness", label: "Ready", Icon: Target, color: "#00D4FF", maxValue: 100 },
+  { key: "sleep_rating", label: "SLEEP", Icon: Moon, color: "#AF52DE", maxValue: 5 },
+  { key: "energy", label: "ENERGY", Icon: Battery, color: "#34C759", maxValue: 5 },
+  { key: "soreness", label: "SORE", Icon: Heart, color: "#30D158", maxValue: 5 },
+  { key: "readiness", label: "READY", Icon: Gauge, color: "#FF9F0A", maxValue: 5 },
 ];
-
-function getValueLabel(value: number | undefined, maxValue: number, inverted?: boolean): string {
-  if (value === undefined) return "—";
-  
-  if (maxValue === 100) {
-    return `${value}`;
-  }
-  
-  return `${value}/${maxValue}`;
-}
 
 export function WellnessOrbs({ checkin, hasCheckedIn }: WellnessOrbsProps) {
   return (
-    <div className="space-y-5">
-      <h3 className="text-white font-bold text-lg">Today&apos;s Wellness</h3>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] p-5"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-white font-bold text-lg">Today&apos;s Wellness</h3>
+        {hasCheckedIn && (
+          <span className="text-[#30D158] text-sm font-semibold px-3 py-1 bg-[#30D158]/10 rounded-full border border-[#30D158]/20">
+            Logged
+          </span>
+        )}
+      </div>
       
-      <div className="flex items-center justify-between gap-2">
+      {/* Metric Rings */}
+      <div className="grid grid-cols-4 gap-3">
         {METRICS.map((metric, index) => {
           const value = checkin?.[metric.key as keyof Checkin] as number | undefined;
-          const hasValue = value !== undefined;
-          const percentage = hasValue 
-            ? (metric.inverted 
-                ? (metric.maxValue - value + 1) / metric.maxValue 
-                : value / metric.maxValue)
-            : 0;
+          const hasValue = value !== undefined && hasCheckedIn;
+          const percentage = hasValue ? value / metric.maxValue : 0;
           
-          const circumference = 2 * Math.PI * 32;
+          const radius = 32;
+          const circumference = 2 * Math.PI * radius;
           const strokeDashoffset = circumference - (percentage * circumference);
           
           return (
@@ -58,28 +58,15 @@ export function WellnessOrbs({ checkin, hasCheckedIn }: WellnessOrbsProps) {
               transition={{ delay: 0.1 * index, type: "spring", stiffness: 200 }}
               className="flex flex-col items-center"
             >
-              {/* Large Ring with Icon */}
+              {/* Ring with Icon Inside */}
               <div className="relative w-[72px] h-[72px]">
-                {/* Glow effect */}
-                {hasValue && (
-                  <motion.div 
-                    className="absolute inset-0 rounded-full"
-                    style={{ 
-                      background: `radial-gradient(circle, ${metric.color}30 0%, transparent 70%)`,
-                    }}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1.2 }}
-                    transition={{ delay: 0.2 + index * 0.1, duration: 0.6 }}
-                  />
-                )}
-                
                 {/* Progress Ring */}
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 72 72">
                   {/* Background ring */}
                   <circle
                     cx="36"
                     cy="36"
-                    r="32"
+                    r={radius}
                     fill="none"
                     stroke="rgba(255,255,255,0.08)"
                     strokeWidth="5"
@@ -89,7 +76,7 @@ export function WellnessOrbs({ checkin, hasCheckedIn }: WellnessOrbsProps) {
                     <motion.circle
                       cx="36"
                       cy="36"
-                      r="32"
+                      r={radius}
                       fill="none"
                       stroke={metric.color}
                       strokeWidth="5"
@@ -98,53 +85,39 @@ export function WellnessOrbs({ checkin, hasCheckedIn }: WellnessOrbsProps) {
                       initial={{ strokeDashoffset: circumference }}
                       animate={{ strokeDashoffset }}
                       transition={{ delay: 0.3 + index * 0.1, duration: 0.8, ease: "easeOut" }}
-                      style={{
-                        filter: `drop-shadow(0 0 8px ${metric.color})`,
-                      }}
                     />
                   )}
                 </svg>
                 
-                {/* Floating icon above ring */}
-                <motion.div 
-                  className="absolute -top-1 left-1/2 -translate-x-1/2"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + index * 0.1 }}
-                >
-                  <div 
-                    className="w-6 h-6 rounded-lg flex items-center justify-center"
-                    style={{ 
-                      backgroundColor: hasValue ? `${metric.color}25` : 'rgba(255,255,255,0.05)',
-                    }}
-                  >
-                    <metric.Icon 
-                      className="w-3.5 h-3.5" 
-                      style={{ 
-                        color: hasValue ? metric.color : 'rgba(255,255,255,0.3)',
-                        filter: hasValue ? `drop-shadow(0 0 4px ${metric.color})` : 'none'
-                      }}
-                    />
-                  </div>
-                </motion.div>
-                
-                {/* Center value */}
+                {/* Centered Icon */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span 
-                    className="text-base font-bold"
-                    style={{ color: hasValue ? metric.color : 'rgba(255,255,255,0.3)' }}
-                  >
-                    {hasCheckedIn ? getValueLabel(value, metric.maxValue, metric.inverted) : "—"}
-                  </span>
+                  <metric.Icon 
+                    className="w-6 h-6" 
+                    style={{ 
+                      color: hasValue ? metric.color : 'rgba(255,255,255,0.3)',
+                    }}
+                  />
                 </div>
               </div>
               
+              {/* Value */}
+              <div className="mt-2 text-center">
+                <span className="text-xl font-bold text-white">
+                  {hasValue ? value : "—"}
+                </span>
+                {hasValue && (
+                  <span className="text-sm text-[#8E8E93]">/5</span>
+                )}
+              </div>
+              
               {/* Label */}
-              <span className="text-xs text-[#8E8E93] mt-2 font-semibold">{metric.label}</span>
+              <span className="text-[10px] text-[#8E8E93] font-semibold uppercase tracking-wider mt-0.5">
+                {metric.label}
+              </span>
             </motion.div>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -587,53 +587,46 @@ function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: {
   maxValue?: number;
 }) {
   const percent = (value / maxValue) * 100;
-  const radius = 28;
+  const radius = 32;
   const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percent / 100) * circumference;
   
   return (
     <motion.div 
       whileHover={{ scale: 1.05 }}
       className="flex flex-col items-center"
     >
-      {/* Circular progress with icon */}
-      <div className="relative w-[68px] h-[68px]">
-        {/* Glow effect */}
-        <div 
-          className="absolute inset-0 rounded-full blur-lg opacity-30"
-          style={{ backgroundColor: color }}
-        />
-        
-        <svg className="w-full h-full -rotate-90 relative" viewBox="0 0 68 68">
-          <circle cx="34" cy="34" r={radius} stroke="rgba(255,255,255,0.06)" strokeWidth="5" fill="none" />
+      {/* Circular progress with icon inside */}
+      <div className="relative w-[72px] h-[72px]">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 72 72">
+          <circle cx="36" cy="36" r={radius} stroke="rgba(255,255,255,0.08)" strokeWidth="5" fill="none" />
           <motion.circle
-            cx="34" cy="34" r={radius}
+            cx="36" cy="36" r={radius}
             stroke={color}
             strokeWidth="5"
             fill="none"
             strokeLinecap="round"
-            initial={{ strokeDasharray: `0 ${circumference}` }}
-            animate={{ strokeDasharray: `${(percent / 100) * circumference} ${circumference}` }}
-            transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-            style={{ filter: `drop-shadow(0 0 8px ${color})` }}
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
           />
         </svg>
         
-        {/* Floating icon */}
-        <div 
-          className="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-6 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: `${color}30` }}
-        >
-          <Icon className="w-3.5 h-3.5" style={{ color, filter: `drop-shadow(0 0 4px ${color})` }} />
-        </div>
-        
-        {/* Center value */}
+        {/* Centered icon */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-lg font-bold" style={{ color }}>{value}/{maxValue}</span>
+          <Icon className="w-6 h-6" style={{ color }} />
         </div>
       </div>
       
+      {/* Value below */}
+      <div className="mt-2 text-center">
+        <span className="text-xl font-bold text-white">{value}</span>
+        <span className="text-sm text-[#8E8E93]">/{maxValue}</span>
+      </div>
+      
       {/* Label */}
-      <p className="text-xs text-white/50 font-semibold mt-2">{label}</p>
+      <p className="text-[10px] text-[#8E8E93] font-semibold uppercase tracking-wider mt-0.5">{label}</p>
     </motion.div>
   );
 }
