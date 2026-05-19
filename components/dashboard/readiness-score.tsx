@@ -31,7 +31,7 @@ export function ReadinessScore() {
     return null;
   }
 
-  const { readiness, insights, tips } = data;
+  const { readiness, patterns: insights, recoverySuggestions: tips } = data;
   const score = readiness.score;
   
   // Color based on score - golden/amber theme like the reference
