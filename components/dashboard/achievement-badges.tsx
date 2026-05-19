@@ -199,62 +199,18 @@ export function AchievementBadges() {
         transition={{ duration: 0.5 }}
         className="relative rounded-2xl overflow-hidden"
       >
-        {/* Animated gradient border */}
-        <div className="absolute inset-0 rounded-2xl p-[2px] bg-gradient-to-r from-[#FFD700] via-[#FF6B00] to-[#FFD700] animate-gradient-x" />
+        {/* Subtle static gold border */}
+        <div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br from-[#FFD700]/60 via-[#FF6B00]/40 to-[#FFD700]/60" />
         
         {/* Inner content */}
-        <div className="relative rounded-2xl bg-[#0A0A0A] m-[2px]">
-          {/* Sparkle effects */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-[#FFD700] rounded-full"
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{
-                  opacity: [0, 1, 0],
-                  scale: [0, 1, 0],
-                  x: [0, Math.random() * 20 - 10],
-                  y: [0, Math.random() * -20],
-                }}
-                transition={{
-                  duration: 2,
-                  delay: i * 0.4,
-                  repeat: Infinity,
-                  repeatDelay: 1,
-                }}
-                style={{
-                  left: `${15 + i * 15}%`,
-                  top: "20%",
-                }}
-              />
-            ))}
-          </div>
-
+        <div className="relative rounded-2xl bg-[#0D0D0D] m-[1px]">
           {/* Header */}
           <div className="p-4 border-b border-[#2A2A2A]/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <motion.div 
-                  className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-[#FFD700]/30 to-[#FF6B00]/20 flex items-center justify-center"
-                  animate={{ 
-                    boxShadow: [
-                      "0 0 20px rgba(255, 215, 0, 0.3)",
-                      "0 0 40px rgba(255, 215, 0, 0.5)",
-                      "0 0 20px rgba(255, 215, 0, 0.3)",
-                    ]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Trophy className="w-6 h-6 text-[#FFD700]" />
-                  <motion.div
-                    className="absolute -top-1 -right-1"
-                    animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Sparkles className="w-4 h-4 text-[#FFD700]" />
-                  </motion.div>
-                </motion.div>
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FFD700]/20 to-[#FF6B00]/10 flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-[#FFD700]" />
+                </div>
                 <div>
                   <h3 className="text-white font-bold text-lg">Achievements</h3>
                   <p className="text-sm text-[#8E8E93]">
@@ -263,7 +219,7 @@ export function AchievementBadges() {
                 </div>
               </div>
               
-              {/* Animated progress ring */}
+              {/* Progress ring - animates once on load only */}
               <div className="relative w-14 h-14">
                 <svg className="w-14 h-14 -rotate-90">
                   <circle cx="28" cy="28" r="24" fill="none" stroke="#2A2A2A" strokeWidth="4" />
@@ -277,7 +233,7 @@ export function AchievementBadges() {
                     strokeLinecap="round"
                     initial={{ strokeDasharray: "0 151" }}
                     animate={{ strokeDasharray: `${(earnedCount / badges.length) * 151} 151` }}
-                    transition={{ duration: 1.5, delay: 0.3, ease: "easeOut" }}
+                    transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
                   />
                   <defs>
                     <linearGradient id="achievementGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -303,15 +259,10 @@ export function AchievementBadges() {
                 {earnedBadges.map((badge, i) => (
                   <motion.button
                     key={badge.id}
-                    initial={{ opacity: 0, scale: 0, rotate: -180 }}
-                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    transition={{ 
-                      delay: 0.1 * i, 
-                      type: "spring", 
-                      stiffness: 200,
-                      damping: 15
-                    }}
-                    whileHover={{ scale: 1.15, rotate: [0, -5, 5, 0] }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.05 * i, duration: 0.3 }}
+                    whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedBadge(badge)}
                     className="relative group"
