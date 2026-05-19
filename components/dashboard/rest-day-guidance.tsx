@@ -6,7 +6,7 @@ import {
   Wind, Coffee, BedDouble, Sparkles, ChevronRight
 } from "lucide-react";
 import useSWR from "swr";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -125,10 +125,22 @@ function getPersonalizedActivities(data: {
 export function RestDayGuidance() {
   const { data: insightsData, isLoading } = useSWR("/api/wellness-insights", fetcher);
   const { data: checkinData } = useSWR("/api/checkins?limit=1", fetcher);
-  const [completedActivities, setCompletedActivities] = useState<Set<string>>(new Set());
+  const todayStr = new Date().toISOString().split("T")[0];
+  const storageKey = `rest-day-activities-${todayStr}`;
+  
+  // Load completed activities from localStorage (persists for the day)
+  const [completedActivities, setCompletedActivities] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    const saved = localStorage.getItem(storageKey);
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+  
+  // Save to localStorage when activities change
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify([...completedActivities]));
+  }, [completedActivities, storageKey]);
   
   const todayCheckin = checkinData?.checkins?.[0];
-  const todayStr = new Date().toISOString().split("T")[0];
   const hasCheckedInToday = todayCheckin?.date === todayStr;
   
   if (isLoading) {
