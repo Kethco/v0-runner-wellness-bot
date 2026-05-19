@@ -204,10 +204,14 @@
 /* Main goal card with gradient border */
 .goal-card-border {
   position: relative;
-  background: #1A1A1C;
+  background: linear-gradient(145deg, #1E1E20 0%, #151517 100%);
   border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .goal-card-border::before {
@@ -218,9 +222,9 @@
   border-radius: 1.5rem;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.15) 0%,
-    rgba(255, 255, 255, 0.05) 50%,
-    rgba(255, 255, 255, 0.1) 100%
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.02) 50%,
+    rgba(255, 107, 0, 0.15) 100%
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -231,10 +235,14 @@
 /* Premium card - glass morphism */
 .premium-card {
   position: relative;
-  background: #1A1A1C;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(145deg, #1E1E20 0%, #151517 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 1.5rem;
   overflow: hidden;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .premium-card::before {
@@ -277,15 +285,21 @@
 
 /* Metric card hover */
 .metric-card {
-  background: #232325;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(145deg, #252527 0%, #1D1D1F 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 1rem;
   transition: all 0.3s ease;
+  box-shadow: 
+    0 2px 12px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .metric-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 /* ========================================

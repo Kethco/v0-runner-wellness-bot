@@ -294,15 +294,15 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 })()}
               </p>
               {/* Mileage display */}
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-baseline gap-1.5">
                 <motion.span 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-5xl font-black text-white tracking-tight"
+                  className="text-5xl font-black text-white tracking-tight leading-none"
                 >
                   {displayCompletedMiles.toFixed(1)}
                 </motion.span>
-                <span className="text-white/40 text-xl font-semibold">
+                <span className="text-white/30 text-lg font-medium">
                   / {displayPlannedMiles.toFixed(0)} mi
                 </span>
               </div>
@@ -315,53 +315,60 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
             </div>
             
             {/* Progress Ring with Glow */}
-            <div className="relative w-24 h-24 flex-shrink-0">
-              {/* Glow effect */}
+            <div className="relative w-28 h-28 flex-shrink-0">
+              {/* Outer glow ring */}
               <motion.div 
-                className="absolute inset-[-8px] rounded-full"
+                className="absolute inset-[-4px] rounded-full"
                 style={{ 
-                  background: 'radial-gradient(circle, rgba(255,69,0,0.3) 0%, transparent 70%)',
+                  background: 'radial-gradient(circle, rgba(255,69,0,0.25) 0%, transparent 60%)',
                 }}
                 animate={{ 
-                  opacity: [0.4, 0.7, 0.4],
-                  scale: [1, 1.05, 1]
+                  opacity: [0.5, 0.8, 0.5],
+                  scale: [1, 1.03, 1]
                 }}
                 transition={{ 
-                  duration: 2.5, 
+                  duration: 3, 
                   repeat: Infinity, 
                   ease: "easeInOut" 
                 }}
               />
               
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.06)" strokeWidth="6" fill="none" />
+                {/* Background track - more visible */}
+                <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.1)" strokeWidth="8" fill="none" />
+                {/* Secondary glow track */}
+                <circle cx="50" cy="50" r="42" stroke="rgba(255,69,0,0.1)" strokeWidth="8" fill="none" />
+                {/* Progress arc */}
                 <motion.circle
                   cx="50" cy="50" r="42"
                   stroke="url(#progress-gradient)"
-                  strokeWidth="6"
+                  strokeWidth="8"
                   fill="none"
                   strokeLinecap="round"
                   initial={{ strokeDasharray: "0 264" }}
                   animate={{ strokeDasharray: `${progressPercent * 2.64} 264` }}
                   transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
-                  style={{ filter: 'drop-shadow(0 0 8px rgba(255,69,0,0.6))' }}
+                  style={{ filter: 'drop-shadow(0 0 10px rgba(255,69,0,0.7))' }}
                 />
                 <defs>
                   <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#FF4500" />
+                    <stop offset="50%" stopColor="#FF6B00" />
                     <stop offset="100%" stopColor="#FF9F0A" />
                   </linearGradient>
                 </defs>
               </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <motion.span 
-                  className="text-2xl font-black text-white"
+                  className="text-2xl font-black text-white leading-none"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}
                 >
                   <CountUp target={Math.round(progressPercent)} />%
                 </motion.span>
+                <span className="text-[10px] text-white/40 font-medium mt-0.5">complete</span>
+              </div>
               </div>
             </div>
           </div>
@@ -432,7 +439,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
           )}
 
           {/* Weekly Workout Strip */}
-          <div className="flex items-end justify-between gap-2 bg-[#0A0A0A] rounded-xl p-4 -mx-1">
+          <div className="flex items-end justify-between gap-1 bg-gradient-to-b from-[#0D0D0F] to-[#0A0A0C] rounded-2xl p-5 -mx-1 border border-white/[0.04]">
             {chartData.map((day, i) => {
               // Use logarithmic scale for better visualization
               const normalizedMiles = day.miles > 0 ? Math.log(day.miles + 1) / Math.log(maxMiles + 1) : 0;
@@ -498,25 +505,25 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               };
               
               return (
-                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[38px]">
+                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[40px]">
                   {/* Miles or Rest label */}
-                  <span className={`text-xs mb-2 whitespace-nowrap ${getLabelColor()}`}>
+                  <span className={`text-[11px] mb-2.5 whitespace-nowrap ${getLabelColor()}`}>
                     {isRestDay ? "Rest" : day.miles > 0 ? day.miles.toFixed(1) : "Rest"}
                   </span>
                   
                   {/* Bar */}
-                  <div className="w-full h-14 flex items-end justify-center">
+                  <div className="w-full h-16 flex items-end justify-center">
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: barHeight }}
                       transition={{ duration: 0.5, delay: i * 0.05, ease: "easeOut" }}
-                      className="w-full max-w-[30px] rounded-t-lg"
+                      className="w-full max-w-[28px] rounded-lg"
                       style={getBarStyles()}
                     />
                   </div>
                   
                   {/* Day label */}
-                  <span className={`text-xs font-bold mt-2 ${
+                  <span className={`text-[11px] font-bold mt-2.5 ${
                     day.isToday ? "text-[#FF6B00]" 
                     : day.isCompleted ? "text-[#30D158]" 
                     : isLifeEventBlocked ? "text-amber-400"

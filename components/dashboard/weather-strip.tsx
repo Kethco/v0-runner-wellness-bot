@@ -143,16 +143,45 @@ export function WeatherStrip() {
               </div>
               
               {/* Temperature */}
-              <span className="text-xs font-bold text-white">
-                {day.tempHigh}°
-              </span>
-              <span className="text-[10px] text-white/40">
-                {day.tempLow}°
-              </span>
+              <div className="flex flex-col items-center">
+                <span className="text-sm font-bold text-white leading-none">
+                  {day.tempHigh}°
+                </span>
+                <span className="text-[10px] text-white/50 leading-none mt-0.5">
+                  {day.tempLow}°
+                </span>
+              </div>
             </motion.div>
           );
         })}
       </div>
+      
+      {/* Running condition note for today */}
+      {data.forecast[0] && (
+        <div className="mt-3 flex items-center gap-2">
+          <div 
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ 
+              backgroundColor: data.forecast[0].isGoodForRunning 
+                ? '#30D158' 
+                : data.forecast[0].precipChance > 70 
+                  ? '#FF453A' 
+                  : '#FFD60A' 
+            }}
+          />
+          <span className="text-[11px] text-white/60">
+            {data.forecast[0].isGoodForRunning 
+              ? "Great conditions for your run today"
+              : data.forecast[0].precipChance > 70
+                ? `${data.forecast[0].precipChance}% chance of rain — consider indoor options`
+                : data.forecast[0].tempHigh > 85
+                  ? "Hot day — hydrate well and run early"
+                  : data.forecast[0].tempHigh < 40
+                    ? "Cold day — layer up for your run"
+                    : "Moderate conditions — check the wind"}
+          </span>
+        </div>
+      )}
     </motion.div>
   );
 }
