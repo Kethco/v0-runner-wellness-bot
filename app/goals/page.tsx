@@ -872,9 +872,6 @@ return (
                 </CardContent>
               </Card>
             </div>
-
-            {/* Life Events */}
-            <LifeEventsManager />
           </>
         )}
       </main>
