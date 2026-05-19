@@ -85,12 +85,12 @@ export function RecentRuns() {
         </div>
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="bg-card border-border p-4 animate-pulse">
+            <Card key={i} className="border-white/10 p-4 animate-pulse" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-muted rounded-lg" />
+                <div className="w-10 h-10 bg-white/5 rounded-lg" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-32 bg-muted rounded" />
-                  <div className="h-3 w-24 bg-muted rounded" />
+                  <div className="h-4 w-32 bg-white/5 rounded" />
+                  <div className="h-3 w-24 bg-white/5 rounded" />
                 </div>
               </div>
             </Card>
@@ -108,10 +108,10 @@ export function RecentRuns() {
             Recent Runs
           </p>
         </div>
-        <Card className="bg-card border-border p-8 text-center">
-          <Activity className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm font-medium mb-1">No runs logged yet</p>
-          <p className="text-xs text-muted-foreground">
+        <Card className="border-white/10 p-8 text-center bg-gradient-to-br from-blue-500/[0.03] to-transparent" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
+          <Activity className="w-8 h-8 text-white/40 mx-auto mb-3" />
+          <p className="text-sm font-medium mb-1 text-white">No runs logged yet</p>
+          <p className="text-xs text-white/50">
             Log your first run to start tracking your training
           </p>
         </Card>
@@ -137,10 +137,11 @@ export function RecentRuns() {
         {runs.slice(0, 4).map((run) => (
           <Card
             key={run.id}
-            className="bg-card border-border hover:border-primary/40 p-4 flex items-center gap-4 cursor-pointer transition-colors group"
+            className="border-white/10 hover:border-blue-500/30 p-4 flex items-center gap-4 cursor-pointer transition-all duration-200 group bg-gradient-to-br from-blue-500/[0.02] to-transparent hover:shadow-lg hover:shadow-blue-500/5"
+            style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}
           >
-            <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-              <Activity className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
+              <Activity className="w-4 h-4 text-blue-400 group-hover:text-blue-300 transition-colors" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-0.5">

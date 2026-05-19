@@ -136,11 +136,11 @@ export function RecoveryCard() {
   
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5 animate-pulse">
-        <div className="h-4 bg-[#2A2A2A] rounded w-32 mb-4" />
+      <div className="rounded-2xl border border-white/10 p-5 animate-pulse" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
+        <div className="h-4 bg-white/5 rounded w-32 mb-4" />
         <div className="space-y-3">
-          <div className="h-12 bg-[#2A2A2A] rounded" />
-          <div className="h-12 bg-[#2A2A2A] rounded" />
+          <div className="h-12 bg-white/5 rounded" />
+          <div className="h-12 bg-white/5 rounded" />
         </div>
       </div>
     );
@@ -167,7 +167,8 @@ export function RecoveryCard() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-[#1A1A2E] to-[#0F0F1A] border border-[#2A2A40] overflow-hidden"
+      className="rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br from-purple-500/[0.03] to-transparent transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 hover:border-purple-500/20"
+      style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}
     >
       <div className="px-5 pt-5 pb-4">
         <div className="flex items-center justify-between mb-4">

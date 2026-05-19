@@ -97,7 +97,8 @@ export function WellnessMetrics() {
             return (
               <Card
                 key={i}
-                className="flex items-center gap-3 bg-card border-border px-4 py-3 hover:border-primary/30 transition-colors cursor-pointer"
+                className="flex items-center gap-3 border-white/10 px-4 py-3 hover:border-emerald-500/30 transition-colors cursor-pointer bg-gradient-to-br from-emerald-500/[0.02] to-transparent"
+                style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}
               >
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -133,7 +134,7 @@ export function WellnessMetrics() {
           Performance
         </p>
         <div className="grid grid-cols-1 gap-2">
-          <Card className="bg-card border-border p-4 hover:border-primary/30 transition-colors cursor-pointer">
+          <Card className="border-white/10 p-4 hover:border-emerald-500/30 transition-colors cursor-pointer bg-gradient-to-br from-emerald-500/[0.02] to-transparent" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center mb-2"
               style={{ backgroundColor: "color-mix(in oklch, oklch(0.70 0.18 150) 20%, transparent)" }}

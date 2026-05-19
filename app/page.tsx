@@ -359,7 +359,8 @@ return (
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
-            className="rounded-2xl bg-[#1C1C1E] border border-[#3A3A3C] p-5"
+            className="rounded-2xl border border-white/10 p-5 bg-gradient-to-br from-emerald-500/[0.03] to-transparent transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20"
+            style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}
           >
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-white font-bold text-lg">Today&apos;s Wellness</h3>

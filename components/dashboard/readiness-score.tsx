@@ -16,12 +16,12 @@ export function ReadinessScore() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-card border border-border p-5 animate-pulse">
+      <div className="rounded-2xl border border-white/10 p-5 animate-pulse" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-muted" />
+          <div className="w-16 h-16 rounded-full bg-white/5" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-muted rounded w-24" />
-            <div className="h-3 bg-muted rounded w-40" />
+            <div className="h-4 bg-white/5 rounded w-24" />
+            <div className="h-3 bg-white/5 rounded w-40" />
           </div>
         </div>
       </div>
@@ -41,7 +41,8 @@ export function ReadinessScore() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-card border border-border overflow-hidden"
+      className="rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br from-emerald-500/[0.03] to-transparent transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20"
+      style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}
     >
       {/* Header accent */}
       <div 
