@@ -208,7 +208,18 @@ return (
                 className="relative flex items-center gap-1.5 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-3 py-2 rounded-full"
                 style={{ boxShadow: '0 0 20px rgba(255,69,0,0.4)' }}
               >
-                <Flame className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} />
+                <motion.div
+                  animate={{
+                    scale: [1, 1.2, 1, 1.15, 1],
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <Flame className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} />
+                </motion.div>
                 <span className="relative text-white font-bold text-sm">
                   <CountingNumber value={currentStreak} duration={1} />
                 </span>
