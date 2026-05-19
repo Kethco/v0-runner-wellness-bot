@@ -68,6 +68,12 @@ export default function Dashboard() {
   // Get today's workout from the week plan
   const todayWorkout = weekPlanData?.todayWorkout;
   
+  // Check if today is a rest day - either explicitly "rest" type, or if plan exists but no workout today
+  // If no plan at all, we don't consider it a "rest day" (they just haven't set up a plan yet)
+  const hasPlan = weekPlanData?.plan?.id;
+  const isRestDay = todayWorkout?.workout_type === "rest" || 
+    (hasPlan && !todayWorkout);
+  
   // Ref for milestone tracking
   const prevProgressRef = useRef<number>(0);
   const prevStreakRef = useRef<number>(0);
@@ -347,7 +353,7 @@ return (
         <RecoveryCard />
         
         {/* Rest Day Guidance (shows on rest days) */}
-        {todayWorkout?.workout_type === "rest" && (
+        {isRestDay && (
           <RestDayGuidance />
         )}
 
