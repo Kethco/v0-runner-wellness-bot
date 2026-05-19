@@ -281,10 +281,11 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               {/* Date range - always show current calendar week */}
               <p className="text-xs text-[#6E6E73] mb-1">
                 {(() => {
-                  const weekStart = new Date(today);
-                  const dayOfWeek = today.getDay();
+                  const now = new Date();
+                  const weekStart = new Date(now);
+                  const dayOfWeek = now.getDay();
                   const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-                  weekStart.setDate(today.getDate() + mondayOffset);
+                  weekStart.setDate(now.getDate() + mondayOffset);
                   const weekEnd = new Date(weekStart);
                   weekEnd.setDate(weekStart.getDate() + 6);
                   const formatDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
