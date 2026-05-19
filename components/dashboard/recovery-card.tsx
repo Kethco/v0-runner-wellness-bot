@@ -167,7 +167,7 @@ export function RecoveryCard() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="premium-card overflow-hidden"
+      className="premium-card overflow-hidden border-2 border-[#AF52DE]"
     >
       {/* Top accent */}
       <div className="h-[2px] bg-gradient-to-r from-transparent via-[#AF52DE] to-transparent" />
