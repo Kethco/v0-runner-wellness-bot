@@ -96,16 +96,18 @@ export async function POST(request: NextRequest) {
     if (currentStreak) {
       // Check if this continues the streak
       const lastDate = currentStreak.last_checkin_date;
-      let newStreak = 1;
+      let newStreak = currentStreak.current_streak;
       
-      if (lastDate === yesterday) {
-        // Continuing streak
-        newStreak = currentStreak.current_streak + 1;
-      } else if (lastDate === today) {
+      if (lastDate === today) {
         // Already checked in today, keep current streak
         newStreak = currentStreak.current_streak;
+      } else if (lastDate === yesterday) {
+        // Continuing streak from yesterday
+        newStreak = currentStreak.current_streak + 1;
+      } else {
+        // Streak broken (missed a day or more), but today counts as day 1
+        newStreak = 1;
       }
-      // else: streak broken, start at 1
       
       await supabase
         .from("streaks")
