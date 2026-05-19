@@ -67,38 +67,25 @@ export async function GET(request: NextRequest) {
       }
 
       // Check if today is a rest day for this user
-      const { data: todayWorkout } = await supabase
-        .from("planned_workouts")
-        .select("workout_type, status")
-        .eq("scheduled_date", todayStr)
-        .eq("status", "planned")
+      const { data: userPlan } = await supabase
+        .from("training_plans")
+        .select("id")
+        .eq("user_id", profile.id)
+        .eq("status", "active")
         .maybeSingle();
       
-      // Also check via training plan
-      if (!todayWorkout) {
-        const { data: plan } = await supabase
-          .from("training_plans")
-          .select("id")
-          .eq("user_id", profile.id)
-          .eq("status", "active")
+      if (userPlan) {
+        const { data: todayWorkout } = await supabase
+          .from("planned_workouts")
+          .select("workout_type, status")
+          .eq("plan_id", userPlan.id)
+          .eq("scheduled_date", todayStr)
           .maybeSingle();
         
-        if (plan) {
-          const { data: workout } = await supabase
-            .from("planned_workouts")
-            .select("workout_type, status")
-            .eq("plan_id", plan.id)
-            .eq("scheduled_date", todayStr)
-            .maybeSingle();
-          
-          if (workout?.workout_type === "rest") {
-            skippedRestDay++;
-            continue;
-          }
+        if (todayWorkout?.workout_type === "rest") {
+          skippedRestDay++;
+          continue;
         }
-      } else if (todayWorkout.workout_type === "rest") {
-        skippedRestDay++;
-        continue;
       }
 
       // Check if today falls within a blocking life event
