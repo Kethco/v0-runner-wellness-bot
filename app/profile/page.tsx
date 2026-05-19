@@ -294,14 +294,23 @@ return (
                           size="sm" 
                           onClick={async () => {
                             if (!editedProfile.location) return;
+                            console.log("[v0] Saving location:", editedProfile.location);
                             try {
-                              await fetch("/api/profile", {
+                              const res = await fetch("/api/profile", {
                                 method: "PUT",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({ location: editedProfile.location }),
                               });
+                              const data = await res.json();
+                              console.log("[v0] Save response:", res.status, data);
+                              if (res.ok) {
+                                alert("Location saved!");
+                              } else {
+                                alert("Failed to save: " + (data.error || "Unknown error"));
+                              }
                             } catch (err) {
-                              console.error("Failed to save location:", err);
+                              console.error("[v0] Failed to save location:", err);
+                              alert("Failed to save location");
                             }
                           }}
                           className="shrink-0"
