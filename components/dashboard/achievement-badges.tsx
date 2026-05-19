@@ -203,7 +203,7 @@ export function AchievementBadges() {
               </div>
               <div>
                 <h3 className="text-white font-bold text-base">Achievements</h3>
-                <p className="text-[12px] text-white/40">
+                <p className="text-[12px] text-white/60">
                   <span className="text-amber-400 font-semibold">{earnedCount}</span> of {badges.length} unlocked
                 </p>
               </div>
@@ -237,7 +237,7 @@ export function AchievementBadges() {
         {/* Earned badges section */}
         {earnedBadges.length > 0 && (
           <div className="p-4 border-b border-white/[0.04]">
-            <p className="text-[10px] font-semibold text-amber-400/70 uppercase tracking-[0.12em] mb-3">
+            <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-[0.12em] mb-3">
               Unlocked
             </p>
             <div className="flex flex-wrap gap-2">
@@ -265,7 +265,7 @@ export function AchievementBadges() {
                   
                   {/* Tooltip */}
                   <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-                    <span className="text-[9px] bg-[#1A1A1A] px-2 py-0.5 rounded text-white/70 border border-white/10">{badge.name}</span>
+                    <span className="text-[9px] bg-[#1A1A1A] px-2 py-0.5 rounded text-white/80 border border-white/10">{badge.name}</span>
                   </div>
                 </button>
               ))}
@@ -276,7 +276,7 @@ export function AchievementBadges() {
         {/* Unearned badges section */}
         {unearnedBadges.length > 0 && (
           <div className="p-4">
-            <p className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] mb-3">In Progress</p>
+            <p className="text-[10px] font-semibold text-white/50 uppercase tracking-[0.12em] mb-3">In Progress</p>
             <div className="flex flex-wrap gap-2">
               {unearnedBadges.map((badge) => (
                 <button
@@ -285,9 +285,9 @@ export function AchievementBadges() {
                   className="relative group/badge transition-transform duration-200 hover:scale-105"
                 >
                   <div 
-                    className="relative w-9 h-9 rounded-lg flex items-center justify-center border border-white/[0.08] bg-white/[0.02]"
+                    className="relative w-9 h-9 rounded-lg flex items-center justify-center border border-white/[0.12] bg-white/[0.04]"
                   >
-                    <badge.icon className="w-4 h-4 text-white/25" />
+                    <badge.icon className="w-4 h-4 text-white/40" />
                     
                     {/* Progress ring */}
                     {badge.progress > 0 && (
@@ -309,7 +309,7 @@ export function AchievementBadges() {
                   
                   {/* Progress label */}
                   <div className="absolute -bottom-4 left-1/2 -translate-x-1/2">
-                    <span className="text-[8px] text-white/30">{Math.round(badge.progress)}%</span>
+                    <span className="text-[8px] text-white/50">{Math.round(badge.progress)}%</span>
                   </div>
                 </button>
               ))}

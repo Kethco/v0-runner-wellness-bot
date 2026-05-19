@@ -161,7 +161,7 @@ export function PersonalRecordsCard() {
                 
                 <div>
                   <h3 className="text-lg font-bold text-white">Personal Records</h3>
-                  <p className="text-sm text-white/40">
+                  <p className="text-sm text-white/60">
                     {hasAnyPR 
                       ? `${earnedCount} of ${personalRecords.length} conquered`
                       : "Your glory awaits"
@@ -192,10 +192,10 @@ export function PersonalRecordsCard() {
                         : "bg-white/[0.02] border border-white/[0.04] border-dashed hover:border-amber-500/20"
                     }`}
                   >
-                    <span className={`text-base font-semibold ${hasPR ? "text-white" : "text-white/40"}`}>
+                    <span className={`text-base font-semibold ${hasPR ? "text-white" : "text-white/50"}`}>
                       {pr.distance}
                     </span>
-                    <span className={`text-lg font-bold ${hasPR ? "text-amber-400" : "text-white/20"}`}>
+                    <span className={`text-lg font-bold ${hasPR ? "text-amber-400" : "text-white/30"}`}>
                       {hasPR ? pr.time : "—"}
                     </span>
                   </motion.button>
