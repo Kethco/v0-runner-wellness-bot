@@ -204,9 +204,9 @@
 /* Main goal card with gradient border */
 .goal-card-border {
   position: relative;
-  background: #0D0D0D;
+  background: #1A1A1C;
   border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   overflow: hidden;
 }
 
@@ -231,8 +231,8 @@
 /* Premium card - glass morphism */
 .premium-card {
   position: relative;
-  background: #0D0D0D;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #1A1A1C;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1.5rem;
   overflow: hidden;
 }
@@ -254,9 +254,9 @@
 
 /* Glass card variant */
 .glass-card {
-  background: rgba(28, 28, 30, 0.95);
+  background: rgba(38, 38, 40, 0.95);
   backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1.5rem;
 }
 
@@ -277,8 +277,8 @@
 
 /* Metric card hover */
 .metric-card {
-  background: #1C1C1E;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #232325;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1rem;
   transition: all 0.3s ease;
 }
