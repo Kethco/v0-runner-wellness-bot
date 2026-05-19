@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Gauge, TrendingUp, AlertCircle, CheckCircle2, Zap } from "lucide-react";
+import { TrendingUp, AlertCircle, CheckCircle2, Zap } from "lucide-react";
 import useSWR from "swr";
 import Link from "next/link";
 
@@ -16,13 +16,10 @@ export function ReadinessScore() {
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-white/10 p-5 animate-pulse" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-white/5" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 bg-white/5 rounded w-24" />
-            <div className="h-3 bg-white/5 rounded w-40" />
-          </div>
+      <div className="premium-card p-6 animate-pulse">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-32 h-32 rounded-full bg-white/5" />
+          <div className="h-4 bg-white/5 rounded w-24" />
         </div>
       </div>
     );
@@ -34,7 +31,7 @@ export function ReadinessScore() {
 
   const { readiness, patterns, recoverySuggestions } = data;
   const score = readiness.score;
-  const circumference = 2 * Math.PI * 28;
+  const circumference = 2 * Math.PI * 54;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
@@ -43,136 +40,151 @@ export function ReadinessScore() {
       animate={{ opacity: 1, y: 0 }}
       className="premium-card overflow-hidden"
     >
-      {/* Subtle top accent line */}
-      <div 
-        className="h-[2px] opacity-80"
-        style={{ 
-          background: `linear-gradient(to right, ${readiness.color}, ${readiness.color}40, transparent)` 
-        }}
-      />
-      
-      <div className="p-5">
-        <div className="flex items-center gap-5">
-          {/* Premium Circular Score with glow */}
-          <div className="relative w-[88px] h-[88px] flex-shrink-0">
-            {/* Glow effect */}
-            <div 
-              className="absolute inset-0 rounded-full blur-xl opacity-30"
-              style={{ backgroundColor: readiness.color }}
+      <div className="p-6">
+        {/* Large centered readiness ring */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="relative w-[140px] h-[140px]">
+            {/* Outer glow */}
+            <motion.div 
+              className="absolute inset-[-20px] rounded-full"
+              style={{ 
+                background: `radial-gradient(circle, ${readiness.color}40 0%, ${readiness.color}15 40%, transparent 70%)`,
+              }}
+              animate={{ 
+                opacity: [0.5, 0.8, 0.5],
+                scale: [1, 1.05, 1]
+              }}
+              transition={{ 
+                duration: 3, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
             />
-            <svg className="w-full h-full -rotate-90 relative z-10" viewBox="0 0 64 64">
-              {/* Background circle */}
+            
+            {/* Progress indicator dot */}
+            <motion.div
+              className="absolute w-3 h-3 rounded-full"
+              style={{ 
+                backgroundColor: readiness.color,
+                boxShadow: `0 0 12px ${readiness.color}, 0 0 24px ${readiness.color}`,
+                top: '0',
+                left: '50%',
+                transform: 'translateX(-50%)',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+            />
+            
+            {/* SVG Ring */}
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 140 140">
+              {/* Background ring */}
               <circle
-                cx="32"
-                cy="32"
-                r="28"
+                cx="70"
+                cy="70"
+                r="54"
                 fill="none"
-                stroke="rgba(255,255,255,0.15)"
-                strokeWidth="5"
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth="8"
               />
-              {/* Progress circle */}
+              {/* Progress ring */}
               <motion.circle
-                cx="32"
-                cy="32"
-                r="28"
+                cx="70"
+                cy="70"
+                r="54"
                 fill="none"
-                stroke={`url(#readiness-gradient-${score})`}
-                strokeWidth="5"
+                stroke={readiness.color}
+                strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 initial={{ strokeDashoffset: circumference }}
                 animate={{ strokeDashoffset }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
-                style={{ filter: `drop-shadow(0 0 6px ${readiness.color}60)` }}
+                transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                style={{ 
+                  filter: `drop-shadow(0 0 12px ${readiness.color}) drop-shadow(0 0 24px ${readiness.color}80)`,
+                }}
               />
-              <defs>
-                <linearGradient id={`readiness-gradient-${score}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor={readiness.color} />
-                  <stop offset="100%" stopColor={readiness.color} stopOpacity="0.6" />
-                </linearGradient>
-              </defs>
             </svg>
+            
             {/* Center content */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span 
+                className="text-xs font-bold uppercase tracking-wider mb-1"
+                style={{ color: readiness.color }}
+              >
+                Ready
+              </span>
               <motion.span
-                className="text-[28px] font-black text-white tracking-tight"
-                initial={{ opacity: 0, scale: 0.8 }}
+                className="text-5xl font-black text-white"
+                initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4, type: "spring" }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
               >
                 {score}
               </motion.span>
-              <span className="text-[8px] text-[#AEAEB2] uppercase tracking-[0.15em] font-semibold">Ready</span>
-            </div>
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <h3 className="text-white font-bold text-base">Today&apos;s Readiness</h3>
               <span 
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
+                className="text-sm font-semibold mt-1 px-3 py-0.5 rounded-full"
                 style={{ 
                   backgroundColor: `${readiness.color}20`,
                   color: readiness.color,
-                  borderColor: `${readiness.color}40`
                 }}
               >
                 {readiness.label}
               </span>
             </div>
-            <p className="text-[#C7C7CC] text-[13px] leading-relaxed">{readiness.advice}</p>
-            
-            {!readiness.hasCheckedIn && (
-              <Link 
-                href="#checkin"
-                className="inline-flex items-center gap-1.5 text-[11px] text-[#FF4500] mt-2.5 hover:text-[#FF6B00] transition-colors font-medium"
-              >
-                <AlertCircle className="w-3 h-3" />
-                Check in for accurate score
-              </Link>
-            )}
           </div>
         </div>
 
-        {/* Patterns & Insights */}
-        {(patterns?.length > 0 || recoverySuggestions?.length > 0) && (
-          <div className="mt-4 pt-4 border-t border-border">
-            {patterns?.length > 0 && (
-              <div className="space-y-2 mb-3">
-                <p className="text-[10px] text-[#6E6E73] uppercase tracking-wider font-bold flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" />
-                  Insights from your data
-                </p>
-                {patterns.slice(0, 2).map((pattern: string, i: number) => (
-                  <div 
-                    key={i}
-                    className="flex items-start gap-2 text-sm text-[#AEAEB2]"
-                  >
-                    <Zap className="w-3.5 h-3.5 text-[#FFD60A] mt-0.5 flex-shrink-0" />
-                    <span>{pattern}</span>
-                  </div>
-                ))}
+        {/* Advice card */}
+        <div className="bg-[#1C1C1E] rounded-xl p-4 border border-white/5">
+          <p className="text-white/90 text-sm leading-relaxed">{readiness.advice}</p>
+          
+          {!readiness.hasCheckedIn && (
+            <Link 
+              href="#checkin"
+              className="inline-flex items-center gap-1.5 text-xs text-[#FF4500] mt-3 hover:text-[#FF6B00] transition-colors font-semibold"
+            >
+              <AlertCircle className="w-3.5 h-3.5" />
+              Check in for accurate score
+            </Link>
+          )}
+        </div>
+
+        {/* Insights section */}
+        {patterns?.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <p className="text-xs text-[#6E6E73] uppercase tracking-wider font-bold flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5" />
+              Insights
+            </p>
+            {patterns.slice(0, 2).map((pattern: string, i: number) => (
+              <div 
+                key={i}
+                className="flex items-start gap-2.5 text-sm text-white/70 bg-[#1C1C1E] rounded-lg p-3"
+              >
+                <Zap className="w-4 h-4 text-[#FFD60A] mt-0.5 flex-shrink-0" />
+                <span>{pattern}</span>
               </div>
-            )}
-            
-            {recoverySuggestions?.length > 0 && readiness.score < 70 && (
-              <div className="space-y-2">
-                <p className="text-[10px] text-[#6E6E73] uppercase tracking-wider font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Recovery tips
-                </p>
-                {recoverySuggestions.slice(0, 2).map((tip: string, i: number) => (
-                  <div 
-                    key={i}
-                    className="flex items-start gap-2 text-sm text-[#AEAEB2]"
-                  >
-                    <span className="text-[#30D158]">•</span>
-                    <span>{tip}</span>
-                  </div>
-                ))}
+            ))}
+          </div>
+        )}
+        
+        {/* Recovery tips */}
+        {recoverySuggestions?.length > 0 && readiness.score < 70 && (
+          <div className="mt-4 space-y-2">
+            <p className="text-xs text-[#6E6E73] uppercase tracking-wider font-bold flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Recovery Tips
+            </p>
+            {recoverySuggestions.slice(0, 2).map((tip: string, i: number) => (
+              <div 
+                key={i}
+                className="flex items-start gap-2.5 text-sm text-white/70 bg-[#1C1C1E] rounded-lg p-3"
+              >
+                <span className="text-[#30D158] font-bold">•</span>
+                <span>{tip}</span>
               </div>
-            )}
+            ))}
           </div>
         )}
       </div>

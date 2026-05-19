@@ -75,40 +75,55 @@ export function WeeklySummary() {
       animate={{ opacity: 1, y: 0 }}
       className="premium-card overflow-hidden"
     >
+      {/* Top accent */}
+      <div className="h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent" />
+      
       {/* Header */}
-      <div className="p-4 pb-3 border-b border-[#2A2A2A]">
+      <div className="p-5 pb-4 border-b border-white/5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#FFD700]">Weekly Recap</p>
-            <p className="text-white font-bold text-base mt-0.5">Your Week in Review</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-[#FFD700]">Weekly Recap</p>
+            <p className="text-white font-bold text-lg mt-1">Your Week in Review</p>
           </div>
           <Link 
             href="/trends" 
-            className="w-8 h-8 rounded-lg bg-[#2A2A2A] flex items-center justify-center text-[#8E8E93] hover:text-white hover:bg-[#3A3A3A] transition-all"
+            className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </Link>
         </div>
       </div>
 
       {/* Stats grid */}
-      <div className="p-4">
-        <div className="grid grid-cols-2 gap-2.5">
+      <div className="p-5">
+        <div className="grid grid-cols-2 gap-3">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.08 + i * 0.04 }}
-              className="flex items-center gap-3 p-3 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#3A3A3A] transition-colors"
+              transition={{ delay: 0.1 + i * 0.05 }}
+              className="flex items-center gap-3 p-4 rounded-xl bg-[#1C1C1E] border border-white/5 hover:border-white/10 transition-all"
             >
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}20` }}>
-                <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center" 
+                style={{ 
+                  backgroundColor: `${stat.color}20`,
+                  boxShadow: `0 0 16px ${stat.color}30`
+                }}
+              >
+                <stat.icon 
+                  className="w-5 h-5" 
+                  style={{ 
+                    color: stat.color,
+                    filter: `drop-shadow(0 0 4px ${stat.color})`
+                  }} 
+                />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-[#8E8E93] font-medium">{stat.label}</p>
-                <div className="flex items-center gap-1.5">
-                  <p className="text-white font-bold text-base">{stat.value}</p>
+                <p className="text-xs text-white/40 font-semibold">{stat.label}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-white font-bold text-lg">{stat.value}</p>
                   <TrendArrow current={stat.current} previous={stat.prev} />
                 </div>
               </div>
@@ -118,19 +133,19 @@ export function WeeklySummary() {
 
         {/* Best day callout */}
         {bestDay && (
-          <div className="mt-3 p-3 rounded-xl bg-[#30D158]/12 border border-[#30D158]/25">
-            <p className="text-[10px] text-[#30D158] font-bold uppercase tracking-wider">Best Day · {bestDay.day}</p>
-            <p className="text-[12px] text-[#C7C7CC] mt-0.5">{bestDay.reason}</p>
+          <div className="mt-4 p-4 rounded-xl bg-[#30D158]/10 border border-[#30D158]/20">
+            <p className="text-xs text-[#30D158] font-bold uppercase tracking-wider">Best Day · {bestDay.day}</p>
+            <p className="text-sm text-white/70 mt-1">{bestDay.reason}</p>
           </div>
         )}
 
         {/* Patterns */}
         {patterns && patterns.length > 0 && (
-          <div className="mt-3 space-y-2">
+          <div className="mt-4 space-y-2">
             {patterns.slice(0, 2).map((pattern: string, i: number) => (
-              <div key={i} className="flex items-start gap-2 p-2">
-                <Flame className="w-3.5 h-3.5 text-[#FF6B00] mt-0.5 shrink-0" />
-                <p className="text-xs text-[#AEAEB2] leading-relaxed">{pattern}</p>
+              <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.02]">
+                <Flame className="w-4 h-4 text-[#FF6B00] mt-0.5 shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(255,107,0,0.5))' }} />
+                <p className="text-sm text-white/60 leading-relaxed">{pattern}</p>
               </div>
             ))}
           </div>

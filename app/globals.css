@@ -62,24 +62,24 @@
 }
 
 .dark {
-  --background: #0A0A0A;
-  --foreground: #F5F5F7;
-  --card: #161618;
-  --card-foreground: #F5F5F7;
-  --popover: #161618;
-  --popover-foreground: #F5F5F7;
+  --background: #000000;
+  --foreground: #FFFFFF;
+  --card: #1C1C1E;
+  --card-foreground: #FFFFFF;
+  --popover: #1C1C1E;
+  --popover-foreground: #FFFFFF;
   --primary: #FF4500;
   --primary-foreground: #FFFFFF;
-  --secondary: #252528;
-  --secondary-foreground: #F5F5F7;
-  --muted: #323235;
-  --muted-foreground: #C7C7CC;
+  --secondary: #2C2C2E;
+  --secondary-foreground: #FFFFFF;
+  --muted: #3A3A3C;
+  --muted-foreground: #AEAEB2;
   --accent: #00D4FF;
   --accent-foreground: #000000;
   --destructive: #FF453A;
   --destructive-foreground: #FFFFFF;
-  --border: #48484A;
-  --input: #252528;
+  --border: #3A3A3C;
+  --input: #2C2C2E;
   --ring: #FF4500;
   --chart-1: #FF4500;
   --chart-2: #30D158;
@@ -158,44 +158,56 @@
   }
 }
 
-/* Glow effects */
+/* ========================================
+   PREMIUM GLOW EFFECTS
+   ======================================== */
+
 .glow-orange {
-  box-shadow: 0 0 20px rgba(255, 69, 0, 0.5), 0 0 40px rgba(255, 69, 0, 0.3);
+  box-shadow: 
+    0 0 20px rgba(255, 69, 0, 0.6),
+    0 0 40px rgba(255, 69, 0, 0.4),
+    0 0 60px rgba(255, 69, 0, 0.2);
 }
 
 .glow-green {
-  box-shadow: 0 0 20px rgba(48, 209, 88, 0.5), 0 0 40px rgba(48, 209, 88, 0.3);
+  box-shadow: 
+    0 0 20px rgba(48, 209, 88, 0.6),
+    0 0 40px rgba(48, 209, 88, 0.4),
+    0 0 60px rgba(48, 209, 88, 0.2);
+}
+
+.glow-purple {
+  box-shadow: 
+    0 0 20px rgba(175, 82, 222, 0.6),
+    0 0 40px rgba(175, 82, 222, 0.4),
+    0 0 60px rgba(175, 82, 222, 0.2);
+}
+
+.glow-gold {
+  box-shadow: 
+    0 0 30px rgba(255, 214, 10, 0.6),
+    0 0 60px rgba(255, 214, 10, 0.4),
+    0 0 90px rgba(255, 214, 10, 0.2);
 }
 
 .glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+  box-shadow: 
+    0 0 20px rgba(0, 212, 255, 0.6),
+    0 0 40px rgba(0, 212, 255, 0.4),
+    0 0 60px rgba(0, 212, 255, 0.2);
 }
 
-/* Animated gradient border for goal card */
-@keyframes gradient-rotate {
-  0% { --gradient-angle: 0deg; }
-  100% { --gradient-angle: 360deg; }
-}
+/* ========================================
+   PREMIUM CARD STYLES
+   ======================================== */
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.7; }
-}
-
-@property --gradient-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
-
+/* Main goal card with gradient border */
 .goal-card-border {
   position: relative;
-  background: linear-gradient(145deg, #1C1C1E, #141416);
+  background: #0D0D0D;
   border-radius: 1.5rem;
-  border: 1.5px solid rgba(255, 107, 0, 0.4);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .goal-card-border::before {
@@ -206,11 +218,9 @@
   border-radius: 1.5rem;
   background: linear-gradient(
     135deg,
-    rgba(255, 69, 0, 0.6),
-    rgba(255, 107, 0, 0.3),
-    rgba(255, 140, 0, 0.1),
-    transparent 50%,
-    rgba(255, 69, 0, 0.2)
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.1) 100%
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -218,97 +228,132 @@
   pointer-events: none;
 }
 
-.goal-card-border::after {
-  content: '';
-  position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 150px;
-  height: 150px;
-  background: radial-gradient(circle, rgba(255, 69, 0, 0.15) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Text glow */
-.text-glow-orange {
-  text-shadow: 0 0 10px rgba(255, 69, 0, 0.8), 0 0 20px rgba(255, 69, 0, 0.5);
-}
-
-.text-glow-white {
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-/* Premium card styles */
+/* Premium card - glass morphism */
 .premium-card {
   position: relative;
-  background: linear-gradient(145deg, #1C1C1E, #141416);
-  border: 1.5px solid rgba(255, 255, 255, 0.12);
-  border-radius: 1.25rem;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
-  transition: all 0.3s ease;
+  background: #0D0D0D;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  overflow: hidden;
 }
 
-.premium-card:hover {
-  border-color: rgba(255, 255, 255, 0.18);
-  box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+.premium-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15),
+    transparent
+  );
 }
 
 /* Glass card variant */
 .glass-card {
-  background: rgba(22, 22, 24, 0.8);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.25rem;
+  background: rgba(28, 28, 30, 0.95);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
 }
 
-/* Progress ring glow */
-.progress-ring-glow {
-  filter: drop-shadow(0 0 8px rgba(255, 69, 0, 0.4));
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
 }
 
 /* Metric card hover */
 .metric-card {
-  transition: all 0.2s ease;
+  background: #1C1C1E;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+  transition: all 0.3s ease;
 }
 
 .metric-card:hover {
-  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
 }
 
-/* Animated gradient border */
-@keyframes gradient-rotate {
-  0% { --gradient-angle: 0deg; }
-  100% { --gradient-angle: 360deg; }
+/* ========================================
+   PROGRESS RING GLOW
+   ======================================== */
+
+.progress-ring-glow {
+  filter: drop-shadow(0 0 12px rgba(255, 69, 0, 0.5));
 }
 
-.animated-border {
-  background: linear-gradient(var(--gradient-angle, 0deg), #FF4500, #FF9F0A, #30D158, #00D4FF, #FF4500);
-  background-size: 400% 400%;
-  animation: gradient-shift 3s ease infinite;
+.progress-ring-gold {
+  filter: drop-shadow(0 0 20px rgba(255, 214, 10, 0.6));
 }
 
-@keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+.progress-ring-purple {
+  filter: drop-shadow(0 0 12px rgba(175, 82, 222, 0.5));
 }
 
-/* Pulse animation */
+/* ========================================
+   TEXT GLOW EFFECTS
+   ======================================== */
+
+.text-glow-orange {
+  text-shadow: 
+    0 0 10px rgba(255, 69, 0, 0.8),
+    0 0 20px rgba(255, 69, 0, 0.5),
+    0 0 30px rgba(255, 69, 0, 0.3);
+}
+
+.text-glow-white {
+  text-shadow: 
+    0 0 10px rgba(255, 255, 255, 0.5),
+    0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.text-glow-gold {
+  text-shadow: 
+    0 0 10px rgba(255, 214, 10, 0.8),
+    0 0 20px rgba(255, 214, 10, 0.5),
+    0 0 30px rgba(255, 214, 10, 0.3);
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
 @keyframes pulse-glow {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.02); }
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes ring-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.1); }
 }
 
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Safe area for fixed headers on phones with notches */
-/* Use top-safe class to position element at very top and add padding for content */
+.ring-pulse {
+  animation: ring-pulse 2s ease-in-out infinite;
+}
+
+/* ========================================
+   SAFE AREA UTILITIES
+   ======================================== */
+
 .top-safe {
   top: 0;
   padding-top: env(safe-area-inset-top, 0px);
@@ -322,31 +367,93 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* For fixed headers that need to cover the entire top including notch area */
 .fixed-header-safe {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   padding-top: env(safe-area-inset-top, 0px);
-  background-color: black;
+  background-color: #000000;
 }
 
-/* Custom scrollbar */
+/* ========================================
+   CUSTOM SCROLLBAR
+   ======================================== */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #111111;
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #3A3A3C;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #4A4A4C;
+}
+
+/* ========================================
+   LUMINOUS ORB STYLES
+   ======================================== */
+
+.wellness-orb {
+  position: relative;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08), transparent 60%);
+}
+
+.wellness-orb::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: inherit;
+  filter: blur(12px);
+  opacity: 0.4;
+  z-index: -1;
+}
+
+/* ========================================
+   ICON GLOW
+   ======================================== */
+
+.icon-glow-orange {
+  filter: drop-shadow(0 0 6px rgba(255, 69, 0, 0.6));
+}
+
+.icon-glow-green {
+  filter: drop-shadow(0 0 6px rgba(48, 209, 88, 0.6));
+}
+
+.icon-glow-purple {
+  filter: drop-shadow(0 0 6px rgba(175, 82, 222, 0.6));
+}
+
+.icon-glow-gold {
+  filter: drop-shadow(0 0 6px rgba(255, 214, 10, 0.6));
+}
+
+.icon-glow-cyan {
+  filter: drop-shadow(0 0 6px rgba(0, 212, 255, 0.6));
+}
+
+/* ========================================
+   AMBIENT LIGHT EFFECTS
+   ======================================== */
+
+.ambient-orange {
+  background: radial-gradient(ellipse at top right, rgba(255, 69, 0, 0.15), transparent 50%);
+}
+
+.ambient-purple {
+  background: radial-gradient(ellipse at top left, rgba(175, 82, 222, 0.1), transparent 50%);
+}
+
+.ambient-gold {
+  background: radial-gradient(ellipse at center, rgba(255, 214, 10, 0.08), transparent 60%);
 }

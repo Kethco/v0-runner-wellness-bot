@@ -261,22 +261,25 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="goal-card-border relative overflow-hidden p-6"
+        className="premium-card relative overflow-hidden"
       >
-        <div className="relative z-10">
+        {/* Top gradient line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF4500] to-transparent" />
+        
+        <div className="relative z-10 p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <div className="flex items-center gap-2.5 mb-1.5">
-                <p className="text-[#AEAEB2] text-xs font-semibold uppercase tracking-[0.12em]">This Week</p>
+              <div className="flex items-center gap-2.5 mb-2">
+                <p className="text-white/60 text-xs font-bold uppercase tracking-widest">This Week</p>
                 {hasPlan && planData?.plan && (
-                  <Badge variant="secondary" className="text-[10px] h-5 px-2 bg-[#FF4500]/15 text-[#FF6B00] border border-[#FF4500]/30 font-semibold">
+                  <Badge variant="secondary" className="text-[10px] h-5 px-2.5 bg-[#FF4500]/20 text-[#FF6B00] border border-[#FF4500]/40 font-bold">
                     Week {planData.plan.currentWeek}{planData.plan.totalWeeks ? `/${planData.plan.totalWeeks}` : ""}
                   </Badge>
                 )}
               </div>
               {/* Date range */}
-              <p className="text-[11px] text-[#8E8E93] font-medium tracking-wide mb-3">
+              <p className="text-sm text-[#8E8E93] font-medium mb-4">
                 {(() => {
                   const now = new Date();
                   const weekStart = new Date(now);
@@ -290,7 +293,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 })()}
               </p>
               {/* Mileage display */}
-              <div className="flex items-baseline gap-1.5">
+              <div className="flex items-baseline gap-2">
                 <motion.span 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -298,31 +301,49 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 >
                   {displayCompletedMiles.toFixed(1)}
                 </motion.span>
-                <span className="text-[#AEAEB2] text-lg font-semibold">
+                <span className="text-white/40 text-xl font-semibold">
                   / {displayPlannedMiles.toFixed(0)} mi
                 </span>
               </div>
               {hasPlan && planData?.plan?.weekType && (
-                <p className="text-xs text-[#8E8E93] mt-2 font-medium tracking-wide">
-                  <span className="text-[#FF6B00] font-semibold capitalize">{planData.plan.weekType}</span>
+                <p className="text-sm text-white/50 mt-3 font-medium">
+                  <span className="text-[#FF6B00] font-bold capitalize">{planData.plan.weekType}</span>
                   {planData.plan.weekFocus ? ` · ${planData.plan.weekFocus}` : ""}
                 </p>
               )}
             </div>
             
-            {/* Progress Ring */}
-            <div className="relative w-20 h-20 flex-shrink-0 progress-ring-glow">
+            {/* Progress Ring with Glow */}
+            <div className="relative w-24 h-24 flex-shrink-0">
+              {/* Glow effect */}
+              <motion.div 
+                className="absolute inset-[-8px] rounded-full"
+                style={{ 
+                  background: 'radial-gradient(circle, rgba(255,69,0,0.3) 0%, transparent 70%)',
+                }}
+                animate={{ 
+                  opacity: [0.4, 0.7, 0.4],
+                  scale: [1, 1.05, 1]
+                }}
+                transition={{ 
+                  duration: 2.5, 
+                  repeat: Infinity, 
+                  ease: "easeInOut" 
+                }}
+              />
+              
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.15)" strokeWidth="6" fill="none" />
+                <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.06)" strokeWidth="6" fill="none" />
                 <motion.circle
-                  cx="50" cy="50" r="40"
+                  cx="50" cy="50" r="42"
                   stroke="url(#progress-gradient)"
                   strokeWidth="6"
                   fill="none"
                   strokeLinecap="round"
-                  initial={{ strokeDasharray: "0 251" }}
-                  animate={{ strokeDasharray: `${progressPercent * 2.51} 251` }}
+                  initial={{ strokeDasharray: "0 264" }}
+                  animate={{ strokeDasharray: `${progressPercent * 2.64} 264` }}
                   transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+                  style={{ filter: 'drop-shadow(0 0 8px rgba(255,69,0,0.6))' }}
                 />
                 <defs>
                   <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -333,7 +354,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <motion.span 
-                  className="text-xl font-black text-white"
+                  className="text-2xl font-black text-white"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}
@@ -368,89 +389,119 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
             </motion.div>
           )}
 
-          {/* Today's Workout (if plan exists) */}
+          {/* Today's Workout Card */}
           {hasPlan && planData?.todayWorkout && planData.todayWorkout.workout_type !== "rest" && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="mb-5 p-3.5 rounded-xl bg-[#1A1A1A] border border-[#3A3A3A] hover:border-[#4A4A4A] transition-colors"
+              className="mb-5 p-4 rounded-xl bg-[#1C1C1E] border border-white/10 hover:border-white/15 transition-all"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <div 
-                  className="w-11 h-11 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: `${WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500"}20` }}
+                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  style={{ 
+                    backgroundColor: `${WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500"}20`,
+                    boxShadow: `0 0 20px ${WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500"}30`
+                  }}
                 >
                   {(() => {
                     const IconComponent = WORKOUT_ICONS[planData.todayWorkout.workout_type]?.icon || Play;
-                    return <IconComponent className="w-5 h-5" style={{ color: WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500" }} />;
+                    return <IconComponent 
+                      className="w-5 h-5" 
+                      style={{ 
+                        color: WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500",
+                        filter: `drop-shadow(0 0 4px ${WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500"})`
+                      }} 
+                    />;
                   })()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-white truncate">
+                  <p className="text-sm font-bold text-white truncate">
                     Today · {planData.todayWorkout.title}
                   </p>
-                  <p className="text-[11px] text-[#AEAEB2] truncate mt-0.5">
+                  <p className="text-xs text-white/50 truncate mt-0.5">
                     {planData.todayWorkout.target_miles ? `${planData.todayWorkout.target_miles} mi` : ""} 
                     {planData.todayWorkout.target_pace_zone ? ` · ${planData.todayWorkout.target_pace_zone} pace` : ""}
                   </p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-[#6E6E73]" />
+                <ChevronRight className="w-5 h-5 text-white/30" />
               </div>
             </motion.div>
           )}
 
           {/* Weekly Workout Strip */}
-          <div className="flex items-end justify-between gap-1.5">
+          <div className="flex items-end justify-between gap-2 bg-[#0A0A0A] rounded-xl p-4 -mx-1">
             {chartData.map((day, i) => {
               // Use logarithmic scale for better visualization
               const normalizedMiles = day.miles > 0 ? Math.log(day.miles + 1) / Math.log(maxMiles + 1) : 0;
-              const barHeight = day.miles > 0 ? Math.max(normalizedMiles * 52 + 14, 18) : 14;
+              const barHeight = day.miles > 0 ? Math.max(normalizedMiles * 48 + 16, 20) : 16;
               
               // Determine bar style based on status
               const isRestDay = day.type === "rest" && day.miles === 0;
               const isLifeEventBlocked = day.isSkipped && day.miles > 0;
               
-              // Bar color logic with clear visual distinction
-              const getBarClasses = () => {
+              // Bar color logic with glowing effects
+              const getBarStyles = () => {
                 if (day.isCompleted) {
-                  return "bg-gradient-to-t from-[#30D158] to-[#4ADE80] shadow-md shadow-[#30D158]/40";
+                  return {
+                    background: 'linear-gradient(to top, #30D158, #4ADE80)',
+                    boxShadow: '0 0 12px rgba(48, 209, 88, 0.5)',
+                  };
                 }
                 if (isLifeEventBlocked) {
-                  return "bg-gradient-to-t from-amber-600/70 to-amber-500/50 border border-amber-500/50";
+                  return {
+                    background: 'linear-gradient(to top, #F59E0B, #FBBF24)',
+                    boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)',
+                  };
                 }
                 if (day.isSkipped && !isLifeEventBlocked) {
-                  return "bg-red-500/50 border border-red-500/40";
+                  return {
+                    background: '#EF4444',
+                    opacity: 0.5,
+                  };
                 }
                 if (isRestDay) {
-                  return "bg-[#2A3A4A] border border-[#3A5A6A]";
+                  return {
+                    background: '#2A2A2A',
+                    border: '1px solid #3A3A3A',
+                  };
                 }
                 if (day.isToday && day.miles > 0) {
-                  return "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/50";
+                  return {
+                    background: 'linear-gradient(to top, #FF4500, #FF6B00)',
+                    boxShadow: '0 0 16px rgba(255, 69, 0, 0.6)',
+                  };
                 }
                 if (day.isPast && day.miles > 0) {
-                  return "bg-[#4A4A4A]";
+                  return {
+                    background: '#4A4A4A',
+                  };
                 }
                 if (day.miles > 0) {
-                  return "bg-[#FF4500]/60";
+                  return {
+                    background: 'linear-gradient(to top, rgba(255,69,0,0.5), rgba(255,107,0,0.3))',
+                  };
                 }
-                return "bg-[#2A3A4A]";
+                return {
+                  background: '#1C1C1E',
+                };
               };
               
-              // Label color logic - more visible
+              // Label color logic
               const getLabelColor = () => {
-                if (isLifeEventBlocked) return "text-amber-400 line-through font-semibold";
-                if (day.isSkipped) return "text-red-400 line-through font-semibold";
+                if (isLifeEventBlocked) return "text-amber-400 line-through font-bold";
+                if (day.isSkipped) return "text-red-400 line-through font-bold";
                 if (day.isCompleted) return "text-[#30D158] font-bold";
                 if (day.isToday) return "text-[#FF6B00] font-bold";
-                if (isRestDay) return "text-[#5A8A9A]";
-                return "text-white/80";
+                if (isRestDay) return "text-white/40 font-semibold";
+                return "text-white/70 font-semibold";
               };
               
               return (
-                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[36px]">
+                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[38px]">
                   {/* Miles or Rest label */}
-                  <span className={`text-[10px] mb-1.5 whitespace-nowrap font-semibold ${getLabelColor()}`}>
+                  <span className={`text-xs mb-2 whitespace-nowrap ${getLabelColor()}`}>
                     {isRestDay ? "Rest" : day.miles > 0 ? day.miles.toFixed(1) : "Rest"}
                   </span>
                   
@@ -459,35 +510,36 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: barHeight }}
-                      transition={{ duration: 0.4, delay: i * 0.04, ease: "easeOut" }}
-                      className={`w-full max-w-[28px] rounded-t-lg ${getBarClasses()}`}
+                      transition={{ duration: 0.5, delay: i * 0.05, ease: "easeOut" }}
+                      className="w-full max-w-[30px] rounded-t-lg"
+                      style={getBarStyles()}
                     />
                   </div>
                   
                   {/* Day label */}
-                  <span className={`text-[11px] font-bold mt-1.5 ${
+                  <span className={`text-xs font-bold mt-2 ${
                     day.isToday ? "text-[#FF6B00]" 
                     : day.isCompleted ? "text-[#30D158]" 
                     : isLifeEventBlocked ? "text-amber-400"
                     : day.isSkipped ? "text-red-400" 
-                    : "text-white/60"
+                    : "text-white/50"
                   }`}>
                     {day.day}
                   </span>
                   
                   {/* Status indicator */}
-                  <div className="h-3 flex items-center justify-center mt-0.5">
+                  <div className="h-4 flex items-center justify-center mt-1">
                     {day.isCompleted && (
-                      <CheckCircle2 className="w-2.5 h-2.5 text-[#30D158]" />
+                      <CheckCircle2 className="w-3 h-3 text-[#30D158]" style={{ filter: 'drop-shadow(0 0 4px rgba(48,209,88,0.5))' }} />
                     )}
                     {isLifeEventBlocked && (
-                      <Calendar className="w-2.5 h-2.5 text-amber-400" />
+                      <Calendar className="w-3 h-3 text-amber-400" />
                     )}
                     {day.isSkipped && !isLifeEventBlocked && (
-                      <SkipForward className="w-2.5 h-2.5 text-red-400" />
+                      <SkipForward className="w-3 h-3 text-red-400" />
                     )}
                     {day.isToday && !day.isCompleted && !day.isSkipped && (
-                      <div className="w-1 h-1 rounded-full bg-[#FF6B00]" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B00]" style={{ boxShadow: '0 0 8px rgba(255,107,0,0.8)' }} />
                     )}
                   </div>
                 </div>
@@ -497,24 +549,24 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
           {/* View Full Plan Link */}
           {hasPlan && (
-            <Link href="/training-plan" className="block mt-4">
+            <Link href="/training-plan" className="block mt-5">
               <Button 
                 variant="ghost" 
-                className="w-full h-9 text-xs text-[#AEAEB2] hover:text-white hover:bg-[#2A2A2A]"
+                className="w-full h-10 text-sm text-white/60 hover:text-white hover:bg-white/5 font-semibold"
               >
-                View Full Training Plan <ChevronRight className="w-3 h-3 ml-1" />
+                View Full Training Plan <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
           )}
 
           {/* No Plan CTA */}
           {!hasPlan && !isLoading && (
-            <Link href="/goals" className="block mt-4">
+            <Link href="/goals" className="block mt-5">
               <Button 
                 variant="ghost" 
-                className="w-full h-9 text-xs text-[#FF4500] hover:text-[#FF6B00] hover:bg-[#FF4500]/10"
+                className="w-full h-10 text-sm text-[#FF4500] hover:text-[#FF6B00] hover:bg-[#FF4500]/10 font-semibold"
               >
-                <Target className="w-3 h-3 mr-1" />
+                <Target className="w-4 h-4 mr-1.5" />
                 Set Up Training Plan
               </Button>
             </Link>

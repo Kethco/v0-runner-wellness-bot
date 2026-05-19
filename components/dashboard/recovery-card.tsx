@@ -169,40 +169,65 @@ export function RecoveryCard() {
       animate={{ opacity: 1, y: 0 }}
       className="premium-card overflow-hidden"
     >
-      <div className="px-5 pt-5 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-white font-bold text-base flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#AF52DE]/20 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-[#AF52DE]" />
+      {/* Top accent */}
+      <div className="h-[2px] bg-gradient-to-r from-transparent via-[#AF52DE] to-transparent" />
+      
+      <div className="p-5">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-white font-bold text-lg flex items-center gap-3">
+            <div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ 
+                backgroundColor: 'rgba(175, 82, 222, 0.2)',
+                boxShadow: '0 0 20px rgba(175, 82, 222, 0.3)'
+              }}
+            >
+              <Sparkles className="w-5 h-5 text-[#AF52DE]" style={{ filter: 'drop-shadow(0 0 4px rgba(175,82,222,0.6))' }} />
             </div>
             Recovery Focus
           </h3>
-          <span className="text-[10px] text-[#AEAEB2] bg-[#2A2A2A] px-2.5 py-1 rounded-full font-medium border border-[#3A3A3A]">
+          <span className="text-xs text-white/60 bg-white/5 px-3 py-1.5 rounded-full font-semibold border border-white/10">
             {tips.filter(t => t.priority === "high").length} priorities
           </span>
         </div>
         
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {tips.map((tip, i) => (
             <motion.div
               key={tip.title}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.08 }}
-              className="flex items-center gap-3 p-3 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#3A3A3A] transition-colors"
+              transition={{ delay: i * 0.1 }}
+              className="flex items-center gap-4 p-4 rounded-xl bg-[#1C1C1E] border border-white/5 hover:border-white/10 transition-all"
             >
               <div 
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: `${tip.color}20` }}
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ 
+                  backgroundColor: `${tip.color}20`,
+                  boxShadow: `0 0 16px ${tip.color}30`
+                }}
               >
-                <tip.icon className="w-4.5 h-4.5" style={{ color: tip.color }} />
+                <tip.icon 
+                  className="w-5 h-5" 
+                  style={{ 
+                    color: tip.color,
+                    filter: `drop-shadow(0 0 4px ${tip.color})`
+                  }} 
+                />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-[13px]">{tip.title}</p>
-                <p className="text-[#AEAEB2] text-[11px] truncate">{tip.description}</p>
+                <p className="text-white font-bold text-sm">{tip.title}</p>
+                <p className="text-white/50 text-xs mt-0.5">{tip.description}</p>
               </div>
               {tip.priority === "high" && (
-                <span className="text-[9px] text-[#FF9500] bg-[#FF9500]/15 px-2 py-0.5 rounded-full font-bold border border-[#FF9500]/30">
+                <span 
+                  className="text-[10px] font-bold px-2.5 py-1 rounded-full"
+                  style={{ 
+                    backgroundColor: `${tip.color}20`,
+                    color: tip.color,
+                    border: `1px solid ${tip.color}40`
+                  }}
+                >
                   Priority
                 </span>
               )}
@@ -213,10 +238,10 @@ export function RecoveryCard() {
       
       {/* Rest day message if applicable */}
       {!hasRunToday && (
-        <div className="px-5 py-3 bg-[#30D158]/12 border-t border-[#30D158]/25">
-          <div className="flex items-center gap-2">
-            <Heart className="w-3.5 h-3.5 text-[#30D158]" />
-            <p className="text-[#30D158] text-[12px] font-medium">
+        <div className="px-5 py-4 bg-[#30D158]/10 border-t border-[#30D158]/20">
+          <div className="flex items-center gap-3">
+            <Heart className="w-4 h-4 text-[#30D158]" style={{ filter: 'drop-shadow(0 0 4px rgba(48,209,88,0.5))' }} />
+            <p className="text-[#30D158] text-sm font-semibold">
               Rest days build strength. You&apos;re doing great!
             </p>
           </div>

@@ -162,46 +162,53 @@ return (
         />
       )}
 
-      {/* Premium Header with Glassmorphism */}
+      {/* Premium Header */}
       <header className="fixed-header-safe z-50">
         {/* Gradient border line */}
-        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF4500]/50 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF4500]/60 to-transparent" />
         
         {/* Main header content */}
-        <div className="px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="px-5 py-4">
+          <div className="flex items-center gap-4">
             {/* Avatar with gradient ring */}
             <div className="relative">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#FF4500] to-[#FF6B00] p-[1.5px]">
-                <div className="w-full h-full rounded-full bg-[#0A0A0A] flex items-center justify-center">
-                  <span className="text-base font-bold bg-gradient-to-br from-[#FF4500] to-[#FFD700] bg-clip-text text-transparent">
+              <div 
+                className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF4500] to-[#FF6B00] p-[2px]"
+                style={{ boxShadow: '0 0 16px rgba(255,69,0,0.4)' }}
+              >
+                <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
+                  <span className="text-base font-bold text-white">
                     {userName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                   </span>
                 </div>
               </div>
               {/* Online indicator */}
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#30D158] rounded-full border-2 border-[#0A0A0A]" />
+              <div 
+                className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#30D158] rounded-full border-2 border-black"
+                style={{ boxShadow: '0 0 8px rgba(48,209,88,0.5)' }}
+              />
             </div>
             
             {/* Greeting */}
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold text-[#FF6B00] uppercase tracking-wider">
+              <p className="text-xs font-bold text-[#FF6B00] uppercase tracking-wider">
                 {greeting.text}
               </p>
-              <h1 className="text-base font-bold text-white tracking-tight truncate">{userName}</h1>
+              <h1 className="text-lg font-bold text-white tracking-tight truncate">{userName}</h1>
             </div>
             
             {/* Right side badges */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               {/* Trial Countdown */}
               <TrialCountdown />
               
               {/* Streak Badge */}
               <motion.div 
                 whileTap={{ scale: 0.95 }}
-                className="relative flex items-center gap-1 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-2.5 py-1.5 rounded-full shadow-md shadow-[#FF4500]/20"
+                className="relative flex items-center gap-1.5 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-3 py-2 rounded-full"
+                style={{ boxShadow: '0 0 20px rgba(255,69,0,0.4)' }}
               >
-                <Flame className="w-4 h-4 text-white" />
+                <Flame className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} />
                 <span className="relative text-white font-bold text-sm">
                   <CountingNumber value={currentStreak} duration={1} />
                 </span>
@@ -210,10 +217,10 @@ return (
           </div>
           
           {/* Quick stats row */}
-          <div className="flex items-center gap-3 mt-2 ml-14">
-            <div className="flex items-center gap-1.5 text-[11px]">
-              <TrendingUp className="w-3 h-3 text-[#30D158]" />
-              <span className="text-white/40">
+          <div className="flex items-center gap-4 mt-3 ml-16">
+            <div className="flex items-center gap-2 text-xs">
+              <TrendingUp className="w-3.5 h-3.5 text-[#30D158]" style={{ filter: 'drop-shadow(0 0 4px rgba(48,209,88,0.5))' }} />
+              <span className="text-white/50 font-medium">
                 <CountingNumber 
                   value={weekPlanData?.weekStats?.completedMiles ?? weeklyMiles} 
                   decimals={1} 
@@ -223,9 +230,9 @@ return (
               </span>
             </div>
             {currentStreak > 0 && (
-              <div className="flex items-center gap-1.5 text-[11px]">
-                <Zap className="w-3 h-3 text-[#FFD700]" />
-                <span className="text-white/40">
+              <div className="flex items-center gap-2 text-xs">
+                <Zap className="w-3.5 h-3.5 text-[#FFD700]" style={{ filter: 'drop-shadow(0 0 4px rgba(255,214,0,0.5))' }} />
+                <span className="text-white/50 font-medium">
                   <CountingNumber value={currentStreak} duration={1} suffix=" day streak" />
                 </span>
               </div>
@@ -241,7 +248,7 @@ return (
         />
       </header>
 
-      <main className="px-5 py-6 space-y-6 mt-[165px]">
+      <main className="px-5 py-6 space-y-6 mt-[175px]">
         {/* Unified This Week Card */}
         <UnifiedWeekCard 
           weeklyMiles={weeklyMiles} 
@@ -257,7 +264,7 @@ return (
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="grid grid-cols-2 gap-3"
+          className="grid grid-cols-2 gap-4"
         >
           <LogRunModal onRunLogged={() => { mutateRuns(); mutateWeekPlan(); }}>
             <motion.button
@@ -266,14 +273,18 @@ return (
               transition={{ delay: 0.2 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/25 transition-shadow hover:shadow-xl hover:shadow-[#FF4500]/30"
+              className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#FF4500] to-[#FF6B00] transition-all"
+              style={{ boxShadow: '0 0 30px rgba(255,69,0,0.4)' }}
             >
-              <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+              <div 
+                className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center"
+                style={{ boxShadow: 'inset 0 0 12px rgba(255,255,255,0.1)' }}
+              >
                 <Play className="w-6 h-6 text-white fill-white" />
               </div>
               <div className="text-left">
                 <p className="text-white font-bold text-lg">Log Run</p>
-                <p className="text-white/70 text-xs font-medium">Record activity</p>
+                <p className="text-white/60 text-xs font-medium">Record activity</p>
               </div>
             </motion.button>
           </LogRunModal>
@@ -295,22 +306,30 @@ return (
                 setShowCheckinModal(true);
               }
             }}
-            className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all ${
+            className={`w-full flex items-center gap-4 p-5 rounded-2xl transition-all ${
               hasCheckedInToday 
-                ? "bg-[#161618] border border-[#30D158]/30 shadow-lg shadow-[#30D158]/10" 
-                : "bg-gradient-to-br from-[#30D158] to-[#34C759] shadow-lg shadow-[#30D158]/25 hover:shadow-xl hover:shadow-[#30D158]/30"
+                ? "bg-[#0D0D0D] border border-[#30D158]/40" 
+                : "bg-gradient-to-br from-[#30D158] to-[#34C759]"
             }`}
+            style={{ 
+              boxShadow: hasCheckedInToday 
+                ? '0 0 20px rgba(48,209,88,0.2)' 
+                : '0 0 30px rgba(48,209,88,0.4)' 
+            }}
           >
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-              hasCheckedInToday ? "bg-[#30D158]/15" : "bg-white/15 backdrop-blur-sm"
+              hasCheckedInToday ? "bg-[#30D158]/20" : "bg-white/20"
             }`}>
-              <Activity className={`w-6 h-6 ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`} />
+              <Activity 
+                className={`w-6 h-6 ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`}
+                style={hasCheckedInToday ? { filter: 'drop-shadow(0 0 4px rgba(48,209,88,0.6))' } : {}}
+              />
             </div>
             <div className="text-left">
               <p className={`font-bold text-lg ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`}>
                 {hasCheckedInToday ? "Done!" : "Check In"}
               </p>
-              <p className={`text-xs font-medium ${hasCheckedInToday ? "text-white/40" : "text-white/70"}`}>
+              <p className={`text-xs font-medium ${hasCheckedInToday ? "text-white/40" : "text-white/60"}`}>
                 {hasCheckedInToday ? "All set today" : "Daily wellness"}
               </p>
             </div>
@@ -335,19 +354,25 @@ return (
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
-            className="rounded-2xl border border-white/10 p-5 bg-gradient-to-br from-emerald-500/[0.03] to-transparent transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20"
-            style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}
+            className="premium-card overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-white font-bold text-lg">Today&apos;s Wellness</h3>
-              <span className="text-[#30D158] text-sm font-semibold px-3 py-1 bg-[#30D158]/10 rounded-full">Logged</span>
-            </div>
+            {/* Top accent */}
+            <div className="h-[2px] bg-gradient-to-r from-transparent via-[#30D158] to-transparent" />
             
-            <div className="grid grid-cols-4 gap-4">
-              <MetricOrb icon={Moon} label="Sleep" value={todayCheckin.sleep_rating} color="#BF5AF2" />
-              <MetricOrb icon={Battery} label="Energy" value={todayCheckin.energy} color="#30D158" />
-              <MetricOrb icon={Heart} label="Sore" value={todayCheckin.soreness} color="#FF9F0A" />
-              <MetricOrb icon={Gauge} label="Ready" value={todayCheckin.readiness} color="#00D4FF" />
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-white font-bold text-lg">Today&apos;s Wellness</h3>
+                <span className="text-xs font-bold text-[#30D158] px-3 py-1.5 bg-[#30D158]/15 rounded-full border border-[#30D158]/30">
+                  Logged
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-3">
+                <MetricOrb icon={Moon} label="Sleep" value={todayCheckin.sleep_rating} color="#AF52DE" />
+                <MetricOrb icon={Battery} label="Energy" value={todayCheckin.energy} color="#30D158" />
+                <MetricOrb icon={Heart} label="Sore" value={todayCheckin.soreness} color="#FF6B6B" />
+                <MetricOrb icon={Gauge} label="Ready" value={todayCheckin.readiness} color="#00D4FF" />
+              </div>
             </div>
           </motion.div>
         )}
@@ -357,67 +382,39 @@ return (
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
-          className="relative overflow-hidden rounded-2xl bg-[#141414] border border-[#2A2A2A] p-5"
+          className="premium-card relative overflow-hidden"
         >
           {/* Gradient accent line at top */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF4500] via-[#00D4FF] to-[#AF52DE]" />
+          <div className="h-[2px] bg-gradient-to-r from-[#FF4500] via-[#00D4FF] to-[#AF52DE]" />
           
           {/* Ambient glow */}
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-[#00D4FF]/5 rounded-full blur-3xl" />
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-[#00D4FF]/15 to-[#AF52DE]/10 rounded-full blur-3xl" />
           
-          <div className="relative z-10">
+          <div className="relative z-10 p-5">
             <div className="flex items-center gap-4 mb-4">
               {/* Pulsing Brain Icon */}
               <div className="relative w-12 h-12">
                 {/* Pulsing glow rings */}
                 <motion.div
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF4500] to-[#00D4FF] opacity-20"
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.1, 0.2] }}
+                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#00D4FF] to-[#AF52DE] opacity-30"
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.15, 0.3] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <motion.div
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF4500] to-[#00D4FF] opacity-10"
-                  animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0.05, 0.1] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
                 />
                 
                 {/* Main brain container */}
-                <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-[#FF4500] to-[#00D4FF] flex items-center justify-center overflow-hidden shadow-lg shadow-[#FF4500]/20">
-                  {/* Neural connection dots */}
-                  <motion.div
-                    className="absolute w-1 h-1 bg-white/60 rounded-full"
-                    style={{ top: '20%', left: '25%' }}
-                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-                    transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
-                  />
-                  <motion.div
-                    className="absolute w-1 h-1 bg-white/60 rounded-full"
-                    style={{ top: '35%', right: '20%' }}
-                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
-                  />
-                  <motion.div
-                    className="absolute w-1 h-1 bg-white/60 rounded-full"
-                    style={{ bottom: '30%', left: '30%' }}
-                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
-                  />
-                  <motion.div
-                    className="absolute w-1 h-1 bg-white/60 rounded-full"
-                    style={{ bottom: '25%', right: '25%' }}
-                    animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-                    transition={{ duration: 1.5, repeat: Infinity, delay: 0.9 }}
-                  />
-                  
-                  <Brain className="w-6 h-6 text-white drop-shadow-lg" />
+                <div 
+                  className="relative w-full h-full rounded-xl bg-gradient-to-br from-[#00D4FF] to-[#AF52DE] flex items-center justify-center overflow-hidden"
+                  style={{ boxShadow: '0 0 24px rgba(0, 212, 255, 0.4)' }}
+                >
+                  <Brain className="w-6 h-6 text-white" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} />
                 </div>
               </div>
               <div>
                 <h3 className="text-white font-bold text-lg flex items-center gap-2">
                   AI Coach
-                  <Sparkles className="w-4 h-4 text-[#00D4FF]" />
+                  <Sparkles className="w-4 h-4 text-[#00D4FF]" style={{ filter: 'drop-shadow(0 0 4px rgba(0,212,255,0.6))' }} />
                 </h3>
-                <p className="text-[#6E6E73] text-sm">Your personalized guidance companion</p>
+                <p className="text-white/40 text-sm">Your personalized guidance</p>
               </div>
             </div>
             
@@ -441,31 +438,25 @@ return (
               </Link>
             </div>
             
-            <div className="space-y-3">
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
               {runs.slice(0, 3).map((run: { id: string; miles: number; date: string; run_type: string; pace?: string }, i: number) => (
                 <motion.div
                   key={run.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 + i * 0.1 }}
-                  whileHover={{ scale: 1.01, x: 4 }}
-                  className="flex items-center justify-between p-4 rounded-xl bg-[#1C1C1E] border border-[#3A3A3C] hover:border-[#3A3A3C] transition-all"
+                  className="flex-shrink-0 w-[140px] p-4 rounded-xl bg-[#0D0D0D] border border-white/5 hover:border-white/10 transition-all"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${getRunStyles(run.run_type).bg}`}>
-                      <Zap className={`w-6 h-6 ${getRunStyles(run.run_type).text}`} />
-                    </div>
-                    <div>
-                      <p className="text-white font-bold text-lg">{run.miles} mi</p>
-                      <p className="text-[#AEAEB2] text-sm font-medium capitalize">{run.run_type || "Run"}</p>
-                    </div>
+                  <div 
+                    className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 ${getRunStyles(run.run_type).bg}`}
+                    style={{ boxShadow: `0 0 16px ${getRunStyles(run.run_type).glow || 'rgba(255,69,0,0.3)'}` }}
+                  >
+                    <Zap className={`w-5 h-5 ${getRunStyles(run.run_type).text}`} />
                   </div>
-                  <div className="text-right">
-                    <p className="text-white font-semibold">{run.pace || "--"}</p>
-                    <p className="text-[#8E8E93] text-sm">
-                      {new Date(run.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </p>
-                  </div>
+                  <p className="text-white font-bold text-lg">{run.miles} mi</p>
+                  <p className="text-white/40 text-xs mt-0.5">
+                    {new Date(run.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -596,20 +587,26 @@ function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: {
   maxValue?: number;
 }) {
   const percent = (value / maxValue) * 100;
-  const radius = 24;
+  const radius = 28;
   const circumference = 2 * Math.PI * radius;
   
   return (
     <motion.div 
       whileHover={{ scale: 1.05 }}
-      className="flex flex-col items-center gap-1"
+      className="flex flex-col items-center"
     >
       {/* Circular progress with icon */}
-      <div className="relative w-16 h-16">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
-          <circle cx="32" cy="32" r={radius} stroke="#2A2A2A" strokeWidth="5" fill="none" />
+      <div className="relative w-[68px] h-[68px]">
+        {/* Glow effect */}
+        <div 
+          className="absolute inset-0 rounded-full blur-lg opacity-30"
+          style={{ backgroundColor: color }}
+        />
+        
+        <svg className="w-full h-full -rotate-90 relative" viewBox="0 0 68 68">
+          <circle cx="34" cy="34" r={radius} stroke="rgba(255,255,255,0.06)" strokeWidth="5" fill="none" />
           <motion.circle
-            cx="32" cy="32" r={radius}
+            cx="34" cy="34" r={radius}
             stroke={color}
             strokeWidth="5"
             fill="none"
@@ -617,19 +614,26 @@ function MetricOrb({ icon: Icon, label, value, color, maxValue = 5 }: {
             initial={{ strokeDasharray: `0 ${circumference}` }}
             animate={{ strokeDasharray: `${(percent / 100) * circumference} ${circumference}` }}
             transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
-            style={{ filter: `drop-shadow(0 0 6px ${color})` }}
+            style={{ filter: `drop-shadow(0 0 8px ${color})` }}
           />
         </svg>
+        
+        {/* Floating icon */}
+        <div 
+          className="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-6 rounded-lg flex items-center justify-center"
+          style={{ backgroundColor: `${color}30` }}
+        >
+          <Icon className="w-3.5 h-3.5" style={{ color, filter: `drop-shadow(0 0 4px ${color})` }} />
+        </div>
+        
+        {/* Center value */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <Icon className="w-5 h-5" style={{ color }} />
+          <span className="text-lg font-bold" style={{ color }}>{value}/{maxValue}</span>
         </div>
       </div>
       
-      {/* Value with scale */}
-      <div className="text-center">
-        <p className="text-white font-bold text-lg leading-tight">{value}<span className="text-[#8E8E93] text-xs font-medium">/{maxValue}</span></p>
-        <p className="text-[#AEAEB2] text-[10px] font-semibold uppercase tracking-wide">{label}</p>
-      </div>
+      {/* Label */}
+      <p className="text-xs text-white/50 font-semibold mt-2">{label}</p>
     </motion.div>
   );
 }
@@ -648,13 +652,13 @@ function getGreeting() {
   return { text: "Good night", gradient: "from-[#0A84FF] via-[#00D4FF] to-[#5AC8FA]" };
 }
 
-function getRunStyles(type: string) {
+ function getRunStyles(type: string) {
   switch (type?.toLowerCase()) {
-    case "easy": return { bg: "bg-[#30D158]/20", text: "text-[#30D158]" };
-    case "tempo": return { bg: "bg-[#FF9F0A]/20", text: "text-[#FF9F0A]" };
-    case "interval": return { bg: "bg-[#FF453A]/20", text: "text-[#FF453A]" };
-    case "long": return { bg: "bg-[#BF5AF2]/20", text: "text-[#BF5AF2]" };
-    case "race": return { bg: "bg-[#FF4500]/20", text: "text-[#FF4500]" };
-    default: return { bg: "bg-[#00D4FF]/20", text: "text-[#00D4FF]" };
+  case "easy": return { bg: "bg-[#30D158]/20", text: "text-[#30D158]", glow: "rgba(48,209,88,0.3)" };
+  case "tempo": return { bg: "bg-[#FF9F0A]/20", text: "text-[#FF9F0A]", glow: "rgba(255,159,10,0.3)" };
+  case "interval": return { bg: "bg-[#FF453A]/20", text: "text-[#FF453A]", glow: "rgba(255,69,58,0.3)" };
+  case "long": return { bg: "bg-[#BF5AF2]/20", text: "text-[#BF5AF2]", glow: "rgba(191,90,242,0.3)" };
+  case "race": return { bg: "bg-[#FF4500]/20", text: "text-[#FF4500]", glow: "rgba(255,69,0,0.3)" };
+  default: return { bg: "bg-[#00D4FF]/20", text: "text-[#00D4FF]", glow: "rgba(0,212,255,0.3)" };
   }
-}
+  }

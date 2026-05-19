@@ -145,17 +145,23 @@ export function PersonalRecordsCard() {
         transition={{ duration: 0.4 }}
       >
         <Card className="premium-card overflow-hidden border-0">
+          {/* Gold accent line */}
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
+          
           {/* Header */}
-          <div className="relative p-4 border-b border-white/[0.04]">
+          <div className="relative p-5 border-b border-white/5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/10 flex items-center justify-center border border-amber-500/20">
-                  <Trophy className="w-5 h-5 text-amber-400" />
+              <div className="flex items-center gap-4">
+                <div 
+                  className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400/25 to-amber-600/10 flex items-center justify-center border border-amber-500/30"
+                  style={{ boxShadow: '0 0 20px rgba(245, 158, 11, 0.3)' }}
+                >
+                  <Trophy className="w-6 h-6 text-amber-400" style={{ filter: 'drop-shadow(0 0 4px rgba(245,158,11,0.6))' }} />
                 </div>
                 
                 <div>
-                  <h3 className="text-base font-bold text-white">Personal Records</h3>
-                  <p className="text-[11px] text-white/40">
+                  <h3 className="text-lg font-bold text-white">Personal Records</h3>
+                  <p className="text-sm text-white/40">
                     {hasAnyPR 
                       ? `${earnedCount} of ${personalRecords.length} conquered`
                       : "Your glory awaits"
@@ -163,85 +169,35 @@ export function PersonalRecordsCard() {
                   </p>
                 </div>
               </div>
-
-              {/* Progress indicator */}
-              <div className="flex items-center gap-1.5">
-                {personalRecords.map((pr, i) => (
-                  <motion.div
-                    key={pr.shortName}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: i * 0.08 }}
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      pr.time !== "--:--" 
-                        ? "bg-amber-400" 
-                        : "bg-white/15"
-                    }`}
-                  />
-                ))}
-              </div>
             </div>
-
-            {/* Motivational tagline */}
-            {!hasAnyPR && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="mt-3 flex items-center gap-2 text-[12px] text-white/40"
-              >
-                <TrendingUp className="w-3.5 h-3.5 text-amber-500/70" />
-                <span>Every record starts with a single run</span>
-              </motion.div>
-            )}
           </div>
 
-          {/* PR Grid */}
-          <div className="p-4 pt-0">
-            <div className="grid grid-cols-5 gap-1.5">
+          {/* PR List */}
+          <div className="p-4">
+            <div className="space-y-2">
               {personalRecords.map((pr, index) => {
                 const hasPR = pr.time !== "--:--";
-                const Icon = pr.icon;
                 
                 return (
                   <motion.button
                     key={pr.shortName}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.06 }}
-                    whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedPR(pr)}
-                    className={`relative rounded-xl p-2.5 text-center transition-all cursor-pointer ${
+                    className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${
                       hasPR 
-                        ? "bg-amber-500/10 border border-amber-500/25" 
-                        : "bg-white/[0.02] border border-white/[0.06] border-dashed hover:border-amber-500/30"
+                        ? "bg-[#1C1C1E] border border-white/5 hover:border-amber-500/30" 
+                        : "bg-white/[0.02] border border-white/[0.04] border-dashed hover:border-amber-500/20"
                     }`}
                   >
-                    {/* Icon */}
-                    <div className={`relative w-8 h-8 mx-auto mb-1.5 rounded-lg flex items-center justify-center ${
-                      hasPR 
-                        ? "bg-gradient-to-br from-amber-400/20 to-amber-600/10" 
-                        : "bg-white/[0.04]"
-                    }`}>
-                      <Icon className={`w-4 h-4 ${
-                        hasPR ? "text-amber-400" : "text-white/30"
-                      }`} />
-                    </div>
-
-                    {/* Distance Label */}
-                    <p className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${
-                      hasPR ? "text-amber-400/80" : "text-white/40"
-                    }`}>
-                      {pr.shortName}
-                    </p>
-
-                    {/* Time */}
-                    {hasPR ? (
-                      <p className="text-[11px] font-bold text-white">{pr.time}</p>
-                    ) : (
-                      <p className="text-[10px] text-white/25">—</p>
-                    )}
+                    <span className={`text-base font-semibold ${hasPR ? "text-white" : "text-white/40"}`}>
+                      {pr.distance}
+                    </span>
+                    <span className={`text-lg font-bold ${hasPR ? "text-amber-400" : "text-white/20"}`}>
+                      {hasPR ? pr.time : "—"}
+                    </span>
                   </motion.button>
                 );
               })}
