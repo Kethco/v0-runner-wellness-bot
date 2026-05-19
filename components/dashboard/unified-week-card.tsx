@@ -28,6 +28,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { getLocalDateString, getUserTimezone } from "@/lib/utils";
+import { WeatherStrip } from "./weather-strip";
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(res => res.json());
 
@@ -418,7 +419,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-white truncate">
-                    Today · {planData.todayWorkout.title}
+                    Today �� {planData.todayWorkout.title}
                   </p>
                   <p className="text-xs text-white/50 truncate mt-0.5">
                     {planData.todayWorkout.target_miles ? `${planData.todayWorkout.target_miles} mi` : ""} 
@@ -571,6 +572,9 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               </Button>
             </Link>
           )}
+
+          {/* Weather Forecast Strip */}
+          <WeatherStrip />
         </div>
       </motion.div>
 

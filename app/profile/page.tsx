@@ -54,6 +54,7 @@ import {
   Moon as MoonIcon,
   Monitor,
   Download,
+  MapPin,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
@@ -77,6 +78,7 @@ export default function ProfilePage() {
     name: "",
     gender: "",
     birthYear: "",
+    location: "",
   });
   const [notifications, setNotifications] = useState({
     morningReminder: true,
@@ -99,6 +101,7 @@ export default function ProfilePage() {
         name: fullName || user?.user_metadata?.name || user?.email?.split("@")[0] || "",
         gender: profileData.profile.gender || "",
         birthYear: profileData.profile.birth_year?.toString() || "",
+        location: profileData.profile.location || "",
       });
     } else if (user) {
       // Use signup metadata for new users
@@ -107,6 +110,7 @@ export default function ProfilePage() {
         name: fullName || user.user_metadata?.name || user.email?.split("@")[0] || "",
         gender: "",
         birthYear: "",
+        location: "",
       });
     }
   }, [profileData, user]);
@@ -134,6 +138,7 @@ export default function ProfilePage() {
           name: editedProfile.name,
           gender: editedProfile.gender || null,
           birth_year: editedProfile.birthYear ? parseInt(editedProfile.birthYear) : null,
+          location: editedProfile.location || null,
         }),
       });
       if (response.ok) {
@@ -274,6 +279,18 @@ return (
                         className="bg-secondary border-border disabled:opacity-70"
                         placeholder="e.g. 1990"
                       />
+                    </div>
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label htmlFor="location">Location (for weather)</Label>
+                      <Input
+                        id="location"
+                        value={editedProfile.location}
+                        disabled={!isEditing}
+                        onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
+                        className="bg-secondary border-border disabled:opacity-70"
+                        placeholder="e.g. New York, Los Angeles, Chicago"
+                      />
+                      <p className="text-xs text-muted-foreground">Used for weather forecast on your training plan</p>
                     </div>
                   </div>
                   
