@@ -155,7 +155,8 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
     const days = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
     const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     
-    // Calculate current calendar week (Monday to Sunday)
+    // Calculate current calendar week (Monday to Sunday) using local timezone
+    const today = new Date();
     const weekStart = new Date(today);
     const dayOfWeek = today.getDay();
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
