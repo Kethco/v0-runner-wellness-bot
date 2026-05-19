@@ -26,10 +26,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp } from "lucide-react";
+import { Target, Calendar, Clock, Trophy, Plus, Edit2, Trash2, CheckCircle2, Loader2, Zap, TrendingUp, Sparkles, Medal, Flag } from "lucide-react";
 import { BottomNav } from "@/components/bottom-nav";
 import { LifeEventsManager } from "@/components/life-events-manager";
 import { GoalProgressionCard } from "@/components/dashboard/goal-progression-card";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Goal {
   id: string;
@@ -696,139 +697,222 @@ return (
 
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Other Active Goals */}
-              <Card className="border-border bg-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-muted-foreground" />
-                    Other Goals
+              <Card className="border-[#2A2A2A] bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] overflow-hidden">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2 text-white">
+                    <div className="p-1.5 bg-blue-500/20 rounded-lg">
+                      <Flag className="w-4 h-4 text-blue-400" />
+                    </div>
+                    Upcoming Races
                   </CardTitle>
-                  <CardDescription>Additional race goals</CardDescription>
+                  <CardDescription>Your future race goals</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {otherActiveGoals.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>No other goals</p>
-                      <Button variant="link" onClick={() => setIsDialogOpen(true)}>
-                        Add a goal race
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {otherActiveGoals.map((goal) => (
-                        <div 
-                          key={goal.id} 
-                          className="flex items-center justify-between p-4 bg-secondary rounded-lg"
-                        >
-                          <div>
-                            <h4 className="font-medium text-foreground">
-                              {goal.race_name || goal.distance}
-                            </h4>
-                            {goal.race_name && (
-                              <p className="text-sm text-muted-foreground">{goal.distance}</p>
-                            )}
-                            <p className="text-sm text-muted-foreground">
-                              {formatDate(goal.target_date)}
-                            </p>
-                            {goal.target_time && (
-                              <p className="text-sm text-muted-foreground">
-                                Target: {goal.target_time}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-right">
-                              <div className="text-lg font-bold text-foreground" suppressHydrationWarning>
-                                {getDaysUntil(goal.target_date)}
-                              </div>
-                              <div className="text-xs text-muted-foreground">days</div>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              {!activeGoal && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  className="h-8 w-8 text-primary hover:text-primary"
-                                  onClick={() => handleSetActive(goal.id)}
-                                  title="Set as active"
-                                >
-                                  <Target className="w-4 h-4" />
-                                </Button>
-                              )}
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                onClick={() => handleDeleteGoal(goal.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-center py-8"
+                    >
+                      <div className="relative w-16 h-16 mx-auto mb-4">
+                        <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping" />
+                        <div className="relative flex items-center justify-center w-16 h-16 bg-[#2A2A2A] rounded-full">
+                          <Flag className="w-8 h-8 text-blue-400/50" />
                         </div>
-                      ))}
+                      </div>
+                      <p className="text-white/70 font-medium">No upcoming races</p>
+                      <p className="text-sm text-white/40 mb-3">Set your sights on a new challenge</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setIsDialogOpen(true)}
+                        className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                      >
+                        <Plus className="w-4 h-4 mr-1" />
+                        Add Race Goal
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <div className="space-y-3">
+                      <AnimatePresence>
+                        {otherActiveGoals.map((goal, index) => (
+                          <motion.div 
+                            key={goal.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="group relative p-4 bg-[#2A2A2A]/50 hover:bg-[#2A2A2A] rounded-xl border border-[#3A3A3A]/50 transition-all duration-300"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg">
+                                  <Target className="w-5 h-5 text-blue-400" />
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-white">
+                                    {goal.race_name || goal.distance}
+                                  </h4>
+                                  {goal.race_name && (
+                                    <p className="text-sm text-white/50">{goal.distance}</p>
+                                  )}
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Calendar className="w-3 h-3 text-white/40" />
+                                    <span className="text-xs text-white/40">{formatDate(goal.target_date)}</span>
+                                    {goal.target_time && (
+                                      <>
+                                        <span className="text-white/20">•</span>
+                                        <Clock className="w-3 h-3 text-white/40" />
+                                        <span className="text-xs text-white/40">{goal.target_time}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <div className="text-right">
+                                  <div className="text-2xl font-bold text-white" suppressHydrationWarning>
+                                    {getDaysUntil(goal.target_date)}
+                                  </div>
+                                  <div className="text-[10px] text-white/40 uppercase tracking-wider">days</div>
+                                </div>
+                                <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {!activeGoal && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      className="h-7 w-7 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                                      onClick={() => handleSetActive(goal.id)}
+                                      title="Set as active"
+                                    >
+                                      <Target className="w-3.5 h-3.5" />
+                                    </Button>
+                                  )}
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="h-7 w-7 text-white/40 hover:text-red-400 hover:bg-red-500/10"
+                                    onClick={() => handleDeleteGoal(goal.id)}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* Completed Goals */}
-              <Card className="border-border bg-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-yellow-500" />
+              <Card className="border-[#2A2A2A] bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] overflow-hidden relative">
+                {/* Decorative glow for completed races */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+                
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2 text-white">
+                    <div className="p-1.5 bg-amber-500/20 rounded-lg">
+                      <Trophy className="w-4 h-4 text-amber-400" />
+                    </div>
                     Completed Races
                   </CardTitle>
-                  <CardDescription>Your achievements</CardDescription>
+                  <CardDescription>Your victories and achievements</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {completedGoals.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Trophy className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>No completed races yet</p>
-                      <p className="text-sm">Keep training!</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {completedGoals.map((goal) => (
-                        <div 
-                          key={goal.id} 
-                          className="flex items-center justify-between p-4 bg-secondary rounded-lg"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-yellow-500/20 rounded-full">
-                              <Trophy className="w-4 h-4 text-yellow-500" />
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-foreground">
-                                {goal.race_name || goal.distance}
-                              </h4>
-                              {goal.race_name && (
-                                <p className="text-sm text-muted-foreground">{goal.distance}</p>
-                              )}
-                              <p className="text-sm text-muted-foreground">
-                                {formatDate(goal.target_date)}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {goal.actual_time && (
-                              <Badge variant="default">{goal.actual_time}</Badge>
-                            )}
-                            {goal.target_time && !goal.actual_time && (
-                              <Badge variant="secondary">{goal.target_time}</Badge>
-                            )}
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                              onClick={() => handleDeleteGoal(goal.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-center py-8"
+                    >
+                      <div className="relative w-16 h-16 mx-auto mb-4">
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            opacity: [0.3, 0.5, 0.3]
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="absolute inset-0 bg-amber-500/20 rounded-full"
+                        />
+                        <div className="relative flex items-center justify-center w-16 h-16 bg-[#2A2A2A] rounded-full">
+                          <Trophy className="w-8 h-8 text-amber-400/50" />
                         </div>
-                      ))}
+                      </div>
+                      <p className="text-white/70 font-medium">No victories yet</p>
+                      <p className="text-sm text-white/40">Your first medal awaits!</p>
+                    </motion.div>
+                  ) : (
+                    <div className="space-y-3">
+                      <AnimatePresence>
+                        {completedGoals.map((goal, index) => (
+                          <motion.div 
+                            key={goal.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="group relative p-4 bg-gradient-to-r from-amber-500/10 to-transparent rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all duration-300"
+                          >
+                            {/* Medal ribbon effect */}
+                            <div className="absolute -left-1 top-3 w-1 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r" />
+                            
+                            <div className="flex items-center justify-between pl-2">
+                              <div className="flex items-center gap-3">
+                                <div className="relative">
+                                  <div className="p-2 bg-gradient-to-br from-amber-400/30 to-orange-500/30 rounded-full">
+                                    <Medal className="w-5 h-5 text-amber-400" />
+                                  </div>
+                                  <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                    className="absolute -inset-1 border border-amber-400/20 rounded-full border-dashed"
+                                  />
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-white">
+                                    {goal.race_name || goal.distance}
+                                  </h4>
+                                  {goal.race_name && (
+                                    <p className="text-sm text-amber-400/70">{goal.distance}</p>
+                                  )}
+                                  <p className="text-xs text-white/40 mt-0.5">
+                                    {formatDate(goal.target_date)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                {goal.actual_time ? (
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-amber-400">{goal.actual_time}</div>
+                                    <div className="text-[10px] text-white/40 uppercase tracking-wider">finish time</div>
+                                  </div>
+                                ) : goal.target_time ? (
+                                  <div className="text-right">
+                                    <div className="text-lg font-medium text-white/60">{goal.target_time}</div>
+                                    <div className="text-[10px] text-white/40 uppercase tracking-wider">target</div>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1 text-amber-400">
+                                    <Sparkles className="w-4 h-4" />
+                                    <span className="text-sm font-medium">Finished!</span>
+                                  </div>
+                                )}
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-7 w-7 text-white/30 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleDeleteGoal(goal.id)}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
                     </div>
                   )}
                 </CardContent>
