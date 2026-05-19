@@ -51,8 +51,6 @@ export function WeatherStrip() {
     dedupingInterval: 1000 * 60 * 30, // Cache for 30 minutes
   });
 
-  console.log("[v0] WeatherStrip - loading:", isLoading, "error:", error, "data:", data);
-
   if (isLoading) {
     return (
       <div className="mt-4 pt-4 border-t border-white/10">
@@ -74,7 +72,6 @@ export function WeatherStrip() {
   }
 
   if (error || !data?.forecast) {
-    console.log("[v0] WeatherStrip hiding - error or no forecast data");
     return null; // Silently fail - weather is nice to have, not critical
   }
 
