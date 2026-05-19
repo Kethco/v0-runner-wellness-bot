@@ -38,21 +38,22 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json();
   
-  // Parse name into first and last
-  const nameParts = body.name?.trim().split(" ") || [];
-  const firstName = nameParts[0] || "";
-  const lastName = nameParts.slice(1).join(" ") || "";
+  // Build update object with only provided fields
+  const updateData: Record<string, unknown> = {};
+  
+  if (body.name !== undefined) {
+    const nameParts = body.name?.trim().split(" ") || [];
+    updateData.first_name = nameParts[0] || "";
+    updateData.last_name = nameParts.slice(1).join(" ") || "";
+    updateData.name = body.name;
+  }
+  if (body.gender !== undefined) updateData.gender = body.gender;
+  if (body.birth_year !== undefined) updateData.birth_year = body.birth_year;
+  if (body.location !== undefined) updateData.location = body.location;
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .update({
-      first_name: firstName,
-      last_name: lastName,
-      name: body.name,
-      gender: body.gender,
-      birth_year: body.birth_year,
-      location: body.location,
-    })
+    .update(updateData)
     .eq("id", user.id)
     .select()
     .single();
