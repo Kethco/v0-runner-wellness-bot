@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { BottomNav } from "@/components/bottom-nav";
+import { CoachOnboarding } from "@/components/coach-onboarding";
 import { toast } from "@/hooks/use-toast";
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(res => res.json());
@@ -78,6 +79,7 @@ export default function CoachDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
 
   const { data: athletesData, mutate: mutateAthletes } = useSWR(
@@ -90,10 +92,21 @@ export default function CoachDashboard() {
     fetcher,
     { refreshInterval: 60000 } // Refresh invites every minute
   );
+  const { data: profileData } = useSWR(
+    user ? "/api/profile" : null,
+    fetcher
+  );
 
   const athletes: Athlete[] = athletesData?.athletes || [];
   const invites: Invite[] = invitesData?.invites || [];
   const pendingInvites = invites.filter(i => i.status === "pending");
+
+  // Check if coach needs onboarding
+  useEffect(() => {
+    if (profileData?.profile && !profileData.profile.onboarded) {
+      setShowOnboarding(true);
+    }
+  }, [profileData]);
 
   // Redirect non-authenticated users
   useEffect(() => {
@@ -107,6 +120,17 @@ export default function CoachDashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#FF4500] border-t-transparent rounded-full animate-spin" />
       </div>
+    );
+  }
+
+  // Show onboarding for new coaches
+  if (showOnboarding) {
+    return (
+      <CoachOnboarding
+        userName={user?.user_metadata?.first_name || user?.user_metadata?.name?.split(" ")[0] || ""}
+        teamName={user?.user_metadata?.program_name}
+        onComplete={() => setShowOnboarding(false)}
+      />
     );
   }
 
