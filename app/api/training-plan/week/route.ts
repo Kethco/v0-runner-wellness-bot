@@ -12,8 +12,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  // Get timezone from query params (sent by client) or default to UTC
+  const { searchParams } = new URL(request.url);
+  const timezone = searchParams.get("tz") || "UTC";
+  
+  // Calculate today's date in user's timezone
+  const now = new Date();
+  const todayStr = now.toLocaleDateString('en-CA', { timeZone: timezone }); // YYYY-MM-DD format
 
   // Get life events
   const { data: lifeEvents } = await supabase
@@ -40,9 +45,10 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Calculate current week number
+  // Calculate current week number using user's timezone
   const startDate = new Date(plan.start_date);
-  const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+  const todayDate = new Date(todayStr + "T12:00:00Z"); // Use noon to avoid timezone edge cases
+  const daysSinceStart = Math.floor((todayDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
   const planWeekNumber = daysSinceStart < 0 ? 1 : Math.floor(daysSinceStart / 7) + 1;
 
   // Get ALL workouts from planned_workouts table (same as training-plan API)

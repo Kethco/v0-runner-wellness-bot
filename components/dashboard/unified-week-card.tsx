@@ -27,6 +27,7 @@ import {
   Flame,
   TrendingUp,
 } from "lucide-react";
+import { getLocalDateString, getUserTimezone } from "@/lib/utils";
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(res => res.json());
 
@@ -129,12 +130,17 @@ interface UnifiedWeekCardProps {
 }
 
 export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWeekCardProps) {
-  const { data: planData, isLoading, mutate } = useSWR<WeekData>("/api/training-plan/week", fetcher);
+  // Get user's timezone for API calls
+  const timezone = getUserTimezone();
+  const { data: planData, isLoading, mutate } = useSWR<WeekData>(
+    `/api/training-plan/week?tz=${encodeURIComponent(timezone)}`, 
+    fetcher
+  );
   const [showAdjustmentDialog, setShowAdjustmentDialog] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  // Use local timezone for today's date
+  const todayStr = getLocalDateString(timezone);
 
   // Check if we have an active training plan
   const hasPlan = planData?.plan && planData?.workouts?.length > 0;
