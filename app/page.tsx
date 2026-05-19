@@ -19,6 +19,7 @@ import { TrialCountdown } from "@/components/trial-expired-blocker";
 import { LEDTicker } from "@/components/led-ticker";
 import { ReadinessScore } from "@/components/dashboard/readiness-score";
 import { RecoveryCard } from "@/components/dashboard/recovery-card";
+import { RestDayGuidance } from "@/components/dashboard/rest-day-guidance";
 import { GentleReminder } from "@/components/dashboard/gentle-reminder";
 import { Onboarding } from "@/components/onboarding";
 import { WeeklySummary } from "@/components/dashboard/weekly-summary";
@@ -344,6 +345,11 @@ return (
 
         {/* Recovery Card (shows when readiness is low) */}
         <RecoveryCard />
+        
+        {/* Rest Day Guidance (shows on rest days) */}
+        {todayWorkout?.workout_type === "rest" && (
+          <RestDayGuidance />
+        )}
 
         {/* Weekly Wellness Summary (shows Sun/Mon) */}
         <WeeklySummary />

@@ -1,7 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingUp, Zap, CheckCircle2 } from "lucide-react";
+import { 
+  Moon, Zap, Activity, TrendingUp, TrendingDown, Minus,
+  Sparkles, CheckCircle2
+} from "lucide-react";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -10,17 +13,46 @@ const fetcher = async (url: string) => {
   return res.json();
 };
 
+function getScoreColor(score: number): string {
+  if (score >= 85) return "#30D158";
+  if (score >= 70) return "#32D74B";
+  if (score >= 50) return "#FFD60A";
+  if (score >= 30) return "#FF9500";
+  return "#FF453A";
+}
+
+function getScoreLabel(score: number): string {
+  if (score >= 85) return "Peak";
+  if (score >= 70) return "Good";
+  if (score >= 50) return "Moderate";
+  if (score >= 30) return "Low";
+  return "Rest";
+}
+
+function getTrend(current: number, average: number): "up" | "down" | "stable" {
+  const diff = current - average;
+  if (diff > 0.3) return "up";
+  if (diff < -0.3) return "down";
+  return "stable";
+}
+
 export function ReadinessScore() {
   const { data, isLoading } = useSWR("/api/wellness-insights", fetcher);
+  const { data: checkinData } = useSWR("/api/checkins?limit=1", fetcher);
+  
+  const todayCheckin = checkinData?.checkins?.[0];
+  const todayStr = new Date().toISOString().split("T")[0];
+  const hasCheckedInToday = todayCheckin?.date === todayStr;
 
   if (isLoading) {
     return (
-      <div className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] p-5 animate-pulse">
-        <div className="flex items-center gap-5">
-          <div className="w-[140px] h-[140px] rounded-full bg-white/5" />
-          <div className="flex-1 space-y-2">
-            <div className="h-5 bg-white/5 rounded w-32" />
-            <div className="h-4 bg-white/5 rounded w-48" />
+      <div className="premium-card p-5 animate-pulse">
+        <div className="flex items-center gap-4">
+          <div className="w-28 h-28 rounded-full bg-white/5" />
+          <div className="flex-1 space-y-3">
+            <div className="h-4 bg-white/5 rounded w-24" />
+            <div className="h-6 bg-white/5 rounded w-32" />
+            <div className="h-3 bg-white/5 rounded w-40" />
           </div>
         </div>
       </div>
@@ -31,121 +63,237 @@ export function ReadinessScore() {
     return null;
   }
 
-  const { readiness, patterns: insights, recoverySuggestions: tips } = data;
+  const { readiness, patterns: insights, recoverySuggestions: tips, weeklyStats } = data;
   const score = readiness.score;
-  
-  // Color based on score - golden/amber theme like the reference
-  const getScoreColor = (s: number) => {
-    if (s >= 80) return "#30D158";
-    if (s >= 60) return "#FFD60A";
-    if (s >= 40) return "#FF9F0A";
-    return "#FF453A";
-  };
-  
-  const getStatus = (s: number) => {
-    if (s >= 80) return "Optimal";
-    if (s >= 60) return "Moderate";
-    if (s >= 40) return "Low";
-    return "Rest";
-  };
-  
   const scoreColor = getScoreColor(score);
-  const status = getStatus(score);
+  const scoreLabel = getScoreLabel(score);
   
-  const radius = 58;
-  const circumference = 2 * Math.PI * radius;
+  // Calculate the circle progress
+  const circumference = 2 * Math.PI * 42;
   const strokeDashoffset = circumference - (score / 100) * circumference;
+  
+  // Get individual metrics from today's check-in
+  const sleepRating = todayCheckin?.sleep_rating || 3;
+  const energyLevel = todayCheckin?.energy || 3;
+  const sorenessLevel = todayCheckin?.soreness || 1;
+  
+  // Calculate trends
+  const avgSleep = parseFloat(weeklyStats?.avgSleep || "3");
+  const avgEnergy = parseFloat(weeklyStats?.avgEnergy || "3");
+  
+  const sleepTrend = hasCheckedInToday ? getTrend(sleepRating, avgSleep) : "stable";
+  const energyTrend = hasCheckedInToday ? getTrend(energyLevel, avgEnergy) : "stable";
+  
+  const TrendIcon = ({ trend }: { trend: "up" | "down" | "stable" }) => {
+    if (trend === "up") return <TrendingUp className="w-3 h-3 text-[#30D158]" />;
+    if (trend === "down") return <TrendingDown className="w-3 h-3 text-[#FF453A]" />;
+    return <Minus className="w-3 h-3 text-white/40" />;
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] overflow-hidden"
+      className="premium-card overflow-hidden"
     >
+      {/* Top accent gradient */}
+      <div 
+        className="h-[2px]" 
+        style={{ 
+          background: `linear-gradient(90deg, transparent, ${scoreColor}, transparent)` 
+        }} 
+      />
+      
       <div className="p-5">
-        {/* Main content - horizontal layout */}
-        <div className="flex items-center gap-5">
-          {/* Circular Score Ring */}
-          <div className="relative w-[140px] h-[140px] flex-shrink-0">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 140 140">
-              {/* Background circle */}
-              <circle
-                cx="70"
-                cy="70"
-                r={radius}
-                stroke="#2C2C2E"
-                strokeWidth="8"
-                fill="none"
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-white font-bold text-lg flex items-center gap-3">
+            <div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ 
+                backgroundColor: `${scoreColor}20`,
+                boxShadow: `0 0 20px ${scoreColor}30`
+              }}
+            >
+              <Sparkles 
+                className="w-5 h-5" 
+                style={{ 
+                  color: scoreColor,
+                  filter: `drop-shadow(0 0 4px ${scoreColor})`
+                }} 
               />
-              {/* Progress circle */}
+            </div>
+            Recovery Score
+          </h3>
+          {!hasCheckedInToday && (
+            <span className="text-[10px] text-white/40 bg-white/5 px-2 py-1 rounded-full">
+              Check in for accuracy
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-5">
+          {/* Score Ring */}
+          <div className="relative w-28 h-28 flex-shrink-0">
+            {/* Glow effect */}
+            <motion.div 
+              className="absolute inset-[-6px] rounded-full"
+              style={{ 
+                background: `radial-gradient(circle, ${scoreColor}30 0%, transparent 70%)`,
+              }}
+              animate={{ 
+                opacity: [0.4, 0.7, 0.4],
+              }}
+              transition={{ 
+                duration: 3, 
+                repeat: Infinity, 
+                ease: "easeInOut" 
+              }}
+            />
+            
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+              {/* Background track */}
+              <circle 
+                cx="50" cy="50" r="42" 
+                stroke="rgba(255,255,255,0.08)" 
+                strokeWidth="8" 
+                fill="none" 
+              />
+              {/* Progress arc */}
               <motion.circle
-                cx="70"
-                cy="70"
-                r={radius}
+                cx="50" cy="50" r="42"
                 stroke={scoreColor}
                 strokeWidth="8"
                 fill="none"
                 strokeLinecap="round"
-                strokeDasharray={circumference}
-                initial={{ strokeDashoffset: circumference }}
+                initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
                 animate={{ strokeDashoffset }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
+                transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+                style={{ filter: `drop-shadow(0 0 8px ${scoreColor})` }}
               />
             </svg>
             
-            {/* Center content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <motion.span 
-                className="text-4xl font-bold text-white"
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
+                className="text-3xl font-black text-white leading-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
               >
                 {score}
               </motion.span>
-              <span className="text-xs text-[#8E8E93] font-semibold uppercase tracking-wider mt-1">
-                Ready
+              <span 
+                className="text-[10px] font-bold uppercase tracking-wider mt-1"
+                style={{ color: scoreColor }}
+              >
+                {scoreLabel}
               </span>
             </div>
           </div>
-
-          {/* Right side - Title and advice */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-2">
-              <h3 className="text-lg font-bold text-white">Today&apos;s Readiness</h3>
-              <span 
-                className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                style={{ 
-                  backgroundColor: `${scoreColor}20`,
-                  color: scoreColor 
-                }}
-              >
-                {status}
-              </span>
+          
+          {/* Metrics Breakdown */}
+          <div className="flex-1 space-y-3">
+            {/* Sleep */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#AF52DE]/20 flex items-center justify-center">
+                <Moon className="w-4 h-4 text-[#AF52DE]" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/60">Sleep</span>
+                  <div className="flex items-center gap-1">
+                    <TrendIcon trend={sleepTrend} />
+                    <span className="text-sm font-bold text-white">{sleepRating}/4</span>
+                  </div>
+                </div>
+                <div className="h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
+                  <motion.div 
+                    className="h-full rounded-full bg-[#AF52DE]"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(sleepRating / 4) * 100}%` }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                  />
+                </div>
+              </div>
             </div>
-            <p className="text-[#8E8E93] text-sm leading-relaxed">
-              {readiness.advice || "Consider an easy run or active recovery."}
-            </p>
+            
+            {/* Energy */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#FFD60A]/20 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-[#FFD60A]" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/60">Energy</span>
+                  <div className="flex items-center gap-1">
+                    <TrendIcon trend={energyTrend} />
+                    <span className="text-sm font-bold text-white">{energyLevel}/5</span>
+                  </div>
+                </div>
+                <div className="h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
+                  <motion.div 
+                    className="h-full rounded-full bg-[#FFD60A]"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(energyLevel / 5) * 100}%` }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Soreness */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#FF9500]/20 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-[#FF9500]" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/60">Soreness</span>
+                  <span className="text-sm font-bold text-white">
+                    {sorenessLevel === 1 ? "None" : sorenessLevel === 2 ? "Mild" : sorenessLevel === 3 ? "Moderate" : "High"}
+                  </span>
+                </div>
+                <div className="h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
+                  <motion.div 
+                    className="h-full rounded-full"
+                    style={{ 
+                      backgroundColor: sorenessLevel <= 2 ? "#30D158" : sorenessLevel === 3 ? "#FFD60A" : "#FF453A" 
+                    }}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(sorenessLevel / 4) * 100}%` }}
+                    transition={{ duration: 0.8, delay: 0.5 }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Divider */}
-        <div className="h-px bg-[#2C2C2E] my-5" />
-
+        
+        {/* Advice */}
+        <div 
+          className="mt-5 p-4 rounded-xl border"
+          style={{ 
+            backgroundColor: `${scoreColor}10`,
+            borderColor: `${scoreColor}30`
+          }}
+        >
+          <p className="text-sm text-white/80">{readiness.advice}</p>
+        </div>
+        
         {/* Insights section */}
         {insights && insights.length > 0 && (
-          <div className="mb-5">
+          <div className="mt-5 pt-5 border-t border-white/5">
             <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-4 h-4 text-[#8E8E93]" />
-              <span className="text-xs font-bold text-[#8E8E93] uppercase tracking-wider">
-                Insights From Your Data
+              <TrendingUp className="w-4 h-4 text-white/40" />
+              <span className="text-xs font-bold text-white/40 uppercase tracking-wider">
+                Insights
               </span>
             </div>
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {insights.slice(0, 2).map((insight: string, i: number) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <Zap className="w-4 h-4 text-[#FF9F0A] mt-0.5 flex-shrink-0" />
-                  <p className="text-white text-sm leading-relaxed">{insight}</p>
+                  <p className="text-white/70 text-sm leading-relaxed">{insight}</p>
                 </div>
               ))}
             </div>
@@ -154,18 +302,18 @@ export function ReadinessScore() {
 
         {/* Recovery Tips section */}
         {tips && tips.length > 0 && (
-          <div>
+          <div className="mt-4">
             <div className="flex items-center gap-2 mb-3">
-              <CheckCircle2 className="w-4 h-4 text-[#8E8E93]" />
-              <span className="text-xs font-bold text-[#8E8E93] uppercase tracking-wider">
+              <CheckCircle2 className="w-4 h-4 text-white/40" />
+              <span className="text-xs font-bold text-white/40 uppercase tracking-wider">
                 Recovery Tips
               </span>
             </div>
             <ul className="space-y-2">
               {tips.slice(0, 2).map((tip: string, i: number) => (
                 <li key={i} className="flex items-start gap-2.5">
-                  <span className="text-[#FF9F0A] mt-1">•</span>
-                  <p className="text-[#AEAEB2] text-sm leading-relaxed">{tip}</p>
+                  <span className="text-[#30D158] mt-1">•</span>
+                  <p className="text-white/60 text-sm leading-relaxed">{tip}</p>
                 </li>
               ))}
             </ul>
