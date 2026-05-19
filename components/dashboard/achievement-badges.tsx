@@ -254,10 +254,10 @@ export function AchievementBadges() {
                   />
                   
                   <div 
-                    className="relative w-11 h-11 rounded-xl flex items-center justify-center border"
+                    className="relative w-11 h-11 rounded-xl flex items-center justify-center border-2"
                     style={{
-                      backgroundColor: `${badge.color}12`,
-                      borderColor: `${badge.color}35`,
+                      backgroundColor: `${badge.color}20`,
+                      borderColor: `${badge.color}60`,
                     }}
                   >
                     <badge.icon className="w-5 h-5" style={{ color: badge.color }} />
@@ -285,9 +285,21 @@ export function AchievementBadges() {
                   className="relative group/badge transition-transform duration-200 hover:scale-105"
                 >
                   <div 
-                    className="relative w-9 h-9 rounded-lg flex items-center justify-center border border-white/[0.12] bg-white/[0.04]"
+                    className="relative w-9 h-9 rounded-lg flex items-center justify-center border-2 border-white/20 bg-white/[0.08]"
                   >
-                    <badge.icon className="w-4 h-4 text-white/40" />
+                    <badge.icon className="w-4 h-4 text-white/50" />
+                    
+                    {/* Background ring track */}
+                    <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <circle 
+                        cx="18" 
+                        cy="18" 
+                        r="16" 
+                        fill="none" 
+                        stroke="rgba(255,255,255,0.15)"
+                        strokeWidth="2.5" 
+                      />
+                    </svg>
                     
                     {/* Progress ring */}
                     {badge.progress > 0 && (
@@ -298,10 +310,10 @@ export function AchievementBadges() {
                           r="16" 
                           fill="none" 
                           stroke={badge.color}
-                          strokeWidth="2" 
+                          strokeWidth="2.5" 
                           strokeLinecap="round"
                           strokeDasharray={`${badge.progress * 1.01} 101`}
-                          opacity={0.4}
+                          opacity={0.8}
                         />
                       </svg>
                     )}
