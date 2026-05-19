@@ -271,7 +271,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
           <div className="flex items-start justify-between mb-6">
             <div>
               <div className="flex items-center gap-2.5 mb-2">
-                <p className="text-white text-xs font-bold uppercase tracking-widest">This Week</p>
+                <p className="text-white text-sm font-bold uppercase tracking-wider">This Week</p>
                 {hasPlan && planData?.plan && (
                   <Badge variant="secondary" className="text-[10px] h-5 px-2.5 bg-[#FF4500]/20 text-[#FF6B00] border border-[#FF4500]/40 font-bold">
                     Week {planData.plan.currentWeek}{planData.plan.totalWeeks ? `/${planData.plan.totalWeeks}` : ""}
