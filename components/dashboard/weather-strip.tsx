@@ -71,7 +71,7 @@ export function WeatherStrip() {
     );
   }
 
-  if (error || !data?.forecast) {
+  if (error || !data?.forecast || data.forecast.length === 0) {
     return null; // Silently fail - weather is nice to have, not critical
   }
 

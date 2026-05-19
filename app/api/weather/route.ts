@@ -79,15 +79,11 @@ export async function GET() {
   }
   
   // Geocode the location
-  const coords = await geocodeCity(location);
+  let coords = await geocodeCity(location);
   if (!coords) {
-    // If geocoding fails, try with default NYC coordinates
-    console.log("[v0] Geocoding failed for:", location);
-    return NextResponse.json({
-      location: "New York",
-      forecast: [],
-      error: "Location not found"
-    });
+    // If geocoding fails, use default NYC coordinates
+    console.log("[v0] Geocoding failed for:", location, "- using NYC defaults");
+    coords = { lat: 40.7128, lon: -74.0060, name: "New York" };
   }
 
   // Fetch 7-day forecast from Open-Meteo
