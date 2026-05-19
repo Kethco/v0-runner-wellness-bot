@@ -41,30 +41,34 @@ export function ReadinessScore() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-white/10 overflow-hidden bg-gradient-to-br from-emerald-500/[0.03] to-transparent transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20"
-      style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}
+      className="premium-card overflow-hidden"
     >
-      {/* Header accent */}
+      {/* Subtle top accent line */}
       <div 
-        className="h-1"
+        className="h-[2px] opacity-80"
         style={{ 
-          background: `linear-gradient(to right, ${readiness.color}, ${readiness.color}80)` 
+          background: `linear-gradient(to right, ${readiness.color}, ${readiness.color}40, transparent)` 
         }}
       />
       
       <div className="p-5">
-        <div className="flex items-center gap-4">
-          {/* Circular Score */}
-          <div className="relative w-20 h-20 flex-shrink-0">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
+        <div className="flex items-center gap-5">
+          {/* Premium Circular Score with glow */}
+          <div className="relative w-[88px] h-[88px] flex-shrink-0">
+            {/* Glow effect */}
+            <div 
+              className="absolute inset-0 rounded-full blur-xl opacity-30"
+              style={{ backgroundColor: readiness.color }}
+            />
+            <svg className="w-full h-full -rotate-90 relative z-10" viewBox="0 0 64 64">
               {/* Background circle */}
               <circle
                 cx="32"
                 cy="32"
                 r="28"
                 fill="none"
-                stroke="hsl(var(--muted))"
-                strokeWidth="6"
+                stroke="rgba(255,255,255,0.06)"
+                strokeWidth="5"
               />
               {/* Progress circle */}
               <motion.circle
@@ -72,49 +76,57 @@ export function ReadinessScore() {
                 cy="32"
                 r="28"
                 fill="none"
-                stroke={readiness.color}
-                strokeWidth="6"
+                stroke={`url(#readiness-gradient-${score})`}
+                strokeWidth="5"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 initial={{ strokeDashoffset: circumference }}
                 animate={{ strokeDashoffset }}
-                transition={{ duration: 1, ease: "easeOut" }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                style={{ filter: `drop-shadow(0 0 6px ${readiness.color}60)` }}
               />
+              <defs>
+                <linearGradient id={`readiness-gradient-${score}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor={readiness.color} />
+                  <stop offset="100%" stopColor={readiness.color} stopOpacity="0.6" />
+                </linearGradient>
+              </defs>
             </svg>
             {/* Center content */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
               <motion.span
-                className="text-2xl font-black text-foreground"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
+                className="text-[28px] font-black text-white tracking-tight"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4, type: "spring" }}
               >
                 {score}
               </motion.span>
-              <span className="text-[9px] text-[#8E8E93] uppercase tracking-wider">Ready</span>
+              <span className="text-[8px] text-white/40 uppercase tracking-[0.15em] font-semibold">Ready</span>
             </div>
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-foreground font-bold text-lg">Today&apos;s Readiness</h3>
+            <div className="flex items-center gap-2 mb-1.5">
+              <h3 className="text-white font-bold text-base">Today&apos;s Readiness</h3>
               <span 
-                className="text-xs font-bold px-2 py-0.5 rounded-full"
+                className="text-[10px] font-bold px-2 py-0.5 rounded-full border"
                 style={{ 
-                  backgroundColor: `${readiness.color}20`,
-                  color: readiness.color 
+                  backgroundColor: `${readiness.color}12`,
+                  color: readiness.color,
+                  borderColor: `${readiness.color}30`
                 }}
               >
                 {readiness.label}
               </span>
             </div>
-            <p className="text-[#8E8E93] text-sm">{readiness.advice}</p>
+            <p className="text-white/50 text-[13px] leading-relaxed">{readiness.advice}</p>
             
             {!readiness.hasCheckedIn && (
               <Link 
                 href="#checkin"
-                className="inline-flex items-center gap-1 text-xs text-[#FF4500] mt-2 hover:underline"
+                className="inline-flex items-center gap-1.5 text-[11px] text-[#FF4500] mt-2.5 hover:text-[#FF6B00] transition-colors font-medium"
               >
                 <AlertCircle className="w-3 h-3" />
                 Check in for accurate score

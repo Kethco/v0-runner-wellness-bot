@@ -73,39 +73,42 @@ export function WeeklySummary() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl overflow-hidden"
+      className="premium-card overflow-hidden"
     >
-      {/* Gradient header */}
-      <div className="bg-gradient-to-r from-[#FF4500]/20 via-[#FFD700]/10 to-[#30D158]/20 p-4 pb-3">
+      {/* Header */}
+      <div className="p-4 pb-3 border-b border-white/[0.04]">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-[#FFD700]">Weekly Recap</p>
-            <p className="text-white font-bold text-lg">Your Week in Review</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#FFD700]/80">Weekly Recap</p>
+            <p className="text-white font-bold text-base mt-0.5">Your Week in Review</p>
           </div>
-          <Link href="/trends" className="text-[#6E6E73] hover:text-white transition-colors">
-            <ChevronRight className="w-5 h-5" />
+          <Link 
+            href="/trends" 
+            className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.06] transition-all"
+          >
+            <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
 
       {/* Stats grid */}
-      <div className="bg-[#141414] border border-[#2A2A2A] border-t-0 rounded-b-2xl p-4">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="p-4">
+        <div className="grid grid-cols-2 gap-2.5">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-              className="flex items-center gap-3 p-3 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A]"
+              transition={{ delay: 0.08 + i * 0.04 }}
+              className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors"
             >
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}15` }}>
-                <stat.icon className="w-4.5 h-4.5" style={{ color: stat.color }} />
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}12` }}>
+                <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-[#6E6E73]">{stat.label}</p>
+                <p className="text-[10px] text-white/40 font-medium">{stat.label}</p>
                 <div className="flex items-center gap-1.5">
-                  <p className="text-white font-bold text-lg">{stat.value}</p>
+                  <p className="text-white font-bold text-base">{stat.value}</p>
                   <TrendArrow current={stat.current} previous={stat.prev} />
                 </div>
               </div>
@@ -115,9 +118,9 @@ export function WeeklySummary() {
 
         {/* Best day callout */}
         {bestDay && (
-          <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-[#30D158]/10 to-transparent border border-[#30D158]/20">
-            <p className="text-xs text-[#30D158] font-semibold">Best Day: {bestDay.day}</p>
-            <p className="text-sm text-[#C7C7CC]">{bestDay.reason}</p>
+          <div className="mt-3 p-3 rounded-xl bg-[#30D158]/8 border border-[#30D158]/15">
+            <p className="text-[10px] text-[#30D158] font-bold uppercase tracking-wider">Best Day · {bestDay.day}</p>
+            <p className="text-[12px] text-white/50 mt-0.5">{bestDay.reason}</p>
           </div>
         )}
 

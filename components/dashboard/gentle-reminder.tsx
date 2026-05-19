@@ -101,30 +101,30 @@ export function GentleReminder() {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+        initial={{ opacity: 0, y: -10, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-        className="rounded-2xl overflow-hidden"
-        style={{ backgroundColor: `${reminder.bgColor}15` }}
+        exit={{ opacity: 0, y: -10, scale: 0.98 }}
+        className="premium-card overflow-hidden"
+        style={{ borderColor: `${reminder.color}20` }}
       >
         <div className="flex items-start gap-3 p-4">
           <div 
-            className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${reminder.color}20` }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: `${reminder.color}15` }}
           >
-            <reminder.icon className="w-5 h-5" style={{ color: reminder.color }} />
+            <reminder.icon className="w-4 h-4" style={{ color: reminder.color }} />
           </div>
           
           <div className="flex-1 min-w-0">
-            <p className="text-white font-semibold text-sm mb-0.5">{reminder.title}</p>
-            <p className="text-[#AEAEB2] text-xs leading-relaxed">{reminder.message}</p>
+            <p className="text-white font-semibold text-[13px] mb-0.5">{reminder.title}</p>
+            <p className="text-white/50 text-[12px] leading-relaxed">{reminder.message}</p>
           </div>
           
           <button
             onClick={() => setDismissed(prev => [...prev, reminder.id])}
-            className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-colors"
           >
-            <X className="w-4 h-4 text-[#6E6E73]" />
+            <X className="w-3.5 h-3.5 text-white/30" />
           </button>
         </div>
       </motion.div>

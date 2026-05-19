@@ -193,134 +193,129 @@ export function AchievementBadges() {
 
   return (
     <>
-      <div className="relative rounded-2xl overflow-hidden group/card transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10">
-        {/* Subtle accent border - static, no animation */}
-        <div className="absolute inset-0 rounded-2xl p-[1px] bg-gradient-to-br from-amber-500/30 via-transparent to-amber-500/20 opacity-60 group-hover/card:opacity-100 transition-opacity duration-300" />
-        
-        {/* Inner content with subtle amber tint */}
-        <div className="relative rounded-2xl bg-gradient-to-br from-amber-500/[0.03] to-transparent m-[1px] backdrop-blur-sm" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
-          {/* Header */}
-          <div className="p-4 border-b border-white/5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                  <Trophy className="w-5 h-5 text-amber-400" />
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold text-lg">Achievements</h3>
-                  <p className="text-sm text-white/50">
-                    <span className="text-amber-400 font-semibold">{earnedCount}</span> of {badges.length} unlocked
-                  </p>
-                </div>
+      <div className="premium-card overflow-hidden">
+        {/* Header */}
+        <div className="p-4 border-b border-white/[0.04]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/12 flex items-center justify-center border border-amber-500/20">
+                <Trophy className="w-5 h-5 text-amber-400" />
               </div>
-              
-              {/* Progress ring - fills once on load */}
-              <div className="relative w-12 h-12">
-                <svg className="w-12 h-12 -rotate-90">
-                  <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
-                  <motion.circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    fill="none"
-                    stroke="#F59E0B"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    initial={{ strokeDasharray: "0 126" }}
-                    animate={{ strokeDasharray: `${(earnedCount / badges.length) * 126} 126` }}
-                    transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-bold text-amber-400">{Math.round((earnedCount / badges.length) * 100)}%</span>
-                </div>
+              <div>
+                <h3 className="text-white font-bold text-base">Achievements</h3>
+                <p className="text-[12px] text-white/40">
+                  <span className="text-amber-400 font-semibold">{earnedCount}</span> of {badges.length} unlocked
+                </p>
+              </div>
+            </div>
+            
+            {/* Progress ring */}
+            <div className="relative w-11 h-11">
+              <svg className="w-11 h-11 -rotate-90">
+                <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+                <motion.circle
+                  cx="22"
+                  cy="22"
+                  r="18"
+                  fill="none"
+                  stroke="#F59E0B"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  initial={{ strokeDasharray: "0 113" }}
+                  animate={{ strokeDasharray: `${(earnedCount / badges.length) * 113} 113` }}
+                  transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                  style={{ filter: "drop-shadow(0 0 4px rgba(245, 158, 11, 0.5))" }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[11px] font-bold text-amber-400">{Math.round((earnedCount / badges.length) * 100)}%</span>
               </div>
             </div>
           </div>
-
-          {/* Earned badges section */}
-          {earnedBadges.length > 0 && (
-            <div className="p-4 border-b border-white/5">
-              <p className="text-xs font-medium text-amber-400/80 uppercase tracking-wider mb-3">
-                Unlocked
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {earnedBadges.map((badge) => (
-                  <button
-                    key={badge.id}
-                    onClick={() => setSelectedBadge(badge)}
-                    className="relative group/badge transition-transform duration-200 hover:scale-105"
-                  >
-                    {/* Hover glow - only on hover */}
-                    <div 
-                      className="absolute inset-0 rounded-lg blur-md opacity-0 group-hover/badge:opacity-40 transition-opacity duration-200"
-                      style={{ backgroundColor: badge.color }}
-                    />
-                    
-                    <div 
-                      className="relative w-12 h-12 rounded-xl flex items-center justify-center border"
-                      style={{
-                        backgroundColor: `${badge.color}15`,
-                        borderColor: `${badge.color}50`,
-                      }}
-                    >
-                      <badge.icon className="w-6 h-6" style={{ color: badge.color }} />
-                    </div>
-                    
-                    {/* Tooltip */}
-                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap z-10">
-                      <span className="text-[10px] bg-[#1A1A1A] px-2 py-1 rounded text-white">{badge.name}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Unearned badges section */}
-          {unearnedBadges.length > 0 && (
-            <div className="p-4">
-              <p className="text-xs font-medium text-white/40 uppercase tracking-wider mb-3">In Progress</p>
-              <div className="flex flex-wrap gap-2">
-                {unearnedBadges.map((badge) => (
-                  <button
-                    key={badge.id}
-                    onClick={() => setSelectedBadge(badge)}
-                    className="relative group/badge transition-transform duration-200 hover:scale-105"
-                  >
-                    <div 
-                      className="relative w-10 h-10 rounded-lg flex items-center justify-center border border-white/10 bg-white/5"
-                    >
-                      <badge.icon className="w-5 h-5 text-white/30" />
-                      
-                      {/* Progress ring */}
-                      {badge.progress > 0 && (
-                        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 40 40">
-                          <circle 
-                            cx="20" 
-                            cy="20" 
-                            r="18" 
-                            fill="none" 
-                            stroke={badge.color}
-                            strokeWidth="2" 
-                            strokeLinecap="round"
-                            strokeDasharray={`${badge.progress * 1.13} 113`}
-                            opacity={0.5}
-                          />
-                        </svg>
-                      )}
-                    </div>
-                    
-                    {/* Progress label */}
-                    <div className="absolute -bottom-5 left-1/2 -translate-x-1/2">
-                      <span className="text-[9px] text-white/40">{Math.round(badge.progress)}%</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Earned badges section */}
+        {earnedBadges.length > 0 && (
+          <div className="p-4 border-b border-white/[0.04]">
+            <p className="text-[10px] font-semibold text-amber-400/70 uppercase tracking-[0.12em] mb-3">
+              Unlocked
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {earnedBadges.map((badge) => (
+                <button
+                  key={badge.id}
+                  onClick={() => setSelectedBadge(badge)}
+                  className="relative group/badge transition-transform duration-200 hover:scale-105"
+                >
+                  {/* Hover glow */}
+                  <div 
+                    className="absolute inset-0 rounded-xl blur-md opacity-0 group-hover/badge:opacity-40 transition-opacity duration-200"
+                    style={{ backgroundColor: badge.color }}
+                  />
+                  
+                  <div 
+                    className="relative w-11 h-11 rounded-xl flex items-center justify-center border"
+                    style={{
+                      backgroundColor: `${badge.color}12`,
+                      borderColor: `${badge.color}35`,
+                    }}
+                  >
+                    <badge.icon className="w-5 h-5" style={{ color: badge.color }} />
+                  </div>
+                  
+                  {/* Tooltip */}
+                  <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 opacity-0 group-hover/badge:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                    <span className="text-[9px] bg-[#1A1A1A] px-2 py-0.5 rounded text-white/70 border border-white/10">{badge.name}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Unearned badges section */}
+        {unearnedBadges.length > 0 && (
+          <div className="p-4">
+            <p className="text-[10px] font-semibold text-white/30 uppercase tracking-[0.12em] mb-3">In Progress</p>
+            <div className="flex flex-wrap gap-2">
+              {unearnedBadges.map((badge) => (
+                <button
+                  key={badge.id}
+                  onClick={() => setSelectedBadge(badge)}
+                  className="relative group/badge transition-transform duration-200 hover:scale-105"
+                >
+                  <div 
+                    className="relative w-9 h-9 rounded-lg flex items-center justify-center border border-white/[0.08] bg-white/[0.02]"
+                  >
+                    <badge.icon className="w-4 h-4 text-white/25" />
+                    
+                    {/* Progress ring */}
+                    {badge.progress > 0 && (
+                      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <circle 
+                          cx="18" 
+                          cy="18" 
+                          r="16" 
+                          fill="none" 
+                          stroke={badge.color}
+                          strokeWidth="2" 
+                          strokeLinecap="round"
+                          strokeDasharray={`${badge.progress * 1.01} 101`}
+                          opacity={0.4}
+                        />
+                      </svg>
+                    )}
+                  </div>
+                  
+                  {/* Progress label */}
+                  <div className="absolute -bottom-4 left-1/2 -translate-x-1/2">
+                    <span className="text-[8px] text-white/30">{Math.round(badge.progress)}%</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Badge detail modal */}

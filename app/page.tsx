@@ -172,27 +172,23 @@ return (
           <div className="flex items-center gap-3">
             {/* Avatar with gradient ring */}
             <div className="relative">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF4500] to-[#FF6B00] p-[2px]">
-                <div className="w-full h-full rounded-full bg-[#1A1A1A] flex items-center justify-center">
-                  <span className="text-lg font-bold bg-gradient-to-br from-[#FF4500] to-[#FFD700] bg-clip-text text-transparent">
+              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#FF4500] to-[#FF6B00] p-[1.5px]">
+                <div className="w-full h-full rounded-full bg-[#0A0A0A] flex items-center justify-center">
+                  <span className="text-base font-bold bg-gradient-to-br from-[#FF4500] to-[#FFD700] bg-clip-text text-transparent">
                     {userName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
                   </span>
                 </div>
               </div>
               {/* Online indicator */}
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#30D158] rounded-full border-2 border-black" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#30D158] rounded-full border-2 border-[#0A0A0A]" />
             </div>
             
-            {/* Greeting with shimmer effect */}
+            {/* Greeting */}
             <div className="flex-1 min-w-0">
-              <motion.p 
-                className="text-sm font-semibold bg-gradient-to-r from-[#FF6B00] via-[#FFD700] to-[#FF6B00] bg-clip-text text-transparent bg-[length:200%_100%]"
-                animate={{ backgroundPosition: ["0% 0%", "200% 0%"] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-              >
+              <p className="text-[11px] font-semibold text-[#FF6B00] uppercase tracking-wider">
                 {greeting.text}
-              </motion.p>
-              <h1 className="text-lg font-bold text-white tracking-tight truncate">{userName}</h1>
+              </p>
+              <h1 className="text-base font-bold text-white tracking-tight truncate">{userName}</h1>
             </div>
             
             {/* Right side badges */}
@@ -200,33 +196,13 @@ return (
               {/* Trial Countdown */}
               <TrialCountdown />
               
-              {/* Streak Badge - Premium version */}
+              {/* Streak Badge */}
               <motion.div 
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="relative flex items-center gap-1.5 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-3 py-1.5 rounded-full shadow-lg shadow-[#FF4500]/30"
+                className="relative flex items-center gap-1 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-2.5 py-1.5 rounded-full shadow-md shadow-[#FF4500]/20"
               >
-                {/* Subtle pulse behind */}
-                <motion.div
-                  className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF4500] to-[#FF6B00]"
-                  animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                />
-                <motion.div
-                  className="relative"
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    rotate: [0, -5, 5, 0],
-                  }}
-                  transition={{ 
-                    duration: 1.5, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
-                  }}
-                >
-                  <Flame className="w-5 h-5 text-white drop-shadow-[0_0_8px_rgba(255,200,0,0.8)]" />
-                </motion.div>
-                <span className="relative text-white font-black text-base">
+                <Flame className="w-4 h-4 text-white" />
+                <span className="relative text-white font-bold text-sm">
                   <CountingNumber value={currentStreak} duration={1} />
                 </span>
               </motion.div>
@@ -234,22 +210,22 @@ return (
           </div>
           
           {/* Quick stats row */}
-          <div className="flex items-center gap-4 mt-2 ml-[60px]">
-            <div className="flex items-center gap-1.5 text-xs">
+          <div className="flex items-center gap-3 mt-2 ml-14">
+            <div className="flex items-center gap-1.5 text-[11px]">
               <TrendingUp className="w-3 h-3 text-[#30D158]" />
-              <span className="text-[#8E8E93]">
+              <span className="text-white/40">
                 <CountingNumber 
                   value={weekPlanData?.weekStats?.completedMiles ?? weeklyMiles} 
                   decimals={1} 
-                  duration={1.2}
+                  duration={1}
                   suffix=" mi this week"
                 />
               </span>
             </div>
             {currentStreak > 0 && (
-              <div className="flex items-center gap-1.5 text-xs">
+              <div className="flex items-center gap-1.5 text-[11px]">
                 <Zap className="w-3 h-3 text-[#FFD700]" />
-                <span className="text-[#8E8E93]">
+                <span className="text-white/40">
                   <CountingNumber value={currentStreak} duration={1} suffix=" day streak" />
                 </span>
               </div>
@@ -281,32 +257,32 @@ return (
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="grid grid-cols-2 gap-4"
+          className="grid grid-cols-2 gap-3"
         >
           <LogRunModal onRunLogged={() => { mutateRuns(); mutateWeekPlan(); }}>
             <motion.button
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              whileHover={{ scale: 1.02, y: -2 }}
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#FF4500] to-[#FF6B00] shadow-xl shadow-[#FF4500]/40"
+              className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/25 transition-shadow hover:shadow-xl hover:shadow-[#FF4500]/30"
             >
-              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <Play className="w-7 h-7 text-white fill-white" />
+              <div className="w-12 h-12 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                <Play className="w-6 h-6 text-white fill-white" />
               </div>
               <div className="text-left">
-                <p className="text-white font-bold text-xl">Log Run</p>
-                <p className="text-white/80 text-sm font-medium">Record activity</p>
+                <p className="text-white font-bold text-lg">Log Run</p>
+                <p className="text-white/70 text-xs font-medium">Record activity</p>
               </div>
             </motion.button>
           </LogRunModal>
 
           <motion.button
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.25 }}
-            whileHover={{ scale: 1.02, y: -2 }}
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               hapticLight();
@@ -319,22 +295,22 @@ return (
                 setShowCheckinModal(true);
               }
             }}
-            className={`w-full flex items-center gap-4 p-5 rounded-2xl shadow-xl transition-all ${
+            className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all ${
               hasCheckedInToday 
-                ? "bg-[#1C1C1E] border-2 border-[#30D158] shadow-[#30D158]/20" 
-                : "bg-gradient-to-br from-[#30D158] to-[#34C759] shadow-[#30D158]/40"
+                ? "bg-[#161618] border border-[#30D158]/30 shadow-lg shadow-[#30D158]/10" 
+                : "bg-gradient-to-br from-[#30D158] to-[#34C759] shadow-lg shadow-[#30D158]/25 hover:shadow-xl hover:shadow-[#30D158]/30"
             }`}
           >
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-              hasCheckedInToday ? "bg-[#30D158]/20" : "bg-white/20 backdrop-blur"
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+              hasCheckedInToday ? "bg-[#30D158]/15" : "bg-white/15 backdrop-blur-sm"
             }`}>
-              <Activity className={`w-7 h-7 ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`} />
+              <Activity className={`w-6 h-6 ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`} />
             </div>
             <div className="text-left">
-              <p className={`font-bold text-xl ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`}>
+              <p className={`font-bold text-lg ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`}>
                 {hasCheckedInToday ? "Done!" : "Check In"}
               </p>
-              <p className={`text-sm font-medium ${hasCheckedInToday ? "text-[#AEAEB2]" : "text-white/80"}`}>
+              <p className={`text-xs font-medium ${hasCheckedInToday ? "text-white/40" : "text-white/70"}`}>
                 {hasCheckedInToday ? "All set today" : "Daily wellness"}
               </p>
             </div>

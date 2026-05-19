@@ -263,23 +263,20 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
         animate={{ opacity: 1, y: 0 }}
         className="goal-card-border relative overflow-hidden p-6"
       >
-        {/* Inner glow effect */}
-        <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#FF4500] rounded-full blur-[100px] opacity-30" />
-        
         <div className="relative z-10">
           {/* Header */}
-          <div className="flex items-start justify-between mb-5">
+          <div className="flex items-start justify-between mb-6">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <p className="text-[#AEAEB2] text-sm font-semibold uppercase tracking-wider">This Week</p>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <p className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em]">This Week</p>
                 {hasPlan && planData?.plan && (
-                  <Badge variant="secondary" className="text-[10px] h-5 bg-[#FF4500]/15 text-[#FF4500] border-0">
-                    Week {planData.plan.currentWeek}{planData.plan.totalWeeks ? ` of ${planData.plan.totalWeeks}` : ""}
+                  <Badge variant="secondary" className="text-[10px] h-5 px-2 bg-[#FF4500]/10 text-[#FF6B00] border border-[#FF4500]/20 font-semibold">
+                    Week {planData.plan.currentWeek}{planData.plan.totalWeeks ? `/${planData.plan.totalWeeks}` : ""}
                   </Badge>
                 )}
               </div>
-              {/* Date range - always show current calendar week */}
-              <p className="text-xs text-[#6E6E73] mb-1">
+              {/* Date range */}
+              <p className="text-[11px] text-white/30 font-medium tracking-wide mb-3">
                 {(() => {
                   const now = new Date();
                   const weekStart = new Date(now);
@@ -289,46 +286,48 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   const weekEnd = new Date(weekStart);
                   weekEnd.setDate(weekStart.getDate() + 6);
                   const formatDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-                  return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
+                  return `${formatDate(weekStart)} – ${formatDate(weekEnd)}`;
                 })()}
               </p>
-              <div className="flex items-baseline gap-2 mt-2">
+              {/* Mileage display */}
+              <div className="flex items-baseline gap-1.5">
                 <motion.span 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-5xl font-black text-white"
+                  className="text-5xl font-black text-white tracking-tight"
                 >
                   {displayCompletedMiles.toFixed(1)}
                 </motion.span>
-                <span className="text-[#AEAEB2] text-lg font-semibold">
+                <span className="text-white/40 text-lg font-semibold">
                   / {displayPlannedMiles.toFixed(0)} mi
                 </span>
               </div>
               {hasPlan && planData?.plan?.weekType && (
-                <p className="text-xs text-[#8E8E93] mt-1 capitalize">
-                  {planData.plan.weekType} Phase {planData.plan.weekFocus ? `• ${planData.plan.weekFocus}` : ""}
+                <p className="text-[11px] text-white/40 mt-2 font-medium tracking-wide">
+                  <span className="text-[#FF6B00] font-semibold capitalize">{planData.plan.weekType}</span>
+                  {planData.plan.weekFocus ? ` · ${planData.plan.weekFocus}` : ""}
                 </p>
               )}
             </div>
             
             {/* Progress Ring */}
-            <div className="relative w-20 h-20 flex-shrink-0">
+            <div className="relative w-20 h-20 flex-shrink-0 progress-ring-glow">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" stroke="#2A2A2A" strokeWidth="8" fill="none" />
+                <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.08)" strokeWidth="6" fill="none" />
                 <motion.circle
                   cx="50" cy="50" r="40"
                   stroke="url(#progress-gradient)"
-                  strokeWidth="8"
+                  strokeWidth="6"
                   fill="none"
                   strokeLinecap="round"
                   initial={{ strokeDasharray: "0 251" }}
                   animate={{ strokeDasharray: `${progressPercent * 2.51} 251` }}
-                  transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
+                  transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
                 />
                 <defs>
                   <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#FF4500" />
-                    <stop offset="100%" stopColor="#FFD700" />
+                    <stop offset="100%" stopColor="#FF9F0A" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -337,7 +336,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   className="text-xl font-black text-white"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
+                  transition={{ delay: 0.4 }}
                 >
                   <CountUp target={Math.round(progressPercent)} />%
                 </motion.span>
@@ -350,15 +349,17 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30"
+              className="mb-4 p-3.5 rounded-xl bg-amber-500/8 border border-amber-500/20 backdrop-blur-sm"
             >
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                </div>
                 <div className="flex-1">
-                  <p className="text-xs text-[#AEAEB2]">{planData.todayAdjustment.recommendation}</p>
+                  <p className="text-xs text-white/70 leading-relaxed">{planData.todayAdjustment.recommendation}</p>
                   <button
                     onClick={() => setShowAdjustmentDialog(true)}
-                    className="text-xs text-amber-500 mt-1 hover:underline"
+                    className="text-[11px] text-amber-400 mt-1.5 hover:text-amber-300 transition-colors font-medium"
                   >
                     View adjusted workout →
                   </button>
@@ -373,12 +374,12 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="mb-4 p-3 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A]"
+              className="mb-5 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-white/10 transition-colors"
             >
               <div className="flex items-center gap-3">
                 <div 
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: `${WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500"}20` }}
+                  className="w-11 h-11 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: `${WORKOUT_ICONS[planData.todayWorkout.workout_type]?.color || "#FF4500"}15` }}
                 >
                   {(() => {
                     const IconComponent = WORKOUT_ICONS[planData.todayWorkout.workout_type]?.icon || Play;
@@ -386,114 +387,107 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   })()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">
-                    Today: {planData.todayWorkout.title}
+                  <p className="text-[13px] font-semibold text-white truncate">
+                    Today · {planData.todayWorkout.title}
                   </p>
-                  <p className="text-xs text-[#8E8E93] truncate">
+                  <p className="text-[11px] text-white/50 truncate mt-0.5">
                     {planData.todayWorkout.target_miles ? `${planData.todayWorkout.target_miles} mi` : ""} 
-                    {planData.todayWorkout.target_pace_zone ? ` • ${planData.todayWorkout.target_pace_zone} pace` : ""}
+                    {planData.todayWorkout.target_pace_zone ? ` · ${planData.todayWorkout.target_pace_zone} pace` : ""}
                   </p>
                 </div>
+                <ChevronRight className="w-4 h-4 text-white/30" />
               </div>
             </motion.div>
           )}
 
           {/* Weekly Workout Strip */}
-          <div className="flex items-end justify-between gap-1">
+          <div className="flex items-end justify-between gap-1.5">
             {chartData.map((day, i) => {
-              // Use logarithmic scale for better visualization when there's a big difference
+              // Use logarithmic scale for better visualization
               const normalizedMiles = day.miles > 0 ? Math.log(day.miles + 1) / Math.log(maxMiles + 1) : 0;
-              const barHeight = day.miles > 0 ? Math.max(normalizedMiles * 48 + 16, 20) : 16;
+              const barHeight = day.miles > 0 ? Math.max(normalizedMiles * 52 + 14, 18) : 14;
               
               // Determine bar style based on status
               const isRestDay = day.type === "rest" && day.miles === 0;
-              const isLifeEventBlocked = day.isSkipped && day.miles > 0; // Has miles but blocked
+              const isLifeEventBlocked = day.isSkipped && day.miles > 0;
               
-              // Bar color logic with clear visual distinction
+              // Bar color logic with premium visual distinction
               const getBarClasses = () => {
                 if (day.isCompleted) {
-                  // Completed - solid green
-                  return "bg-[#30D158]";
+                  return "bg-gradient-to-t from-[#30D158] to-[#4ADE80] shadow-sm shadow-[#30D158]/30";
                 }
                 if (isLifeEventBlocked) {
-                  // Life event blocked - amber with stripe pattern
-                  return "bg-gradient-to-t from-amber-600/60 to-amber-500/40 border-l-2 border-amber-500";
+                  return "bg-gradient-to-t from-amber-600/50 to-amber-500/30";
                 }
                 if (day.isSkipped && !isLifeEventBlocked) {
-                  // Skipped (user chose to skip) - red muted
-                  return "bg-red-500/40";
+                  return "bg-red-500/30";
                 }
                 if (isRestDay) {
-                  // Rest day - subtle blue-gray
-                  return "bg-[#2A3A4A] border border-[#3A4A5A]";
+                  return "bg-white/[0.04] border border-white/[0.06]";
                 }
                 if (day.isToday && day.miles > 0) {
-                  // Today (pending) - bright orange gradient
-                  return "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-lg shadow-[#FF4500]/40";
+                  return "bg-gradient-to-t from-[#FF4500] to-[#FF6B00] shadow-md shadow-[#FF4500]/30";
                 }
                 if (day.isPast && day.miles > 0) {
-                  // Past but not completed - muted
-                  return "bg-[#3A3A3A]";
+                  return "bg-white/20";
                 }
                 if (day.miles > 0) {
-                  // Future planned - semi-transparent orange
-                  return "bg-[#FF4500]/50";
+                  return "bg-[#FF4500]/40";
                 }
-                // Default rest/empty
-                return "bg-[#2A2A2A]";
+                return "bg-white/[0.04]";
               };
               
               // Label color logic
               const getLabelColor = () => {
-                if (isLifeEventBlocked) return "text-amber-500 line-through";
-                if (day.isSkipped) return "text-red-500 line-through";
-                if (day.isCompleted) return "text-[#30D158]";
-                if (day.isToday) return "text-[#FF6B00]";
-                if (isRestDay) return "text-[#8E8E93]";
-                return "text-white/80";
+                if (isLifeEventBlocked) return "text-amber-400/80 line-through";
+                if (day.isSkipped) return "text-red-400/80 line-through";
+                if (day.isCompleted) return "text-[#30D158] font-semibold";
+                if (day.isToday) return "text-[#FF6B00] font-semibold";
+                if (isRestDay) return "text-white/30";
+                return "text-white/60";
               };
               
               return (
-                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[36px]">
+                <div key={`${day.date}-${i}`} className="flex-1 flex flex-col items-center min-w-[34px]">
                   {/* Miles or Rest label */}
-                  <span className={`text-[10px] font-bold mb-1 whitespace-nowrap ${getLabelColor()}`}>
-                    {isRestDay ? "Rest" : isLifeEventBlocked ? `${day.miles.toFixed(1)}` : day.miles > 0 ? `${day.miles.toFixed(1)}` : "Rest"}
+                  <span className={`text-[10px] mb-1.5 whitespace-nowrap ${getLabelColor()}`}>
+                    {isRestDay ? "–" : day.miles > 0 ? day.miles.toFixed(1) : "–"}
                   </span>
                   
                   {/* Bar */}
-                  <div className="w-full h-16 flex items-end justify-center">
+                  <div className="w-full h-14 flex items-end justify-center">
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: barHeight }}
-                      transition={{ duration: 0.5, delay: i * 0.05 }}
-                      className={`w-full max-w-[28px] rounded-t-md ${getBarClasses()}`}
+                      transition={{ duration: 0.4, delay: i * 0.04, ease: "easeOut" }}
+                      className={`w-full max-w-[26px] rounded-t-lg ${getBarClasses()}`}
                     />
                   </div>
                   
                   {/* Day label */}
-                  <span className={`text-[11px] font-bold mt-1 ${
+                  <span className={`text-[10px] font-medium mt-1.5 ${
                     day.isToday ? "text-[#FF6B00]" 
                     : day.isCompleted ? "text-[#30D158]" 
-                    : isLifeEventBlocked ? "text-amber-500"
-                    : day.isSkipped ? "text-red-500" 
-                    : "text-white/70"
+                    : isLifeEventBlocked ? "text-amber-400"
+                    : day.isSkipped ? "text-red-400" 
+                    : "text-white/40"
                   }`}>
                     {day.day}
                   </span>
                   
                   {/* Status indicator */}
-                  <div className="h-4 flex items-center justify-center">
+                  <div className="h-3 flex items-center justify-center mt-0.5">
                     {day.isCompleted && (
-                      <CheckCircle2 className="w-3 h-3 text-[#30D158]" />
+                      <CheckCircle2 className="w-2.5 h-2.5 text-[#30D158]" />
                     )}
                     {isLifeEventBlocked && (
-                      <Calendar className="w-3 h-3 text-amber-500" />
+                      <Calendar className="w-2.5 h-2.5 text-amber-400" />
                     )}
                     {day.isSkipped && !isLifeEventBlocked && (
-                      <SkipForward className="w-3 h-3 text-red-500" />
+                      <SkipForward className="w-2.5 h-2.5 text-red-400" />
                     )}
                     {day.isToday && !day.isCompleted && !day.isSkipped && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B00]" />
+                      <div className="w-1 h-1 rounded-full bg-[#FF6B00]" />
                     )}
                   </div>
                 </div>

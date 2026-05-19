@@ -142,58 +142,20 @@ export function PersonalRecordsCard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.4 }}
       >
-        <Card className="relative overflow-hidden border-2 border-amber-500/30 bg-gradient-to-br from-[#1A1A1A] via-[#141414] to-[#1A1A1A]">
-          {/* Animated gradient border effect */}
-          <div className="absolute inset-0 pointer-events-none">
-            <motion.div
-              className="absolute inset-0 opacity-30"
-              style={{
-                background: "linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), transparent)",
-              }}
-              animate={{
-                x: ["-100%", "100%"],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-            />
-          </div>
-
-          {/* Glowing corner accent */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-radial from-amber-500/20 via-transparent to-transparent blur-2xl" />
-          
+        <Card className="premium-card overflow-hidden border-0">
           {/* Header */}
-          <div className="relative p-4 border-b border-amber-500/20">
+          <div className="relative p-4 border-b border-white/[0.04]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {/* Animated Trophy */}
-                <motion.div
-                  className="relative"
-                  animate={hasAnyPR ? { 
-                    rotate: [0, -5, 5, -5, 0],
-                  } : {}}
-                  transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
-                >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                    <Trophy className="w-6 h-6 text-white" />
-                  </div>
-                  {/* Sparkle effect */}
-                  <motion.div
-                    className="absolute -top-1 -right-1 w-3 h-3"
-                    animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    <Star className="w-3 h-3 text-amber-300 fill-amber-300" />
-                  </motion.div>
-                </motion.div>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/10 flex items-center justify-center border border-amber-500/20">
+                  <Trophy className="w-5 h-5 text-amber-400" />
+                </div>
                 
                 <div>
-                  <h3 className="text-lg font-bold text-white">Personal Records</h3>
-                  <p className="text-sm text-amber-500/80">
+                  <h3 className="text-base font-bold text-white">Personal Records</h3>
+                  <p className="text-[11px] text-white/40">
                     {hasAnyPR 
                       ? `${earnedCount} of ${personalRecords.length} conquered`
                       : "Your glory awaits"
@@ -203,17 +165,17 @@ export function PersonalRecordsCard() {
               </div>
 
               {/* Progress indicator */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {personalRecords.map((pr, i) => (
                   <motion.div
                     key={pr.shortName}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ delay: i * 0.1 }}
-                    className={`w-2 h-2 rounded-full ${
+                    transition={{ delay: i * 0.08 }}
+                    className={`w-1.5 h-1.5 rounded-full ${
                       pr.time !== "--:--" 
-                        ? "bg-amber-500 shadow-sm shadow-amber-500/50" 
-                        : "bg-[#3A3A3A]"
+                        ? "bg-amber-400" 
+                        : "bg-white/15"
                     }`}
                   />
                 ))}
@@ -225,18 +187,18 @@ export function PersonalRecordsCard() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="mt-3 flex items-center gap-2 text-sm text-[#8E8E93]"
+                transition={{ delay: 0.4 }}
+                className="mt-3 flex items-center gap-2 text-[12px] text-white/40"
               >
-                <TrendingUp className="w-4 h-4 text-amber-500" />
-                <span>Every record starts with a single run. Make yours count.</span>
+                <TrendingUp className="w-3.5 h-3.5 text-amber-500/70" />
+                <span>Every record starts with a single run</span>
               </motion.div>
             )}
           </div>
 
           {/* PR Grid */}
-          <div className="p-4">
-            <div className="grid grid-cols-5 gap-2">
+          <div className="p-4 pt-0">
+            <div className="grid grid-cols-5 gap-1.5">
               {personalRecords.map((pr, index) => {
                 const hasPR = pr.time !== "--:--";
                 const Icon = pr.icon;
@@ -244,110 +206,46 @@ export function PersonalRecordsCard() {
                 return (
                   <motion.button
                     key={pr.shortName}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.05, y: -2 }}
+                    transition={{ delay: index * 0.06 }}
+                    whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedPR(pr)}
-                    className={`relative rounded-xl p-3 text-center transition-all cursor-pointer group ${
+                    className={`relative rounded-xl p-2.5 text-center transition-all cursor-pointer ${
                       hasPR 
-                        ? "bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border-2 border-amber-400/60" 
-                        : "bg-[#1A1A1A] border-2 border-dashed border-[#5A5A5A] hover:border-amber-500/50"
+                        ? "bg-amber-500/10 border border-amber-500/25" 
+                        : "bg-white/[0.02] border border-white/[0.06] border-dashed hover:border-amber-500/30"
                     }`}
                   >
-                    {/* Glow effect for earned PRs */}
-                    {hasPR && (
-                      <motion.div
-                        className="absolute inset-0 rounded-xl bg-amber-500/10 blur-md"
-                        animate={{ opacity: [0.3, 0.6, 0.3] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                    )}
-
                     {/* Icon */}
-                    <div className={`relative w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center ${
+                    <div className={`relative w-8 h-8 mx-auto mb-1.5 rounded-lg flex items-center justify-center ${
                       hasPR 
-                        ? "bg-gradient-to-br from-amber-400 to-amber-600 shadow-lg shadow-amber-500/40" 
-                        : "bg-[#2A2A2A] border border-[#4A4A4A] group-hover:bg-[#3A3A3A]"
+                        ? "bg-gradient-to-br from-amber-400/20 to-amber-600/10" 
+                        : "bg-white/[0.04]"
                     }`}>
-                      <Icon className={`w-5 h-5 ${
-                        hasPR ? "text-white" : "text-white/60 group-hover:text-amber-400"
+                      <Icon className={`w-4 h-4 ${
+                        hasPR ? "text-amber-400" : "text-white/30"
                       }`} />
-                      
-                      {/* Pulse ring for unearned */}
-                      {!hasPR && (
-                        <motion.div
-                          className="absolute inset-0 rounded-full border-2 border-amber-500/30"
-                          animate={{ scale: [1, 1.3], opacity: [0.5, 0] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        />
-                      )}
                     </div>
 
                     {/* Distance Label */}
-                    <p className={`text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                      hasPR ? "text-amber-300" : "text-white/70 group-hover:text-white"
+                    <p className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${
+                      hasPR ? "text-amber-400/80" : "text-white/40"
                     }`}>
                       {pr.shortName}
                     </p>
 
-                    {/* Time or Call to Action */}
+                    {/* Time */}
                     {hasPR ? (
-                      <motion.p 
-                        className="text-sm font-bold text-white"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 200 }}
-                      >
-                        {pr.time}
-                      </motion.p>
+                      <p className="text-[11px] font-bold text-white">{pr.time}</p>
                     ) : (
-                      <p className="text-[10px] text-white/50 group-hover:text-amber-400 transition-colors">
-                        Set it!
-                      </p>
+                      <p className="text-[10px] text-white/25">—</p>
                     )}
-
-                    {/* Earned checkmark */}
-                    {hasPR && (
-                      <motion.div
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ type: "spring", stiffness: 300, delay: index * 0.1 + 0.3 }}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/50"
-                      >
-                        <Star className="w-3 h-3 text-white fill-white" />
-                      </motion.div>
-                    )}
-
-                    {/* Hover arrow */}
-                    <motion.div
-                      className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      animate={{ x: [0, 3, 0] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                    >
-                      <ChevronRight className="w-3 h-3 text-amber-500/50" />
-                    </motion.div>
                   </motion.button>
                 );
               })}
             </div>
-
-            {/* Inspirational footer */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.8 }}
-              className="mt-4 pt-3 border-t border-[#2A2A2A] flex items-center justify-center gap-2"
-            >
-              <Timer className="w-4 h-4 text-amber-500/60" />
-              <p className="text-xs text-[#6E6E73]">
-                {hasAnyPR 
-                  ? "Tap a distance to see details or challenge yourself" 
-                  : "Complete a timed run to unlock your first PR"
-                }
-              </p>
-            </motion.div>
           </div>
         </Card>
       </motion.div>
