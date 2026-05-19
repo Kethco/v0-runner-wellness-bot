@@ -33,61 +33,36 @@ const WEATHER_CODES: Record<number, { label: string; icon: string }> = {
   99: { label: "Thunderstorm", icon: "cloud-lightning" },
 };
 
-// Geocoding: city name to coordinates
+// Geocoding: city name to coordinates using Nominatim (OpenStreetMap)
 async function geocodeCity(city: string): Promise<{ lat: number; lon: number; name: string } | null> {
   try {
-    // Parse the city string - try to extract city and state
-    const parts = city.split(',').map(p => p.trim());
-    const cityName = parts[0];
-    const stateOrCountry = parts[1] || '';
-    
-    // Search with city + state for better accuracy
-    const searchQuery = stateOrCountry ? `${cityName} ${stateOrCountry}` : cityName;
-    
+    // Use Nominatim for better US city coverage
     const res = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=10&language=en&format=json`
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1&countrycodes=us`,
+      {
+        headers: {
+          'User-Agent': 'RunnerWellnessBot/1.0'
+        }
+      }
     );
     const data = await res.json();
     
-    if (data.results && data.results.length > 0) {
-      // Try to find a matching result with state/admin area
-      const isUSQuery = city.toLowerCase().includes('usa') || /,\s*[a-z]{2}\s*(,|$)/i.test(city);
+    if (data && data.length > 0) {
+      const result = data[0];
+      // Extract city name from display_name (first part before the comma)
+      const displayParts = result.display_name.split(',');
+      const cityName = displayParts[0].trim();
+      const state = displayParts.length > 2 ? displayParts[displayParts.length - 3]?.trim() : '';
       
-      // First, try to find exact city name match in US
-      if (isUSQuery) {
-        const exactUSMatch = data.results.find((r: { name?: string; country_code?: string; admin1?: string }) => 
-          r.country_code === 'US' && 
-          r.name?.toLowerCase() === cityName.toLowerCase()
-        );
-        if (exactUSMatch) {
-          return {
-            lat: exactUSMatch.latitude,
-            lon: exactUSMatch.longitude,
-            name: `${exactUSMatch.name}${exactUSMatch.admin1 ? `, ${exactUSMatch.admin1}` : ''}`,
-          };
-        }
-        
-        // Then try any US result
-        const usResult = data.results.find((r: { country_code?: string }) => r.country_code === 'US');
-        if (usResult) {
-          return {
-            lat: usResult.latitude,
-            lon: usResult.longitude,
-            name: `${usResult.name}${usResult.admin1 ? `, ${usResult.admin1}` : ''}`,
-          };
-        }
-      }
-      
-      // Fall back to first result
-      const result = data.results[0];
       return {
-        lat: result.latitude,
-        lon: result.longitude,
-        name: `${result.name}${result.admin1 ? `, ${result.admin1}` : ''}`,
+        lat: parseFloat(result.lat),
+        lon: parseFloat(result.lon),
+        name: state ? `${cityName}, ${state}` : cityName,
       };
     }
     return null;
-  } catch {
+  } catch (e) {
+    console.log("[v0] Geocoding error:", e);
     return null;
   }
 }
