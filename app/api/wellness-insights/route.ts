@@ -289,6 +289,12 @@ export async function GET() {
       advice: readinessAdvice,
       hasCheckedIn: !!todayCheckin,
     },
+    todayCheckin: todayCheckin ? {
+      sleep: todayCheckin.sleep_rating,
+      energy: todayCheckin.energy,
+      soreness: todayCheckin.soreness,
+      readiness: todayCheckin.readiness,
+    } : null,
     patterns: patterns.slice(0, 4), // Max 4 patterns
     correlations,
     recoverySuggestions: recoverySuggestions.slice(0, 3),

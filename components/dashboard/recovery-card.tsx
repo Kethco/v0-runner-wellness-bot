@@ -148,16 +148,18 @@ export function RecoveryCard() {
   
   const readiness = insightsData?.readiness;
   const weeklyStats = insightsData?.weeklyStats;
+  const todayCheckin = insightsData?.todayCheckin;
   
   // Don't show if readiness is high (they don't need recovery tips)
   if (!readiness || readiness.score >= 80) {
     return null;
   }
   
+  // Use actual check-in data, with fallbacks
   const tips = getRecoveryTips({
-    soreness: 5 - (readiness.score / 20), // Estimate from readiness
-    energy: parseFloat(weeklyStats?.avgEnergy || "3"),
-    sleep: parseFloat(weeklyStats?.avgSleep || "3"),
+    soreness: todayCheckin?.soreness ?? 1,
+    energy: todayCheckin?.energy ?? 3,
+    sleep: todayCheckin?.sleep ?? 3,
     hardRunsRecent: weeklyStats?.runs >= 5 ? 2 : weeklyStats?.runs >= 3 ? 1 : 0,
     milesSoFar: weeklyStats?.miles || 0,
     isRestDay: !hasRunToday,
@@ -167,7 +169,7 @@ export function RecoveryCard() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="premium-card overflow-hidden border-2 border-[#AF52DE]"
+      className="premium-card overflow-hidden"
     >
       {/* Top accent */}
       <div className="h-[2px] bg-gradient-to-r from-transparent via-[#AF52DE] to-transparent" />
