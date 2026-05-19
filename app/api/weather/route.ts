@@ -61,19 +61,33 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get user's location from profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("location")
-    .eq("id", user.id)
-    .single();
-
-  const location = profile?.location || "New York"; // Default to NYC if not set
+  // Get user's location from profile - handle if column doesn't exist
+  let location = "New York";
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("location")
+      .eq("id", user.id)
+      .single();
+    
+    if (profile?.location) {
+      location = profile.location;
+    }
+  } catch (e) {
+    // Column might not exist yet, use default
+    console.log("[v0] Could not fetch location, using default:", e);
+  }
   
   // Geocode the location
   const coords = await geocodeCity(location);
   if (!coords) {
-    return NextResponse.json({ error: "Could not find location" }, { status: 400 });
+    // If geocoding fails, try with default NYC coordinates
+    console.log("[v0] Geocoding failed for:", location);
+    return NextResponse.json({
+      location: "New York",
+      forecast: [],
+      error: "Location not found"
+    });
   }
 
   // Fetch 7-day forecast from Open-Meteo

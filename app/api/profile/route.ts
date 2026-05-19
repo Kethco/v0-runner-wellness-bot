@@ -64,3 +64,8 @@ export async function PUT(request: NextRequest) {
 
   return NextResponse.json({ profile });
 }
+
+// Also support PATCH for partial updates
+export async function PATCH(request: NextRequest) {
+  return PUT(request);
+}
