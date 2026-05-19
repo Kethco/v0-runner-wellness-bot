@@ -369,7 +369,6 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 </motion.span>
                 <span className="text-[10px] text-white/40 font-medium mt-0.5">complete</span>
               </div>
-              </div>
             </div>
           </div>
 
