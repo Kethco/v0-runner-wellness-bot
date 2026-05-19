@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Activity } from "lucide-react";
 
 interface Run {
   date: string;
@@ -104,17 +105,22 @@ export function ActivityHeatmap({ runs, weeks = 12 }: ActivityHeatmapProps) {
   const activeDays = new Set(runs.map(r => r.date.split("T")[0])).size;
 
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-white/10 bg-gradient-to-br from-emerald-500/[0.03] to-transparent overflow-hidden group/card transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10 hover:border-emerald-500/20" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-lg">Activity Heatmap</CardTitle>
-            <CardDescription>Your running activity over the past {weeks} weeks</CardDescription>
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-emerald-500/10 rounded-lg">
+              <Activity className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div>
+              <CardTitle className="text-lg text-white">Activity Heatmap</CardTitle>
+              <CardDescription>Your running activity over the past {weeks} weeks</CardDescription>
+            </div>
           </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{totalMiles.toFixed(1)} mi total</span>
+          <div className="flex items-center gap-4 text-xs text-white/50">
+            <span>{totalMiles.toFixed(1)} mi</span>
             <span>{totalRuns} runs</span>
-            <span>{activeDays} active days</span>
+            <span>{activeDays} days</span>
           </div>
         </div>
       </CardHeader>

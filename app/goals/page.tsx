@@ -697,10 +697,10 @@ return (
 
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Other Active Goals */}
-              <Card className="border-[#2A2A2A] bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] overflow-hidden">
+              <Card className="border-white/10 bg-gradient-to-br from-blue-500/[0.03] to-transparent overflow-hidden group/card transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-500/20" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2 text-white">
-                    <div className="p-1.5 bg-blue-500/20 rounded-lg">
+                    <div className="p-1.5 bg-blue-500/10 rounded-lg">
                       <Flag className="w-4 h-4 text-blue-400" />
                     </div>
                     Upcoming Races
@@ -709,16 +709,9 @@ return (
                 </CardHeader>
                 <CardContent>
                   {otherActiveGoals.length === 0 ? (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-center py-8"
-                    >
-                      <div className="relative w-16 h-16 mx-auto mb-4">
-                        <div className="absolute inset-0 bg-blue-500/20 rounded-full animate-ping" />
-                        <div className="relative flex items-center justify-center w-16 h-16 bg-[#2A2A2A] rounded-full">
-                          <Flag className="w-8 h-8 text-blue-400/50" />
-                        </div>
+                    <div className="text-center py-8">
+                      <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <Flag className="w-7 h-7 text-blue-400/50" />
                       </div>
                       <p className="text-white/70 font-medium">No upcoming races</p>
                       <p className="text-sm text-white/40 mb-3">Set your sights on a new challenge</p>
@@ -731,90 +724,51 @@ return (
                         <Plus className="w-4 h-4 mr-1" />
                         Add Race Goal
                       </Button>
-                    </motion.div>
+                    </div>
                   ) : (
                     <div className="space-y-3">
-                      <AnimatePresence>
-                        {otherActiveGoals.map((goal, index) => (
-                          <motion.div 
-                            key={goal.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 20 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="group relative p-4 bg-[#2A2A2A]/50 hover:bg-[#2A2A2A] rounded-xl border border-[#3A3A3A]/50 transition-all duration-300"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg">
-                                  <Target className="w-5 h-5 text-blue-400" />
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold text-white">
-                                    {goal.race_name || goal.distance}
-                                  </h4>
-                                  {goal.race_name && (
-                                    <p className="text-sm text-white/50">{goal.distance}</p>
-                                  )}
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Calendar className="w-3 h-3 text-white/40" />
-                                    <span className="text-xs text-white/40">{formatDate(goal.target_date)}</span>
-                                    {goal.target_time && (
-                                      <>
-                                        <span className="text-white/20">•</span>
-                                        <Clock className="w-3 h-3 text-white/40" />
-                                        <span className="text-xs text-white/40">{goal.target_time}</span>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
+                      {otherActiveGoals.map((goal) => (
+                        <div 
+                          key={goal.id}
+                          className="group relative p-4 bg-white/[0.02] hover:bg-white/[0.05] rounded-xl border border-white/5 hover:border-blue-500/20 transition-all duration-200"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-blue-500/10 rounded-lg">
+                                <Target className="w-5 h-5 text-blue-400" />
                               </div>
-                              <div className="flex items-center gap-3">
-                                <div className="text-right">
-                                  <div className="text-2xl font-bold text-white" suppressHydrationWarning>
-                                    {getDaysUntil(goal.target_date)}
-                                  </div>
-                                  <div className="text-[10px] text-white/40 uppercase tracking-wider">days</div>
-                                </div>
-                                <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  {!activeGoal && (
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon"
-                                      className="h-7 w-7 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                                      onClick={() => handleSetActive(goal.id)}
-                                      title="Set as active"
-                                    >
-                                      <Target className="w-3.5 h-3.5" />
-                                    </Button>
+                              <div>
+                                <h4 className="font-semibold text-white">
+                                  {goal.race_name || goal.distance}
+                                </h4>
+                                {goal.race_name && (
+                                  <p className="text-sm text-white/50">{goal.distance}</p>
+                                )}
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Calendar className="w-3 h-3 text-white/40" />
+                                  <span className="text-xs text-white/40">{formatDate(goal.target_date)}</span>
+                                  {goal.target_time && (
+                                    <>
+                                      <span className="text-white/20">|</span>
+                                      <Clock className="w-3 h-3 text-white/40" />
+                                      <span className="text-xs text-white/40">{goal.target_time}</span>
+                                    </>
                                   )}
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    className="h-7 w-7 text-white/40 hover:text-red-400 hover:bg-red-500/10"
-                                    onClick={() => handleDeleteGoal(goal.id)}
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </Button>
                                 </div>
                               </div>
                             </div>
-                          </motion.div>
+                          </div>
                         ))}
-                      </AnimatePresence>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* Completed Goals */}
-              <Card className="border-[#2A2A2A] bg-gradient-to-br from-[#1C1C1E] to-[#0D0D0D] overflow-hidden relative">
-                {/* Decorative glow for completed races */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-                
+              <Card className="border-white/10 bg-gradient-to-br from-amber-500/[0.03] to-transparent overflow-hidden group/card transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/10 hover:border-amber-500/20" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2 text-white">
-                    <div className="p-1.5 bg-amber-500/20 rounded-lg">
+                    <div className="p-1.5 bg-amber-500/10 rounded-lg">
                       <Trophy className="w-4 h-4 text-amber-400" />
                     </div>
                     Completed Races
@@ -823,101 +777,74 @@ return (
                 </CardHeader>
                 <CardContent>
                   {completedGoals.length === 0 ? (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-center py-8"
-                    >
-                      <div className="relative w-16 h-16 mx-auto mb-4">
-                        <motion.div
-                          animate={{ 
-                            scale: [1, 1.2, 1],
-                            opacity: [0.3, 0.5, 0.3]
-                          }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                          className="absolute inset-0 bg-amber-500/20 rounded-full"
-                        />
-                        <div className="relative flex items-center justify-center w-16 h-16 bg-[#2A2A2A] rounded-full">
-                          <Trophy className="w-8 h-8 text-amber-400/50" />
-                        </div>
+                    <div className="text-center py-8">
+                      <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-amber-500/10 flex items-center justify-center">
+                        <Trophy className="w-7 h-7 text-amber-400/50" />
                       </div>
                       <p className="text-white/70 font-medium">No victories yet</p>
                       <p className="text-sm text-white/40">Your first medal awaits!</p>
-                    </motion.div>
+                    </div>
                   ) : (
                     <div className="space-y-3">
-                      <AnimatePresence>
-                        {completedGoals.map((goal, index) => (
-                          <motion.div 
-                            key={goal.id}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="group relative p-4 bg-gradient-to-r from-amber-500/10 to-transparent rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all duration-300"
-                          >
-                            {/* Medal ribbon effect */}
-                            <div className="absolute -left-1 top-3 w-1 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-r" />
-                            
-                            <div className="flex items-center justify-between pl-2">
-                              <div className="flex items-center gap-3">
-                                <div className="relative">
-                                  <div className="p-2 bg-gradient-to-br from-amber-400/30 to-orange-500/30 rounded-full">
-                                    <Medal className="w-5 h-5 text-amber-400" />
-                                  </div>
-                                  <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                                    className="absolute -inset-1 border border-amber-400/20 rounded-full border-dashed"
-                                  />
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold text-white">
-                                    {goal.race_name || goal.distance}
-                                  </h4>
-                                  {goal.race_name && (
-                                    <p className="text-sm text-amber-400/70">{goal.distance}</p>
-                                  )}
-                                  <p className="text-xs text-white/40 mt-0.5">
-                                    {formatDate(goal.target_date)}
-                                  </p>
-                                </div>
+                      {completedGoals.map((goal) => (
+                        <div 
+                          key={goal.id}
+                          className="group relative p-4 bg-white/[0.02] hover:bg-white/[0.05] rounded-xl border border-white/5 hover:border-amber-500/20 transition-all duration-200"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-amber-500/10 rounded-full">
+                                <Medal className="w-5 h-5 text-amber-400" />
                               </div>
-                              <div className="flex items-center gap-3">
-                                {goal.actual_time ? (
-                                  <div className="text-right">
-                                    <div className="text-lg font-bold text-amber-400">{goal.actual_time}</div>
-                                    <div className="text-[10px] text-white/40 uppercase tracking-wider">finish time</div>
-                                  </div>
-                                ) : goal.target_time ? (
-                                  <div className="text-right">
-                                    <div className="text-lg font-medium text-white/60">{goal.target_time}</div>
-                                    <div className="text-[10px] text-white/40 uppercase tracking-wider">target</div>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-1 text-amber-400">
-                                    <Sparkles className="w-4 h-4" />
-                                    <span className="text-sm font-medium">Finished!</span>
-                                  </div>
+                              <div>
+                                <h4 className="font-semibold text-white">
+                                  {goal.race_name || goal.distance}
+                                </h4>
+                                {goal.race_name && (
+                                  <p className="text-sm text-amber-400/70">{goal.distance}</p>
                                 )}
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon"
-                                  className="h-7 w-7 text-white/30 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  onClick={() => handleDeleteGoal(goal.id)}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
+                                <p className="text-xs text-white/40 mt-0.5">
+                                  {formatDate(goal.target_date)}
+                                </p>
                               </div>
                             </div>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
+                            <div className="flex items-center gap-3">
+                              {goal.actual_time ? (
+                                <div className="text-right">
+                                  <div className="text-lg font-bold text-amber-400">{goal.actual_time}</div>
+                                  <div className="text-[10px] text-white/40 uppercase tracking-wider">finish time</div>
+                                </div>
+                              ) : goal.target_time ? (
+                                <div className="text-right">
+                                  <div className="text-lg font-medium text-white/60">{goal.target_time}</div>
+                                  <div className="text-[10px] text-white/40 uppercase tracking-wider">target</div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1 text-amber-400">
+                                  <Sparkles className="w-4 h-4" />
+                                  <span className="text-sm font-medium">Finished!</span>
+                                </div>
+                              )}
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-7 w-7 text-white/30 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleDeleteGoal(goal.id)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
               </Card>
             </div>
+
+            {/* Life Events */}
+            <LifeEventsManager />
           </>
         )}
       </main>
