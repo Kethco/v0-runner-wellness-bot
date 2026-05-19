@@ -76,7 +76,8 @@ export async function GET() {
   }
 
   // Get user's location from profile - handle if column doesn't exist
-  let location = "New York";
+  let location = "";
+  let isDefaultLocation = true;
   try {
     const { data: profile } = await supabase
       .from("profiles")
@@ -86,10 +87,17 @@ export async function GET() {
     
     if (profile?.location) {
       location = profile.location;
+      isDefaultLocation = false;
     }
   } catch (e) {
     // Column might not exist yet, use default
     console.log("[v0] Could not fetch location, using default:", e);
+  }
+  
+  // If no location set, use New York as default
+  if (!location) {
+    location = "New York";
+    isDefaultLocation = true;
   }
   
   // Geocode the location
@@ -133,6 +141,7 @@ export async function GET() {
     return NextResponse.json({
       location: coords.name,
       forecast,
+      isDefaultLocation,
     });
   } catch (error) {
     console.error("Weather fetch error:", error);

@@ -2,6 +2,7 @@
 
 import useSWR from "swr";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   Sun,
   Cloud,
@@ -12,6 +13,7 @@ import {
   CloudDrizzle,
   CloudSun,
   MapPin,
+  Settings,
 } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -30,6 +32,7 @@ interface DayForecast {
 interface WeatherData {
   location: string;
   forecast: DayForecast[];
+  isDefaultLocation?: boolean;
 }
 
 const ICON_MAP: Record<string, typeof Sun> = {
@@ -83,9 +86,20 @@ export function WeatherStrip() {
       className="mt-4 pt-4 border-t border-white/10"
     >
       {/* Location header */}
-      <div className="flex items-center gap-1.5 mb-3">
-        <MapPin className="w-3 h-3 text-[#FF6B00]" />
-        <span className="text-xs text-white/50 font-medium">{data.location}</span>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1.5">
+          <MapPin className="w-3 h-3 text-[#FF6B00]" />
+          <span className="text-xs text-white/50 font-medium">{data.location}</span>
+        </div>
+        {data.isDefaultLocation && (
+          <Link 
+            href="/profile" 
+            className="flex items-center gap-1 text-[10px] text-[#FF6B00] hover:text-[#FF8C00] transition-colors"
+          >
+            <Settings className="w-3 h-3" />
+            Set your location
+          </Link>
+        )}
       </div>
 
       {/* 7-day forecast strip */}
