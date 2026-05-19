@@ -282,14 +282,33 @@ return (
                     </div>
                     <div className="space-y-2 sm:col-span-2">
                       <Label htmlFor="location">Location (for weather)</Label>
-                      <Input
-                        id="location"
-                        value={editedProfile.location}
-                        disabled={!isEditing}
-                        onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
-                        className="bg-secondary border-border disabled:opacity-70"
-                        placeholder="e.g. New York, Los Angeles, Chicago"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          id="location"
+                          value={editedProfile.location}
+                          onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
+                          className="bg-secondary border-border"
+                          placeholder="e.g. New York, Los Angeles, Chicago"
+                        />
+                        <Button 
+                          size="sm" 
+                          onClick={async () => {
+                            if (!editedProfile.location) return;
+                            try {
+                              await fetch("/api/profile", {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ location: editedProfile.location }),
+                              });
+                            } catch (err) {
+                              console.error("Failed to save location:", err);
+                            }
+                          }}
+                          className="shrink-0"
+                        >
+                          Save
+                        </Button>
+                      </div>
                       <p className="text-xs text-muted-foreground">Used for weather forecast on your training plan</p>
                     </div>
                   </div>
