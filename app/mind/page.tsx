@@ -13,6 +13,7 @@ import { DailyTips } from "@/components/daily-tips";
 import { GuidedBreathing } from "@/components/guided-breathing";
 import { RunVisualization } from "@/components/run-visualization";
 import { SelfCompassionReset } from "@/components/self-compassion-reset";
+import { DailyIntentionCard } from "@/components/daily-intention-card";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -315,6 +316,9 @@ function HomeView({
           </div>
         </motion.div>
       )}
+
+      {/* Daily Intention Card */}
+      <DailyIntentionCard />
       
       {/* Daily Wisdom */}
       <motion.div
