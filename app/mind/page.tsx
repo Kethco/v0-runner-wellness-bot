@@ -14,6 +14,7 @@ import { GuidedBreathing } from "@/components/guided-breathing";
 import { RunVisualization } from "@/components/run-visualization";
 import { SelfCompassionReset } from "@/components/self-compassion-reset";
 import { DailyIntentionCard } from "@/components/daily-intention-card";
+import { ProgressEcho } from "@/components/progress-echo";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -319,6 +320,9 @@ function HomeView({
 
       {/* Daily Intention Card */}
       <DailyIntentionCard />
+
+      {/* Weekly Progress Echo */}
+      <ProgressEcho />
       
       {/* Daily Wisdom */}
       <motion.div
