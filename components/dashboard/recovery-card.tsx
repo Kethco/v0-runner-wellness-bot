@@ -33,7 +33,7 @@ function getRecoveryTips(data: {
 }): RecoveryTip[] {
   const tips: RecoveryTip[] = [];
   
-  // High soreness tips
+  // High soreness tips (4-5)
   if (data.soreness >= 4) {
     tips.push({
       icon: StretchVertical,
@@ -49,9 +49,18 @@ function getRecoveryTips(data: {
       color: "#64D2FF",
       priority: "high",
     });
+  } else if (data.soreness >= 3) {
+    // Moderate soreness (3)
+    tips.push({
+      icon: StretchVertical,
+      title: "Gentle Stretching",
+      description: "Focus on tight muscles for 5-10 minutes",
+      color: "#FF9500",
+      priority: "medium",
+    });
   }
   
-  // Low energy tips
+  // Low energy tips (1-2)
   if (data.energy <= 2) {
     tips.push({
       icon: Coffee,
@@ -67,9 +76,18 @@ function getRecoveryTips(data: {
       color: "#64D2FF",
       priority: "medium",
     });
+  } else if (data.energy <= 3) {
+    // Moderate energy (3)
+    tips.push({
+      icon: Droplets,
+      title: "Hydration Check",
+      description: "Water boosts energy - drink up!",
+      color: "#64D2FF",
+      priority: "medium",
+    });
   }
   
-  // Poor sleep tips
+  // Poor sleep tips (1-2)
   if (data.sleep <= 2) {
     tips.push({
       icon: BedDouble,
@@ -82,6 +100,15 @@ function getRecoveryTips(data: {
       icon: Moon,
       title: "Wind Down Early",
       description: "No screens 30 min before bed",
+      color: "#5E5CE6",
+      priority: "medium",
+    });
+  } else if (data.sleep <= 3) {
+    // Moderate sleep (3)
+    tips.push({
+      icon: Moon,
+      title: "Sleep Quality",
+      description: "A bit more rest could help recovery",
       color: "#5E5CE6",
       priority: "medium",
     });
