@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sparkles, Sun, Moon as MoonIcon, Heart, Wind, 
   ArrowLeft, Check, ChevronRight, Flame, 
-  CloudRain, Smile, Frown, Meh, Zap, Coffee
+  CloudRain, Smile, Frown, Meh, Zap, Coffee, Flag, Sunrise
 } from "lucide-react";
 import Link from "next/link";
 import { BottomNav } from "@/components/bottom-nav";
@@ -16,6 +16,8 @@ import { SelfCompassionReset } from "@/components/self-compassion-reset";
 import { DailyIntentionCard } from "@/components/daily-intention-card";
 import { ProgressEcho } from "@/components/progress-echo";
 import { EmotionalPatterns } from "@/components/emotional-patterns";
+import { RaceDayPrep } from "@/components/race-day-prep";
+import { ComebackJourney } from "@/components/comeback-journey";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -29,6 +31,8 @@ type MindMode = "home" | "pre-run" | "post-run" | "burnout" | "breathe" | "visua
 export default function MindPage() {
   const [mode, setMode] = useState<MindMode>("home");
   const [showCompassionReset, setShowCompassionReset] = useState(false);
+  const [showRaceDayPrep, setShowRaceDayPrep] = useState(false);
+  const [showComebackJourney, setShowComebackJourney] = useState(false);
   const [compassionTrigger, setCompassionTrigger] = useState<"bad_run" | "low_energy" | "high_soreness" | "manual">("manual");
   const { data: reflectionsData, mutate } = useSWR("/api/reflections", fetcher);
   const { data: insightsData } = useSWR("/api/wellness-insights", fetcher);
@@ -90,6 +94,8 @@ return (
             <HomeView 
               onSelectMode={setMode} 
               setShowCompassionReset={setShowCompassionReset}
+              setShowRaceDayPrep={setShowRaceDayPrep}
+              setShowComebackJourney={setShowComebackJourney}
               compassionTrigger={compassionTrigger}
               journalData={journalData}
             />
@@ -129,6 +135,20 @@ return (
             }}
             onDismiss={() => setShowCompassionReset(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Race Day Prep Modal */}
+      <AnimatePresence>
+        {showRaceDayPrep && (
+          <RaceDayPrep onClose={() => setShowRaceDayPrep(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Comeback Journey Modal */}
+      <AnimatePresence>
+        {showComebackJourney && (
+          <ComebackJourney onClose={() => setShowComebackJourney(false)} />
         )}
       </AnimatePresence>
 
@@ -176,11 +196,15 @@ const CHRISTIAN_WISDOM = [
 function HomeView({ 
   onSelectMode, 
   setShowCompassionReset,
+  setShowRaceDayPrep,
+  setShowComebackJourney,
   compassionTrigger,
   journalData 
 }: { 
   onSelectMode: (mode: MindMode) => void;
   setShowCompassionReset: (show: boolean) => void;
+  setShowRaceDayPrep: (show: boolean) => void;
+  setShowComebackJourney: (show: boolean) => void;
   compassionTrigger: "bad_run" | "low_energy" | "high_soreness" | "manual";
   journalData: { total: number; avgMoodImprovement: number } | null;
 }) {
@@ -482,6 +506,40 @@ function HomeView({
                 ? "Your body needs compassion today"
                 : "Turn setbacks into self-compassion"}
             </p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
+        </motion.button>
+
+        {/* Race Day Prep */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => setShowRaceDayPrep(true)}
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#FF6B00]/15 to-[#FF6B00]/5 border border-[#FF6B00]/25 hover:border-[#FF6B00]/40 transition-colors"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#FF6B00]/15 flex items-center justify-center">
+            <Flag className="w-7 h-7 text-[#FF6B00]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Race Day Prep</p>
+            <p className="text-[#8E8E93] text-sm">Get your mind ready for race day</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
+        </motion.button>
+
+        {/* Comeback Journey */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => setShowComebackJourney(true)}
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#64D2FF]/15 to-[#64D2FF]/5 border border-[#64D2FF]/25 hover:border-[#64D2FF]/40 transition-colors"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#64D2FF]/15 flex items-center justify-center">
+            <Sunrise className="w-7 h-7 text-[#64D2FF]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Comeback Journey</p>
+            <p className="text-[#8E8E93] text-sm">Support when taking time off</p>
           </div>
           <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
         </motion.button>
