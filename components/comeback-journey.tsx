@@ -383,8 +383,8 @@ export function ComebackJourney({ onClose }: ComebackJourneyProps) {
       </div>
 
       {/* Footer Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-        <div className="flex gap-3">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-gradient-to-t from-black via-black/95 to-transparent">
+        <div className="flex gap-3 max-w-lg mx-auto">
           {step > 0 && step < 4 && (
             <button
               onClick={() => setStep(s => s - 1)}
