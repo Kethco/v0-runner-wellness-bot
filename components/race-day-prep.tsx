@@ -393,8 +393,8 @@ export function RaceDayPrep({ onClose, raceName }: RaceDayPrepProps) {
       </div>
 
       {/* Footer Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black to-transparent" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 24px), 32px)' }}>
-        <div className="flex gap-3 max-w-lg mx-auto mb-6">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pt-6 bg-gradient-to-t from-black via-black to-transparent" style={{ paddingBottom: '100px' }}>
+        <div className="flex gap-3 max-w-lg mx-auto">
           {step > 0 && step < 4 && (
             <button
               onClick={() => setStep(s => s - 1)}
