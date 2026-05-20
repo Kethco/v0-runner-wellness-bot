@@ -319,15 +319,6 @@ function HomeView({
         </motion.div>
       )}
 
-      {/* Daily Intention Card */}
-      <DailyIntentionCard />
-
-      {/* Weekly Progress Echo */}
-      <ProgressEcho />
-
-      {/* Emotional Patterns & Insights */}
-      <EmotionalPatterns />
-      
       {/* Daily Wisdom */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -346,7 +337,16 @@ function HomeView({
         </div>
       </motion.div>
 
-{/* Daily Tips Section */}
+      {/* Daily Intention Card */}
+      <DailyIntentionCard />
+
+      {/* Weekly Progress Echo */}
+      <ProgressEcho />
+
+      {/* Emotional Patterns & Insights */}
+      <EmotionalPatterns />
+
+      {/* Daily Tips Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
