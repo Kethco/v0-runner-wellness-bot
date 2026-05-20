@@ -62,7 +62,7 @@ export default function Dashboard() {
   const { data: runsData, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher, { revalidateOnMount: true });
   const { data: profileData, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher, { revalidateOnMount: true });
   const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher, { revalidateOnMount: true });
-  const { data: streakData, mutate: mutateStreak } = useSWR(
+  const { data: streakData, isLoading: isStreakLoading, mutate: mutateStreak } = useSWR(
     user ? "/api/streak" : null, 
     fetcher,
     { 
@@ -116,7 +116,7 @@ export default function Dashboard() {
   const weeklyMiles = runs.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
   const weeklyGoal = localGoal || profile?.weekly_goal || 25;
   const progressPercent = Math.min((weeklyMiles / weeklyGoal) * 100, 100);
-  const currentStreak = streakData?.streak?.current_streak || 0;
+  const currentStreak = isStreakLoading ? null : (streakData?.streak?.current_streak || 0);
 
   // Show onboarding for new users (no check-ins and no runs)
   useEffect(() => {
@@ -127,13 +127,15 @@ export default function Dashboard() {
 
   // Check for streak milestone celebrations
   useEffect(() => {
-    if (currentStreak > 0 && prevStreakRef.current > 0 && currentStreak > prevStreakRef.current) {
+    if (currentStreak !== null && currentStreak > 0 && prevStreakRef.current > 0 && currentStreak > prevStreakRef.current) {
       const milestone = checkStreakMilestone(prevStreakRef.current, currentStreak);
       if (milestone) {
         celebrateStreakMilestone(milestone);
       }
     }
-    prevStreakRef.current = currentStreak;
+    if (currentStreak !== null) {
+      prevStreakRef.current = currentStreak;
+    }
   }, [currentStreak]);
   
   // Check if on trial
@@ -225,9 +227,9 @@ return (
                 style={{ boxShadow: '0 0 20px rgba(255,69,0,0.4)' }}
               >
                 <Flame className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} />
-                <span className="relative text-white font-bold text-sm">
-                  <CountingNumber value={currentStreak} duration={1} />
-                </span>
+                  <span className="relative text-white font-bold text-sm">
+                    {currentStreak === null ? "-" : <CountingNumber value={currentStreak} duration={1} />}
+                  </span>
               </motion.div>
             </div>
           </div>
@@ -245,21 +247,21 @@ return (
                 />
               </span>
             </div>
-            {currentStreak > 0 && (
-              <div className="flex items-center gap-2 text-xs">
-                <Zap className="w-3.5 h-3.5 text-[#FFD700]" style={{ filter: 'drop-shadow(0 0 4px rgba(255,214,0,0.5))' }} />
-                <span className="text-white/50 font-medium">
-                  <CountingNumber value={currentStreak} duration={1} suffix=" day streak" />
-                </span>
-              </div>
-            )}
+                {currentStreak !== null && currentStreak > 0 && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <Zap className="w-3.5 h-3.5 text-[#FFD700]" style={{ filter: 'drop-shadow(0 0 4px rgba(255,214,0,0.5))' }} />
+                    <span className="text-white/50 font-medium">
+                      <CountingNumber value={currentStreak} duration={1} suffix=" day streak" />
+                    </span>
+                  </div>
+                )}
           </div>
         </div>
         
         {/* LED Stadium Ticker */}
-        <LEDTicker 
-          streak={currentStreak} 
-          weeklyMiles={weeklyMiles} 
+              <LEDTicker
+                streak={currentStreak ?? 0}
+                weeklyMiles={weeklyMiles}
           userName={userName} 
         />
       </header>
