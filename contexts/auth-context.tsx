@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { mutate } from "swr";
 import type { User, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -45,10 +46,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Listen for auth changes
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
+      } = supabase.auth.onAuthStateChange((event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+        
+        // Clear SWR cache on sign in/out to prevent stale data
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
+          // Clear all cached data and revalidate
+          mutate(() => true, undefined, { revalidate: true });
+        }
       });
 
       return () => subscription.unsubscribe();
@@ -59,6 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     const supabase = createClient();
+    // Clear SWR cache before signing out
+    mutate(() => true, undefined, { revalidate: false });
     await supabase.auth.signOut();
     window.location.href = "/login";
   };
