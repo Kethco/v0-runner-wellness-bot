@@ -7,6 +7,7 @@ import useSWR from "swr";
 import { useShareCard } from "@/hooks/use-share-card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -141,9 +142,10 @@ function computeBadges(stats: {
 }
 
 export function AchievementBadges() {
-  const { data: runsData } = useSWR("/api/runs?days=365", fetcher);
-  const { data: streakData } = useSWR("/api/streak", fetcher);
-  const { data: checkinsData } = useSWR("/api/checkins?limit=365", fetcher);
+  const { user } = useAuth();
+  const { data: runsData } = useSWR(user ? "/api/runs?days=365" : null, fetcher, { revalidateOnMount: true });
+  const { data: streakData } = useSWR(user ? "/api/streak" : null, fetcher, { revalidateOnMount: true });
+  const { data: checkinsData } = useSWR(user ? "/api/checkins?limit=365" : null, fetcher, { revalidateOnMount: true });
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const { shareToSocial } = useShareCard();

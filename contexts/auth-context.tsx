@@ -39,6 +39,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
+        
+        // Trigger SWR revalidation when initial session is loaded
+        if (session?.user) {
+          mutate(() => true, undefined, { revalidate: true });
+        }
       }).catch(() => {
         setIsLoading(false);
       });

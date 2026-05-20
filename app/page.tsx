@@ -58,20 +58,21 @@ export default function Dashboard() {
   });
   
   // Data fetching hooks
-  const { data: checkinsData, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher);
-  const { data: runsData, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher);
-  const { data: profileData, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher);
-  const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher);
+  const { data: checkinsData, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher, { revalidateOnMount: true });
+  const { data: runsData, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher, { revalidateOnMount: true });
+  const { data: profileData, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher, { revalidateOnMount: true });
+  const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher, { revalidateOnMount: true });
   const { data: streakData, mutate: mutateStreak } = useSWR(
     user ? "/api/streak" : null, 
     fetcher,
     { 
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
+      revalidateOnMount: true,
       dedupingInterval: 5000 
     }
   );
-  const { data: weekPlanData, mutate: mutateWeekPlan } = useSWR(user ? "/api/training-plan/week" : null, fetcher);
+  const { data: weekPlanData, mutate: mutateWeekPlan } = useSWR(user ? "/api/training-plan/week" : null, fetcher, { revalidateOnMount: true });
   
   // Get today's workout from the week plan
   const todayWorkout = weekPlanData?.todayWorkout;
