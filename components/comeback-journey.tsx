@@ -114,7 +114,7 @@ export function ComebackJourney({ onClose }: ComebackJourneyProps) {
       </div>
 
       {/* Content */}
-      <div className="p-6 pb-32">
+      <div className="p-6 pb-48">
         <AnimatePresence mode="wait">
           {/* Step 0: Acknowledge Feelings */}
           {step === 0 && (
@@ -383,8 +383,8 @@ export function ComebackJourney({ onClose }: ComebackJourneyProps) {
       </div>
 
       {/* Footer Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-gradient-to-t from-black via-black/95 to-transparent">
-        <div className="flex gap-3 max-w-lg mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 p-4 pb-[env(safe-area-inset-bottom,24px)] bg-gradient-to-t from-black via-black to-transparent" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 24px), 32px)' }}>
+        <div className="flex gap-3 max-w-lg mx-auto mb-6">
           {step > 0 && step < 4 && (
             <button
               onClick={() => setStep(s => s - 1)}
