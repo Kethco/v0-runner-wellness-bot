@@ -122,9 +122,16 @@ function getPersonalizedActivities(data: {
   return [...new Map(activities.map(a => [a.id, a])).values()].slice(0, 4);
 }
 
+const swrOptions = { 
+  revalidateOnMount: true, 
+  revalidateOnFocus: true, 
+  revalidateOnReconnect: true,
+  dedupingInterval: 2000 
+};
+
 export function RestDayGuidance() {
-  const { data: insightsData, isLoading } = useSWR("/api/wellness-insights", fetcher);
-  const { data: checkinData } = useSWR("/api/checkins?limit=1", fetcher);
+  const { data: insightsData, isLoading } = useSWR("/api/wellness-insights", fetcher, swrOptions);
+  const { data: checkinData } = useSWR("/api/checkins?limit=1", fetcher, swrOptions);
   const todayStr = new Date().toISOString().split("T")[0];
   const storageKey = `rest-day-activities-${todayStr}`;
   

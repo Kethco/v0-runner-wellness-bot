@@ -36,9 +36,16 @@ function getTrend(current: number, average: number): "up" | "down" | "stable" {
   return "stable";
 }
 
+const swrOptions = { 
+  revalidateOnMount: true, 
+  revalidateOnFocus: true, 
+  revalidateOnReconnect: true,
+  dedupingInterval: 2000 
+};
+
 export function ReadinessScore() {
-  const { data, isLoading } = useSWR("/api/wellness-insights", fetcher);
-  const { data: checkinData } = useSWR("/api/checkins?limit=1", fetcher);
+  const { data, isLoading } = useSWR("/api/wellness-insights", fetcher, swrOptions);
+  const { data: checkinData } = useSWR("/api/checkins?limit=1", fetcher, swrOptions);
   
   const todayCheckin = checkinData?.checkins?.[0];
   const todayStr = new Date().toISOString().split("T")[0];

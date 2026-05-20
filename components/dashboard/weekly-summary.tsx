@@ -19,8 +19,15 @@ function TrendArrow({ current, previous }: { current: number; previous: number }
   return <Minus className="w-3.5 h-3.5 text-[#6E6E73]" />;
 }
 
+const swrOptions = { 
+  revalidateOnMount: true, 
+  revalidateOnFocus: true, 
+  revalidateOnReconnect: true,
+  dedupingInterval: 2000 
+};
+
 export function WeeklySummary() {
-  const { data } = useSWR("/api/wellness-insights", fetcher);
+  const { data } = useSWR("/api/wellness-insights", fetcher, swrOptions);
 
   if (!data?.insights) return null;
 

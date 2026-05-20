@@ -152,9 +152,16 @@ function getRecoveryTips(data: {
   return tips.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).slice(0, 3);
 }
 
+const swrOptions = { 
+  revalidateOnMount: true, 
+  revalidateOnFocus: true, 
+  revalidateOnReconnect: true,
+  dedupingInterval: 2000 
+};
+
 export function RecoveryCard() {
-  const { data: insightsData, isLoading } = useSWR("/api/wellness-insights", fetcher);
-  const { data: runsData } = useSWR("/api/runs?days=1", fetcher);
+  const { data: insightsData, isLoading } = useSWR("/api/wellness-insights", fetcher, swrOptions);
+  const { data: runsData } = useSWR("/api/runs?days=1", fetcher, swrOptions);
   
   const hasRunToday = runsData?.runs?.some((r: { date: string }) => {
     const today = new Date().toISOString().split("T")[0];

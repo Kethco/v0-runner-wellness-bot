@@ -134,8 +134,14 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
   // Get user's timezone for API calls
   const timezone = getUserTimezone();
   const { data: planData, isLoading, mutate } = useSWR<WeekData>(
-    `/api/training-plan/week?tz=${encodeURIComponent(timezone)}`, 
-    fetcher
+    `/api/training-plan/week?tz=${encodeURIComponent(timezone)}`,
+    fetcher,
+    {
+      revalidateOnMount: true,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 2000
+    }
   );
   const [showAdjustmentDialog, setShowAdjustmentDialog] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);

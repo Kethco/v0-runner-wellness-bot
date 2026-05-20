@@ -58,31 +58,35 @@ export default function Dashboard() {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   });
   
-  // Data fetching hooks
-  const { data: checkinsData, isLoading: isCheckinsLoading, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher, { revalidateOnMount: true });
-  const { data: runsData, isLoading: isRunsLoading, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher, { revalidateOnMount: true });
-  const { data: profileData, isLoading: isProfileLoading, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher, { revalidateOnMount: true });
+  // Data fetching hooks - revalidate on mount and focus to ensure fresh data
+  const swrOptions = { 
+    revalidateOnMount: true, 
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000
+  };
+  const { data: checkinsData, isLoading: isCheckinsLoading, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher, swrOptions);
+  const { data: runsData, isLoading: isRunsLoading, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher, swrOptions);
+  const { data: profileData, isLoading: isProfileLoading, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher, swrOptions);
   const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher, { revalidateOnMount: true });
   const { data: streakData, isLoading: isStreakLoading, mutate: mutateStreak } = useSWR(
     user ? "/api/streak" : null, 
     fetcher,
-    { 
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      revalidateOnMount: true,
-      dedupingInterval: 5000 
-    }
+    swrOptions
   );
-  const { data: weekPlanData, mutate: mutateWeekPlan } = useSWR(user ? "/api/training-plan/week" : null, fetcher, { revalidateOnMount: true });
+  const { data: weekPlanData, isLoading: isWeekPlanLoading, mutate: mutateWeekPlan } = useSWR(user ? "/api/training-plan/week" : null, fetcher, swrOptions);
   
   // Get today's workout from the week plan
   const todayWorkout = weekPlanData?.todayWorkout;
   
   // Check if today is a rest day - either explicitly "rest" type, or if plan exists but no workout today
   // If no plan at all, we don't consider it a "rest day" (they just haven't set up a plan yet)
+  // Only determine rest day after data is loaded to avoid flashing
   const hasPlan = weekPlanData?.plan?.id;
-  const isRestDay = todayWorkout?.workout_type === "rest" || 
-    (hasPlan && !todayWorkout);
+  const isRestDay = !isWeekPlanLoading && (
+    todayWorkout?.workout_type === "rest" || 
+    (hasPlan && !todayWorkout)
+  );
   
   // Ref for milestone tracking
   const prevProgressRef = useRef<number>(0);
@@ -114,7 +118,17 @@ export default function Dashboard() {
   const profile = profileData?.profile;
   const hasCheckedInToday = checkins.some((c: { date: string }) => c.date === todayStr);
   const todayCheckin = checkins.find((c: { date: string }) => c.date === todayStr);
-  const weeklyMiles = runs.reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
+  
+  // Calculate weekly miles from current calendar week (Sunday to Saturday)
+  const startOfWeek = new Date();
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+  const startOfWeekStr = startOfWeek.toISOString().split("T")[0];
+  
+  const weeklyMiles = runs
+    .filter((r: { date: string }) => r.date >= startOfWeekStr)
+    .reduce((sum: number, r: { miles: number }) => sum + (r.miles || 0), 0);
+  
   const weeklyGoal = localGoal || profile?.weekly_goal || 25;
   const progressPercent = Math.min((weeklyMiles / weeklyGoal) * 100, 100);
   const currentStreak = isStreakLoading ? null : (streakData?.streak?.current_streak || 0);
@@ -245,12 +259,16 @@ return (
             <div className="flex items-center gap-2 text-xs">
               <TrendingUp className="w-3.5 h-3.5 text-[#30D158]" style={{ filter: 'drop-shadow(0 0 4px rgba(48,209,88,0.5))' }} />
               <span className="text-white/50 font-medium">
-                <CountingNumber 
-                  value={weekPlanData?.weekStats?.completedMiles ?? weeklyMiles} 
-                  decimals={1} 
-                  duration={1}
-                  suffix=" mi this week"
-                />
+                {isWeekPlanLoading || isRunsLoading ? (
+                  "- mi this week"
+                ) : (
+                  <CountingNumber 
+                    value={weekPlanData?.weekStats?.completedMiles ?? weeklyMiles} 
+                    decimals={1} 
+                    duration={1}
+                    suffix=" mi this week"
+                  />
+                )}
               </span>
             </div>
                 {currentStreak !== null && currentStreak > 0 && (
