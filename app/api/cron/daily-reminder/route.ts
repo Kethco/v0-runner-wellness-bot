@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      // Check if today is a rest day for this user
+      // Check if today is a rest day for this user (or no workout scheduled)
       const { data: userPlan } = await supabase
         .from("training_plans")
         .select("id")
@@ -82,7 +82,8 @@ export async function GET(request: NextRequest) {
           .eq("scheduled_date", todayStr)
           .maybeSingle();
         
-        if (todayWorkout?.workout_type === "rest") {
+        // Skip if rest day OR no workout scheduled for today
+        if (!todayWorkout || todayWorkout?.workout_type === "rest") {
           skippedRestDay++;
           continue;
         }
