@@ -3,13 +3,10 @@
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { Navbar } from "@/components/dashboard/navbar";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
@@ -152,79 +149,83 @@ export default function ProfilePage() {
   };
 
 return (
-  <div className="min-h-screen bg-background">
+  <div className="min-h-screen bg-black atmospheric-bg noise-overlay">
       <Navbar />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-[70px] pb-32">
+      <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-[70px] pb-32">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Profile & Settings</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-bold text-white">Profile & Settings</h1>
+          <p className="text-[#8E8E93] mt-1">
             Manage your account and preferences
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Profile Header Card - Always Visible */}
-          <Card className="border-border bg-card">
-            <CardContent className="pt-6">
+          <div className="section-card p-6">
               <div className="flex items-center gap-5">
                 {/* Styled Avatar with Initials Badge */}
                 <div className="relative">
-                  <Avatar className="w-20 h-20 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+                  <Avatar className="w-20 h-20 avatar-ring-glow">
                     <AvatarImage src={user?.user_metadata?.avatar_url} />
-                    <AvatarFallback className="bg-gradient-to-br from-[#FF4500] to-[#FF6B00] text-white text-xl font-bold">
+                    <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF4500] text-white text-xl font-bold">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
                   {/* Status indicator */}
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-background flex items-center justify-center">
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#30D158] rounded-full border-2 border-black flex items-center justify-center shadow-lg">
                     <CheckCircle className="w-3.5 h-3.5 text-white" />
                   </div>
                 </div>
                 
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-foreground">{displayName}</h2>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge variant="secondary" className="gap-1 text-xs">
+                  <h2 className="text-xl font-bold text-white">{displayName}</h2>
+                  <p className="text-sm text-[#8E8E93]">{user?.email}</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <span className="premium-badge px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
                       <Activity className="w-3 h-3" />
                       Runner
-                    </Badge>
-                    <Badge variant="secondary" className="gap-1 text-xs">
+                    </span>
+                    <span className="bg-[#1C1C1E] border border-[#3A3A3C] px-3 py-1 rounded-full text-xs font-medium text-[#AEAEB2] flex items-center gap-1.5">
                       <Calendar className="w-3 h-3" />
                       Since {memberSince}
-                    </Badge>
+                    </span>
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+          </div>
 
           {/* Personal Information - Collapsible */}
           <Collapsible open={isInfoOpen} onOpenChange={setIsInfoOpen}>
-            <Card className="border-border bg-card">
+            <div className="section-card overflow-hidden">
               <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-secondary/50 transition-colors rounded-t-lg">
+                <div className="cursor-pointer hover:bg-white/[0.02] transition-colors p-5">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <User className="w-5 h-5" />
-                      Personal Information
-                    </CardTitle>
-                    <ChevronDown className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${isInfoOpen ? "rotate-180" : ""}`} />
+                    <div className="flex items-center gap-3">
+                      <div className="icon-container p-2.5">
+                        <User className="w-5 h-5 text-[#FF6B00]" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-semibold text-white">Personal Information</h3>
+                        <p className="text-sm text-[#8E8E93] mt-0.5">
+                          {isInfoOpen ? "Click to collapse" : "Tap to view and edit your details"}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-[#6E6E73] transition-transform duration-200 ${isInfoOpen ? "rotate-180" : ""}`} />
                   </div>
-                  <CardDescription>
-                    {isInfoOpen ? "Click to collapse" : "Tap to view and edit your details"}
-                  </CardDescription>
-                </CardHeader>
+                </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <CardContent className="pt-0">
+                <div className="px-5 pb-5 pt-0">
+                  <div className="premium-divider mb-5" />
                   <div className="flex justify-end mb-4">
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => setIsEditing(!isEditing)}
+                      className="bg-transparent border-[#3A3A3C] hover:bg-white/5 hover:border-[#4A4A4C] text-white"
                     >
                       {isEditing ? "Cancel" : "Edit"}
                     </Button>
@@ -232,36 +233,36 @@ return (
                   
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
+                      <Label htmlFor="name" className="text-[#AEAEB2] text-sm">Full Name</Label>
                       <Input
                         id="name"
                         value={editedProfile.name}
                         disabled={!isEditing}
                         onChange={(e) => setEditedProfile({ ...editedProfile, name: e.target.value })}
-                        className="bg-secondary border-border disabled:opacity-70"
+                        className="premium-input bg-[#1C1C1E] border-[#3A3A3C] text-white placeholder:text-[#6E6E73] disabled:opacity-60"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email" className="text-[#AEAEB2] text-sm">Email</Label>
                       <Input
                         id="email"
                         type="email"
                         value={user?.email || ""}
                         disabled
-                        className="bg-secondary border-border disabled:opacity-70"
+                        className="premium-input bg-[#1C1C1E] border-[#3A3A3C] text-white placeholder:text-[#6E6E73] disabled:opacity-60"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="gender">Gender</Label>
+                      <Label htmlFor="gender" className="text-[#AEAEB2] text-sm">Gender</Label>
                       <Select 
                         value={editedProfile.gender} 
                         onValueChange={(v) => setEditedProfile({ ...editedProfile, gender: v })}
                         disabled={!isEditing}
                       >
-                        <SelectTrigger className="bg-secondary border-border">
+                        <SelectTrigger className="premium-input bg-[#1C1C1E] border-[#3A3A3C] text-white">
                           <SelectValue placeholder="Select gender" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-[#1C1C1E] border-[#3A3A3C]">
                           <SelectItem value="M">Male</SelectItem>
                           <SelectItem value="F">Female</SelectItem>
                           <SelectItem value="O">Other</SelectItem>
@@ -269,32 +270,31 @@ return (
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="birthYear">Birth Year</Label>
+                      <Label htmlFor="birthYear" className="text-[#AEAEB2] text-sm">Birth Year</Label>
                       <Input
                         id="birthYear"
                         type="number"
                         value={editedProfile.birthYear}
                         disabled={!isEditing}
                         onChange={(e) => setEditedProfile({ ...editedProfile, birthYear: e.target.value })}
-                        className="bg-secondary border-border disabled:opacity-70"
+                        className="premium-input bg-[#1C1C1E] border-[#3A3A3C] text-white placeholder:text-[#6E6E73] disabled:opacity-60"
                         placeholder="e.g. 1990"
                       />
                     </div>
                     <div className="space-y-2 sm:col-span-2">
-                      <Label htmlFor="location">Location (for weather)</Label>
+                      <Label htmlFor="location" className="text-[#AEAEB2] text-sm">Location (for weather)</Label>
                       <div className="flex gap-2">
                         <Input
                           id="location"
                           value={editedProfile.location}
                           onChange={(e) => setEditedProfile({ ...editedProfile, location: e.target.value })}
-                          className="bg-secondary border-border"
+                          className="premium-input bg-[#1C1C1E] border-[#3A3A3C] text-white placeholder:text-[#6E6E73]"
                           placeholder="e.g. New York, Los Angeles, Chicago"
                         />
                         <Button 
                           size="sm" 
                           onClick={async () => {
                             if (!editedProfile.location) return;
-                            console.log("[v0] Saving location:", editedProfile.location);
                             try {
                               const res = await fetch("/api/profile", {
                                 method: "PUT",
@@ -302,291 +302,298 @@ return (
                                 body: JSON.stringify({ location: editedProfile.location }),
                               });
                               const data = await res.json();
-                              console.log("[v0] Save response:", res.status, data);
                               if (res.ok) {
-                                alert("Location saved!");
+                                toast({ title: "Location saved!", description: "Your weather forecast will update." });
                               } else {
-                                alert("Failed to save: " + (data.error || "Unknown error"));
+                                toast({ title: "Failed to save", description: data.error || "Unknown error", variant: "destructive" });
                               }
-                            } catch (err) {
-                              console.error("[v0] Failed to save location:", err);
-                              alert("Failed to save location");
+                            } catch {
+                              toast({ title: "Failed to save location", variant: "destructive" });
                             }
                           }}
-                          className="shrink-0"
+                          className="shrink-0 bg-[#FF6B00] hover:bg-[#FF4500] text-white"
                         >
                           Save
                         </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">Used for weather forecast on your training plan</p>
+                      <p className="text-xs text-[#6E6E73]">Used for weather forecast on your training plan</p>
                     </div>
                   </div>
                   
                   {isEditing && (
-                    <Button className="mt-4" onClick={handleSaveProfile} disabled={isSaving}>
+                    <Button className="mt-4 bg-[#FF6B00] hover:bg-[#FF4500] text-white" onClick={handleSaveProfile} disabled={isSaving}>
                       {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                       Save Changes
                     </Button>
                   )}
 
                   {editedProfile.birthYear && calculateAge(editedProfile.birthYear) && (
-                    <div className="mt-4 pt-4 border-t border-border">
-                      <Badge variant="secondary">
+                    <div className="mt-4 pt-4 border-t border-[#2C2C2E]">
+                      <span className="bg-[#1C1C1E] border border-[#3A3A3C] px-3 py-1.5 rounded-full text-xs font-medium text-[#AEAEB2]">
                         Age {calculateAge(editedProfile.birthYear)}
-                      </Badge>
+                      </span>
                     </div>
                   )}
-                </CardContent>
+                </div>
               </CollapsibleContent>
-            </Card>
+            </div>
           </Collapsible>
 
           {/* Privacy & Data Sharing */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Privacy & Data Sharing
-              </CardTitle>
-              <CardDescription>Control who can see your data</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${privacyMode === "solo" ? "bg-blue-500/20" : "bg-emerald-500/20"}`}>
-                      {privacyMode === "solo" ? (
-                        <Lock className="w-5 h-5 text-blue-500" />
-                      ) : (
-                        <Users className="w-5 h-5 text-emerald-500" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-foreground">
-                        {privacyMode === "solo" ? "Solo Mode" : "Coach Mode"}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {privacyMode === "solo" 
-                          ? "Your data is private - only you can see it"
-                          : "Your coach can view your check-ins and trends"
-                        }
-                      </p>
-                    </div>
-                  </div>
-                  <Select 
-                    value={privacyMode} 
-                    onValueChange={(v) => setPrivacyMode(v as "solo" | "coach")}
-                  >
-                    <SelectTrigger className="w-[120px] bg-background border-border">
+          <div className="section-card p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="icon-container-blue p-2.5">
+                <Shield className="w-5 h-5 text-[#0099FF]" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">Privacy & Data Sharing</h3>
+                <p className="text-sm text-[#8E8E93] mt-0.5">Control who can see your data</p>
+              </div>
+            </div>
+            <div className="premium-divider mb-4" />
+            <div className="flex items-center justify-between p-4 bg-[#1C1C1E] rounded-xl border border-[#2C2C2E]">
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl ${privacyMode === "solo" ? "bg-[#0099FF]/15 border border-[#0099FF]/20" : "bg-[#30D158]/15 border border-[#30D158]/20"}`}>
+                  {privacyMode === "solo" ? (
+                    <Lock className="w-5 h-5 text-[#0099FF]" />
+                  ) : (
+                    <Users className="w-5 h-5 text-[#30D158]" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-medium text-white">
+                    {privacyMode === "solo" ? "Solo Mode" : "Coach Mode"}
+                  </h4>
+                  <p className="text-sm text-[#8E8E93]">
+                    {privacyMode === "solo" 
+                      ? "Your data is private - only you can see it"
+                      : "Your coach can view your check-ins and trends"
+                    }
+                  </p>
+                </div>
+              </div>
+              <Select 
+                value={privacyMode} 
+                onValueChange={(v) => setPrivacyMode(v as "solo" | "coach")}
+              >
+                <SelectTrigger className="w-[120px] bg-[#2C2C2E] border-[#3A3A3C] text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1C1C1E] border-[#3A3A3C]">
+                  <SelectItem value="solo">Solo</SelectItem>
+                  <SelectItem value="coach">Coach</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Appearance */}
+          <div className="section-card p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="icon-container p-2.5">
+                <Sun className="w-5 h-5 text-[#FF6B00]" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">Appearance</h3>
+                <p className="text-sm text-[#8E8E93] mt-0.5">Choose your preferred theme</p>
+              </div>
+            </div>
+            <div className="premium-divider mb-4" />
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { value: "light", label: "Light", icon: Sun },
+                { value: "dark", label: "Dark", icon: MoonIcon },
+                { value: "system", label: "System", icon: Monitor },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setTheme(opt.value)}
+                  className={`flex flex-col items-center gap-2.5 p-4 rounded-xl border transition-all ${
+                    theme === opt.value
+                      ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]"
+                      : "border-[#3A3A3C] bg-[#1C1C1E] text-[#8E8E93] hover:text-white hover:border-[#4A4A4C]"
+                  }`}
+                >
+                  <opt.icon className="w-5 h-5" />
+                  <span className="text-sm font-medium">{opt.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Notifications */}
+          <div className="section-card p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="icon-container-purple p-2.5">
+                <Bell className="w-5 h-5 text-[#AF52DE]" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-white">Notifications</h3>
+                <p className="text-sm text-[#8E8E93] mt-0.5">Manage your notification preferences</p>
+              </div>
+            </div>
+            <div className="premium-divider mb-4" />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-white">Morning Check-in Reminder</h4>
+                  <p className="text-sm text-[#8E8E93]">Daily reminder via SMS</p>
+                </div>
+                <Switch
+                  checked={notifications.morningReminder}
+                  onCheckedChange={(v) => setNotifications({ ...notifications, morningReminder: v })}
+                  className="data-[state=checked]:bg-[#FF6B00]"
+                />
+              </div>
+              {notifications.morningReminder && (
+                <div className="ml-0 pl-4 border-l-2 border-[#FF6B00]/30">
+                  <Label className="text-xs text-[#8E8E93] mb-1 block">Reminder Time</Label>
+                  <Select defaultValue="7:00">
+                    <SelectTrigger className="w-32 h-8 text-sm bg-[#1C1C1E] border-[#3A3A3C] text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="solo">Solo</SelectItem>
-                      <SelectItem value="coach">Coach</SelectItem>
+                    <SelectContent className="bg-[#1C1C1E] border-[#3A3A3C]">
+                      <SelectItem value="6:00">6:00 AM</SelectItem>
+                      <SelectItem value="6:30">6:30 AM</SelectItem>
+                      <SelectItem value="7:00">7:00 AM</SelectItem>
+                      <SelectItem value="7:30">7:30 AM</SelectItem>
+                      <SelectItem value="8:00">8:00 AM</SelectItem>
+                      <SelectItem value="8:30">8:30 AM</SelectItem>
+                      <SelectItem value="9:00">9:00 AM</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+              <div className="premium-divider" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-white">Weekly Summary Report</h4>
+                  <p className="text-sm text-[#8E8E93]">Every Sunday at 6 PM</p>
+                </div>
+                <Switch
+                  checked={notifications.weeklyReport}
+                  onCheckedChange={(v) => setNotifications({ ...notifications, weeklyReport: v })}
+                  className="data-[state=checked]:bg-[#FF6B00]"
+                />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Appearance */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Sun className="w-5 h-5" />
-                Appearance
-              </CardTitle>
-              <CardDescription>Choose your preferred theme</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { value: "light", label: "Light", icon: Sun },
-                  { value: "dark", label: "Dark", icon: MoonIcon },
-                  { value: "system", label: "System", icon: Monitor },
-                ].map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setTheme(opt.value)}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
-                      theme === opt.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-secondary/50 text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <opt.icon className="w-5 h-5" />
-                    <span className="text-sm font-medium">{opt.label}</span>
-                  </button>
-                ))}
+              <div className="premium-divider" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-white">AI Training Tips</h4>
+                  <p className="text-sm text-[#8E8E93]">Personalized advice after check-ins</p>
+                </div>
+                <Switch
+                  checked={notifications.aiTips}
+                  onCheckedChange={(v) => setNotifications({ ...notifications, aiTips: v })}
+                  className="data-[state=checked]:bg-[#FF6B00]"
+                />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Notifications */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                Notifications
-              </CardTitle>
-              <CardDescription>Manage your notification preferences</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium text-foreground">Morning Check-in Reminder</h4>
-                    <p className="text-sm text-muted-foreground">Daily reminder via SMS</p>
-                  </div>
-                  <Switch
-                    checked={notifications.morningReminder}
-                    onCheckedChange={(v) => setNotifications({ ...notifications, morningReminder: v })}
-                  />
+              <div className="premium-divider" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-medium text-white">Injury Prevention Alerts</h4>
+                  <p className="text-sm text-[#8E8E93]">Warnings when fatigue patterns are detected</p>
                 </div>
-                {notifications.morningReminder && (
-                  <div className="ml-0 pl-4 border-l-2 border-primary/30">
-                    <Label className="text-xs text-muted-foreground mb-1 block">Reminder Time</Label>
-                    <Select defaultValue="7:00">
-                      <SelectTrigger className="w-32 h-8 text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="6:00">6:00 AM</SelectItem>
-                        <SelectItem value="6:30">6:30 AM</SelectItem>
-                        <SelectItem value="7:00">7:00 AM</SelectItem>
-                        <SelectItem value="7:30">7:30 AM</SelectItem>
-                        <SelectItem value="8:00">8:00 AM</SelectItem>
-                        <SelectItem value="8:30">8:30 AM</SelectItem>
-                        <SelectItem value="9:00">9:00 AM</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium text-foreground">Weekly Summary Report</h4>
-                    <p className="text-sm text-muted-foreground">Every Sunday at 6 PM</p>
-                  </div>
-                  <Switch
-                    checked={notifications.weeklyReport}
-                    onCheckedChange={(v) => setNotifications({ ...notifications, weeklyReport: v })}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium text-foreground">AI Training Tips</h4>
-                    <p className="text-sm text-muted-foreground">Personalized advice after check-ins</p>
-                  </div>
-                  <Switch
-                    checked={notifications.aiTips}
-                    onCheckedChange={(v) => setNotifications({ ...notifications, aiTips: v })}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium text-foreground">Injury Prevention Alerts</h4>
-                    <p className="text-sm text-muted-foreground">Warnings when fatigue patterns are detected</p>
-                  </div>
-                  <Switch
-                    checked={notifications.injuryAlerts}
-                    onCheckedChange={(v) => setNotifications({ ...notifications, injuryAlerts: v })}
-                  />
-                </div>
+                <Switch
+                  checked={notifications.injuryAlerts}
+                  onCheckedChange={(v) => setNotifications({ ...notifications, injuryAlerts: v })}
+                  className="data-[state=checked]:bg-[#FF6B00]"
+                />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Subscription Management */}
           <SubscriptionCard user={user} />
 
           {/* Data Export */}
-          <Card className="border-border bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Download className="w-5 h-5" />
-                Export Your Data
-              </CardTitle>
-              <CardDescription>Download your check-ins and run history</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">All Data (CSV)</p>
-                    <p className="text-xs text-muted-foreground">Check-ins and runs in spreadsheet format</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      window.open("/api/export?format=csv&type=all", "_blank");
-                      toast({ title: "Export started", description: "Your CSV download will begin shortly." });
-                    }}
-                  >
-                    <Download className="w-4 h-4 mr-1" />
-                    CSV
-                  </Button>
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">All Data (JSON)</p>
-                    <p className="text-xs text-muted-foreground">Full data in developer-friendly format</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      window.open("/api/export?type=all", "_blank");
-                      toast({ title: "Export started", description: "Your JSON download will begin shortly." });
-                    }}
-                  >
-                    <Download className="w-4 h-4 mr-1" />
-                    JSON
-                  </Button>
-                </div>
+          <div className="section-card p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="icon-container-green p-2.5">
+                <Download className="w-5 h-5 text-[#30D158]" />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Danger Zone */}
-          <Card className="border-destructive/50 bg-card">
-            <CardHeader>
-              <CardTitle className="text-lg text-destructive flex items-center gap-2">
-                <Trash2 className="w-5 h-5" />
-                Danger Zone
-              </CardTitle>
-              <CardDescription>Irreversible actions</CardDescription>
-            </CardHeader>
-            <CardContent>
+              <div>
+                <h3 className="text-base font-semibold text-white">Export Your Data</h3>
+                <p className="text-sm text-[#8E8E93] mt-0.5">Download your check-ins and run history</p>
+              </div>
+            </div>
+            <div className="premium-divider mb-4" />
+            <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-medium text-foreground">Delete Account</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Permanently delete your account and all data
-                  </p>
+                  <p className="text-sm font-medium text-white">All Data (CSV)</p>
+                  <p className="text-xs text-[#6E6E73]">Check-ins and runs in spreadsheet format</p>
                 </div>
-                <DeleteAccountDialog />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    window.open("/api/export?format=csv&type=all", "_blank");
+                    toast({ title: "Export started", description: "Your CSV download will begin shortly." });
+                  }}
+                  className="bg-transparent border-[#3A3A3C] hover:bg-white/5 hover:border-[#4A4A4C] text-white"
+                >
+                  <Download className="w-4 h-4 mr-1" />
+                  CSV
+                </Button>
               </div>
-            </CardContent>
-          </Card>
+              <div className="premium-divider" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white">All Data (JSON)</p>
+                  <p className="text-xs text-[#6E6E73]">Full data in developer-friendly format</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    window.open("/api/export?type=all", "_blank");
+                    toast({ title: "Export started", description: "Your JSON download will begin shortly." });
+                  }}
+                  className="bg-transparent border-[#3A3A3C] hover:bg-white/5 hover:border-[#4A4A4C] text-white"
+                >
+                  <Download className="w-4 h-4 mr-1" />
+                  JSON
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Danger Zone */}
+          <div className="section-card p-5 border-[#FF453A]/30">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2.5 rounded-xl bg-[#FF453A]/15 border border-[#FF453A]/20">
+                <Trash2 className="w-5 h-5 text-[#FF453A]" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-[#FF453A]">Danger Zone</h3>
+                <p className="text-sm text-[#8E8E93] mt-0.5">Irreversible actions</p>
+              </div>
+            </div>
+            <div className="premium-divider mb-4" />
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-white">Delete Account</h4>
+                <p className="text-sm text-[#8E8E93]">
+                  Permanently delete your account and all data
+                </p>
+              </div>
+              <DeleteAccountDialog />
+            </div>
+          </div>
 
           {/* Legal Links */}
-          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground justify-center pt-4">
-            <a href="/about" className="hover:text-foreground flex items-center gap-1">
+          <div className="flex flex-wrap gap-4 text-sm text-[#6E6E73] justify-center pt-4">
+            <a href="/about" className="hover:text-white transition-colors flex items-center gap-1">
               Our Story <ExternalLink className="w-3 h-3" />
             </a>
-            <a href="/privacy" className="hover:text-foreground flex items-center gap-1">
+            <a href="/privacy" className="hover:text-white transition-colors flex items-center gap-1">
               Privacy Policy <ExternalLink className="w-3 h-3" />
             </a>
-            <a href="/terms" className="hover:text-foreground flex items-center gap-1">
+            <a href="/terms" className="hover:text-white transition-colors flex items-center gap-1">
               Terms of Service <ExternalLink className="w-3 h-3" />
             </a>
-            <a href="/help" className="hover:text-foreground flex items-center gap-1">
+            <a href="/help" className="hover:text-white transition-colors flex items-center gap-1">
               Help Center <ExternalLink className="w-3 h-3" />
             </a>
           </div>
@@ -671,36 +678,39 @@ function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string };
   };
   
   return (
-    <Card className="border-border bg-card">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <CreditCard className="w-5 h-5" />
-          Subscription
-        </CardTitle>
-        <CardDescription>Manage your plan and billing</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="section-card p-5">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="icon-container p-2.5">
+          <CreditCard className="w-5 h-5 text-[#FF6B00]" />
+        </div>
+        <div>
+          <h3 className="text-base font-semibold text-white">Subscription</h3>
+          <p className="text-sm text-[#8E8E93] mt-0.5">Manage your plan and billing</p>
+        </div>
+      </div>
+      <div className="premium-divider mb-4" />
+      <div className="space-y-4">
         {/* Current Plan */}
-        <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+        <div className="flex items-center justify-between p-4 bg-[#1C1C1E] rounded-xl border border-[#2C2C2E]">
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="font-medium text-foreground">{planNames[plan] || plan}</h4>
+              <h4 className="font-medium text-white">{planNames[plan] || plan}</h4>
               {mounted && isTrialPlan && daysLeft > 0 && (
-                <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
+                <span className="bg-[#0099FF]/15 border border-[#0099FF]/25 text-[#0099FF] px-2 py-0.5 rounded-full text-xs font-medium">
                   {daysLeft} days left
-                </Badge>
+                </span>
               )}
               {isCoachAthlete && (
-                <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-400">
-                  <CheckCircle className="w-3 h-3 mr-1" />
+                <span className="bg-[#30D158]/15 border border-[#30D158]/25 text-[#30D158] px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
                   Active
-                </Badge>
+                </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{planPrices[plan] || ""}</p>
+            <p className="text-sm text-[#8E8E93]">{planPrices[plan] || ""}</p>
           </div>
           {!isCoachAthlete && (
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="sm" asChild className="bg-transparent border-[#3A3A3C] hover:bg-white/5 hover:border-[#4A4A4C] text-white">
               <a href="/pricing">
                 {isTrialPlan ? "Upgrade" : "Change Plan"}
               </a>
@@ -710,11 +720,11 @@ function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string };
         
         {/* Trial Info */}
         {mounted && isTrialPlan && daysLeft > 0 && (
-          <div className="flex items-start gap-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-4 bg-[#0099FF]/10 border border-[#0099FF]/20 rounded-xl">
+            <AlertCircle className="w-5 h-5 text-[#0099FF] flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-foreground">Trial Period</h4>
-              <p className="text-sm text-muted-foreground">
+              <h4 className="font-medium text-white">Trial Period</h4>
+              <p className="text-sm text-[#8E8E93]">
                 Your free trial ends on {endDateStr || "soon"}. Upgrade to keep your data and continue using all features.
               </p>
             </div>
@@ -723,11 +733,11 @@ function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string };
         
         {/* Coach Athlete Info */}
         {isCoachAthlete && (
-          <div className="flex items-start gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-            <Users className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-4 bg-[#30D158]/10 border border-[#30D158]/20 rounded-xl">
+            <Users className="w-5 h-5 text-[#30D158] flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-foreground">Team Membership</h4>
-              <p className="text-sm text-muted-foreground">
+              <h4 className="font-medium text-white">Team Membership</h4>
+              <p className="text-sm text-[#8E8E93]">
                 Your account is managed by your coach. Contact your coach if you need to make changes to your subscription.
               </p>
             </div>
@@ -739,44 +749,45 @@ function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string };
           <div className="pt-2">
             <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+                <Button variant="ghost" size="sm" className="text-[#6E6E73] hover:text-[#FF453A] hover:bg-[#FF453A]/10">
                   <XCircle className="w-4 h-4 mr-2" />
                   Cancel Subscription
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-card border-border">
+              <DialogContent className="bg-[#1C1C1E] border-[#3A3A3C]">
                 <DialogHeader>
-                  <DialogTitle>Cancel Subscription?</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-white">Cancel Subscription?</DialogTitle>
+                  <DialogDescription className="text-[#8E8E93]">
                     Are you sure you want to cancel? You&apos;ll lose access to:
                   </DialogDescription>
                 </DialogHeader>
-                <ul className="text-sm text-muted-foreground space-y-2 py-4">
+                <ul className="text-sm text-[#8E8E93] space-y-2 py-4">
                   <li className="flex items-center gap-2">
-                    <XCircle className="w-4 h-4 text-destructive" />
+                    <XCircle className="w-4 h-4 text-[#FF453A]" />
                     AI coaching recommendations
                   </li>
                   <li className="flex items-center gap-2">
-                    <XCircle className="w-4 h-4 text-destructive" />
+                    <XCircle className="w-4 h-4 text-[#FF453A]" />
                     30-day analytics and trends
                   </li>
                   <li className="flex items-center gap-2">
-                    <XCircle className="w-4 h-4 text-destructive" />
+                    <XCircle className="w-4 h-4 text-[#FF453A]" />
                     Unlimited goals
                   </li>
                   <li className="flex items-center gap-2">
-                    <XCircle className="w-4 h-4 text-destructive" />
+                    <XCircle className="w-4 h-4 text-[#FF453A]" />
                     Race predictions
                   </li>
                 </ul>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+                  <Button variant="outline" onClick={() => setShowCancelDialog(false)} className="bg-transparent border-[#3A3A3C] text-white hover:bg-white/5">
                     Keep Subscription
                   </Button>
                   <Button 
                     variant="destructive" 
                     onClick={handleCancelSubscription}
                     disabled={isCancelling}
+                    className="bg-[#FF453A] hover:bg-[#FF453A]/80"
                   >
                     {isCancelling && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Yes, Cancel
@@ -792,26 +803,27 @@ function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string };
           <div className="pt-2">
             <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+                <Button variant="ghost" size="sm" className="text-[#6E6E73] hover:text-[#FF453A] hover:bg-[#FF453A]/10">
                   <XCircle className="w-4 h-4 mr-2" />
                   Cancel Trial
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-card border-border">
+              <DialogContent className="bg-[#1C1C1E] border-[#3A3A3C]">
                 <DialogHeader>
-                  <DialogTitle>Cancel Free Trial?</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-white">Cancel Free Trial?</DialogTitle>
+                  <DialogDescription className="text-[#8E8E93]">
                     Your trial will end immediately and your account will be deactivated. You can always sign up again later.
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowCancelDialog(false)}>
+                  <Button variant="outline" onClick={() => setShowCancelDialog(false)} className="bg-transparent border-[#3A3A3C] text-white hover:bg-white/5">
                     Keep Trial
                   </Button>
                   <Button 
                     variant="destructive" 
                     onClick={handleCancelSubscription}
                     disabled={isCancelling}
+                    className="bg-[#FF453A] hover:bg-[#FF453A]/80"
                   >
                     {isCancelling && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Yes, Cancel Trial
@@ -821,8 +833,8 @@ function SubscriptionCard({ user }: { user: { user_metadata?: { plan?: string };
             </Dialog>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -857,25 +869,26 @@ function DeleteAccountDialog() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm">
+        <Button variant="destructive" size="sm" className="bg-[#FF453A] hover:bg-[#FF453A]/80">
           Delete Account
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-card border-border">
+      <DialogContent className="bg-[#1C1C1E] border-[#3A3A3C]">
         <DialogHeader>
-          <DialogTitle>Are you sure?</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-white">Are you sure?</DialogTitle>
+          <DialogDescription className="text-[#8E8E93]">
             This action cannot be undone. All your check-ins, runs, and account data will be permanently deleted.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isDeleting}>
+          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isDeleting} className="bg-transparent border-[#3A3A3C] text-white hover:bg-white/5">
             Cancel
           </Button>
           <Button 
             variant="destructive" 
             onClick={handleDelete}
             disabled={isDeleting}
+            className="bg-[#FF453A] hover:bg-[#FF453A]/80"
           >
             {isDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {isDeleting ? "Deleting..." : "Delete Everything"}
