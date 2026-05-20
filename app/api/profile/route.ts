@@ -50,6 +50,10 @@ export async function PUT(request: NextRequest) {
   if (body.gender !== undefined) updateData.gender = body.gender;
   if (body.birth_year !== undefined) updateData.birth_year = body.birth_year;
   if (body.location !== undefined) updateData.location = body.location;
+  if (body.onboarded !== undefined) updateData.onboarded = body.onboarded;
+  if (body.weekly_goal !== undefined) updateData.weekly_goal = body.weekly_goal;
+  if (body.experience_level !== undefined) updateData.experience_level = body.experience_level;
+  if (body.initial_goal !== undefined) updateData.initial_goal = body.initial_goal;
 
   const { data: profile, error } = await supabase
     .from("profiles")

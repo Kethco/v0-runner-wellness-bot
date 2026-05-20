@@ -92,7 +92,7 @@ export default function CoachDashboard() {
     fetcher,
     { refreshInterval: 60000 } // Refresh invites every minute
   );
-  const { data: profileData } = useSWR(
+  const { data: profileData, isLoading: isProfileLoading } = useSWR(
     user ? "/api/profile" : null,
     fetcher
   );
@@ -101,12 +101,12 @@ export default function CoachDashboard() {
   const invites: Invite[] = invitesData?.invites || [];
   const pendingInvites = invites.filter(i => i.status === "pending");
 
-  // Check if coach needs onboarding
+  // Check if coach needs onboarding (only after profile data loads)
   useEffect(() => {
-    if (profileData?.profile && !profileData.profile.onboarded) {
+    if (!isProfileLoading && profileData?.profile && profileData.profile.onboarded === false) {
       setShowOnboarding(true);
     }
-  }, [profileData]);
+  }, [isProfileLoading, profileData]);
 
   // Redirect non-authenticated users
   useEffect(() => {

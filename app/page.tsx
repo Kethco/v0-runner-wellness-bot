@@ -59,9 +59,9 @@ export default function Dashboard() {
   });
   
   // Data fetching hooks
-  const { data: checkinsData, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher, { revalidateOnMount: true });
-  const { data: runsData, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher, { revalidateOnMount: true });
-  const { data: profileData, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher, { revalidateOnMount: true });
+  const { data: checkinsData, isLoading: isCheckinsLoading, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher, { revalidateOnMount: true });
+  const { data: runsData, isLoading: isRunsLoading, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher, { revalidateOnMount: true });
+  const { data: profileData, isLoading: isProfileLoading, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher, { revalidateOnMount: true });
   const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher, { revalidateOnMount: true });
   const { data: streakData, isLoading: isStreakLoading, mutate: mutateStreak } = useSWR(
     user ? "/api/streak" : null, 
@@ -120,11 +120,13 @@ export default function Dashboard() {
   const currentStreak = isStreakLoading ? null : (streakData?.streak?.current_streak || 0);
 
   // Show onboarding for new users (no check-ins and no runs)
+  // Only check after data has loaded to avoid false positives
+  const dataLoaded = !isProfileLoading && !isCheckinsLoading && !isRunsLoading;
   useEffect(() => {
-    if (profile && !profile.onboarded && checkins.length === 0 && runs.length === 0) {
+    if (dataLoaded && profile && profile.onboarded === false && checkins.length === 0 && runs.length === 0) {
       setShowOnboarding(true);
     }
-  }, [profile, checkins.length, runs.length]);
+  }, [dataLoaded, profile, checkins.length, runs.length]);
 
   // Check for streak milestone celebrations
   useEffect(() => {
