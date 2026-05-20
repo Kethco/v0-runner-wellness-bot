@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sparkles, Sun, Moon as MoonIcon, Heart, Wind, 
@@ -12,6 +12,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { DailyTips } from "@/components/daily-tips";
 import { GuidedBreathing } from "@/components/guided-breathing";
 import { RunVisualization } from "@/components/run-visualization";
+import { SelfCompassionReset } from "@/components/self-compassion-reset";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -20,11 +21,28 @@ const fetcher = async (url: string) => {
   return res.json();
 };
 
-type MindMode = "home" | "pre-run" | "post-run" | "burnout" | "breathe" | "visualize";
+type MindMode = "home" | "pre-run" | "post-run" | "burnout" | "breathe" | "visualize" | "compassion";
 
 export default function MindPage() {
   const [mode, setMode] = useState<MindMode>("home");
+  const [showCompassionReset, setShowCompassionReset] = useState(false);
+  const [compassionTrigger, setCompassionTrigger] = useState<"bad_run" | "low_energy" | "high_soreness" | "manual">("manual");
   const { data: reflectionsData, mutate } = useSWR("/api/reflections", fetcher);
+  const { data: insightsData } = useSWR("/api/wellness-insights", fetcher);
+  const { data: journalData } = useSWR("/api/resilience-journal?limit=5", fetcher);
+
+  // Auto-trigger compassion reset when wellness is low
+  useEffect(() => {
+    if (insightsData?.todayCheckin) {
+      const { energy, soreness } = insightsData.todayCheckin;
+      // Auto-show prompt (but not the full modal) if struggling
+      if (energy && energy <= 2) {
+        setCompassionTrigger("low_energy");
+      } else if (soreness && soreness >= 4) {
+        setCompassionTrigger("high_soreness");
+      }
+    }
+  }, [insightsData]);
   
 return (
   <div className="min-h-screen bg-background text-foreground pb-28">
@@ -65,7 +83,14 @@ return (
 
       <main className="px-5 py-4 mt-[115px]">
         <AnimatePresence mode="wait">
-          {mode === "home" && <HomeView onSelectMode={setMode} />}
+          {mode === "home" && (
+            <HomeView 
+              onSelectMode={setMode} 
+              setShowCompassionReset={setShowCompassionReset}
+              compassionTrigger={compassionTrigger}
+              journalData={journalData}
+            />
+          )}
           {mode === "pre-run" && <PreRunView onComplete={() => setMode("home")} />}
           {mode === "post-run" && <PostRunView onComplete={() => { setMode("home"); mutate(); }} />}
 {mode === "burnout" && <BurnoutView />}
@@ -89,6 +114,20 @@ return (
 )}
 </AnimatePresence>
       </main>
+
+      {/* Self-Compassion Reset Modal */}
+      <AnimatePresence>
+        {showCompassionReset && (
+          <SelfCompassionReset
+            triggerType={compassionTrigger}
+            onComplete={() => {
+              setShowCompassionReset(false);
+              setCompassionTrigger("manual");
+            }}
+            onDismiss={() => setShowCompassionReset(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Bottom Navigation */}
       <BottomNav />
@@ -131,7 +170,17 @@ const CHRISTIAN_WISDOM = [
   { quote: "In all your ways acknowledge him, and he will make straight your paths.", reference: "Proverbs 3:6" },
 ];
 
-function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) {
+function HomeView({ 
+  onSelectMode, 
+  setShowCompassionReset,
+  compassionTrigger,
+  journalData 
+}: { 
+  onSelectMode: (mode: MindMode) => void;
+  setShowCompassionReset: (show: boolean) => void;
+  compassionTrigger: "bad_run" | "low_energy" | "high_soreness" | "manual";
+  journalData: { total: number; avgMoodImprovement: number } | null;
+}) {
   // Fetch today's wellness data
   const { data: checkinData } = useSWR<{ checkins: Array<{
     sleep_rating: number;
@@ -395,6 +444,57 @@ function HomeView({ onSelectMode }: { onSelectMode: (mode: MindMode) => void }) 
           </div>
           <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
         </motion.button>
+
+        {/* Self-Compassion Reset */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => setShowCompassionReset(true)}
+          className={`w-full flex items-center gap-4 p-5 rounded-2xl border transition-colors ${
+            compassionTrigger !== "manual" 
+              ? "bg-gradient-to-r from-rose-500/20 to-purple-500/10 border-rose-500/40 animate-pulse"
+              : "bg-gradient-to-r from-rose-500/15 to-rose-500/5 border-rose-500/25 hover:border-rose-500/40"
+          }`}
+        >
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/15 flex items-center justify-center">
+            <Heart className="w-7 h-7 text-rose-400" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">
+              {compassionTrigger !== "manual" ? "Time for Self-Care" : "Bad Run Reset"}
+            </p>
+            <p className="text-[#8E8E93] text-sm">
+              {compassionTrigger === "low_energy" 
+                ? "Your energy is low - be kind to yourself"
+                : compassionTrigger === "high_soreness"
+                ? "Your body needs compassion today"
+                : "Turn setbacks into self-compassion"}
+            </p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
+        </motion.button>
+
+        {/* Resilience Journal Stats */}
+        {journalData && journalData.total > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/5 border border-emerald-500/20"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-400 text-xs font-medium uppercase tracking-wider">Resilience Journal</p>
+                <p className="text-white text-sm mt-1">
+                  {journalData.total} {journalData.total === 1 ? "entry" : "entries"} 
+                  {journalData.avgMoodImprovement > 0 && (
+                    <span className="text-emerald-400"> • Avg +{journalData.avgMoodImprovement} mood boost</span>
+                  )}
+                </p>
+              </div>
+              <Sparkles className="w-5 h-5 text-emerald-400" />
+            </div>
+          </motion.div>
+        )}
       </div>
 
       </motion.div>
