@@ -144,7 +144,7 @@ export function PersonalRecordsCard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Card className="premium-card overflow-hidden border-0">
+        <Card className="glass-card-premium overflow-hidden border-0">
           {/* Gold accent line */}
           <div className="h-[2px] bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
           

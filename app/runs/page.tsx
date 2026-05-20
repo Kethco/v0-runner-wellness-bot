@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
+import { MeshBackground } from "@/components/mesh-background";
 import { Navbar } from "@/components/dashboard/navbar";
 import { LogRunModal } from "@/components/dashboard/log-run-modal";
 import { Card } from "@/components/ui/card";
@@ -175,7 +176,8 @@ export default function RunsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24">
+    <div className="min-h-screen mesh-gradient-bg noise-texture text-foreground pb-24">
+      <MeshBackground />
       <Navbar />
       
       {isLoading ? (

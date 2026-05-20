@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/dashboard/navbar";
 import { PRODUCTS, type Product } from "@/lib/products";
+import { MeshBackground } from "@/components/mesh-background";
 
 export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false);
@@ -34,10 +35,11 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen mesh-gradient-bg noise-texture">
+      <MeshBackground />
       <Navbar />
       
-      <main className="container max-w-6xl mx-auto px-4 py-8 mt-[70px]">
+      <main className="relative z-10 container max-w-6xl mx-auto px-4 py-8 mt-[70px]">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-black tracking-tight mb-4">

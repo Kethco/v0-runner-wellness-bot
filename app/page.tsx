@@ -29,6 +29,7 @@ import { PersonalRecordsCard } from "@/components/dashboard/personal-records";
 import { UnifiedWeekCard } from "@/components/dashboard/unified-week-card";
 import { CountingNumber } from "@/components/ui/animated-number";
 import { RaceCountdown } from "@/components/dashboard/race-countdown";
+import { MeshBackground } from "@/components/mesh-background";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -168,7 +169,10 @@ export default function Dashboard() {
   }
 
 return (
-  <div className={`min-h-screen bg-background text-foreground pb-20 ${showTrialBanner ? "pt-10" : ""}`}>
+  <div className={`min-h-screen mesh-gradient-bg noise-texture text-foreground pb-20 ${showTrialBanner ? "pt-10" : ""}`}>
+      {/* Animated mesh background */}
+      <MeshBackground />
+      
       {/* Onboarding for new users */}
       {showOnboarding && (
         <Onboarding 
@@ -180,8 +184,8 @@ return (
         />
       )}
 
-      {/* Premium Header */}
-      <header className="fixed-header-safe z-50">
+      {/* Premium Glass Header */}
+      <header className="fixed-header-safe glass-header z-50">
         {/* Gradient border line */}
         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FF4500]/60 to-transparent" />
         
@@ -266,7 +270,7 @@ return (
         />
       </header>
 
-      <main className="px-5 py-6 space-y-6 mt-[175px]">
+      <main className="relative z-10 px-5 py-6 space-y-6 mt-[175px]">
         {/* Unified This Week Card */}
         <UnifiedWeekCard 
           weeklyMiles={weeklyMiles} 
@@ -289,20 +293,19 @@ return (
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#FF4500] to-[#FF6B00] transition-all"
-              style={{ boxShadow: '0 0 30px rgba(255,69,0,0.4)' }}
+              className="w-full flex items-center gap-4 p-5 btn-premium-orange transition-all"
             >
               <div 
-                className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center"
-                style={{ boxShadow: 'inset 0 0 12px rgba(255,255,255,0.1)' }}
+                className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm"
+                style={{ boxShadow: 'inset 0 0 12px rgba(255,255,255,0.15)' }}
               >
                 <Play className="w-6 h-6 text-white fill-white" />
               </div>
               <div className="text-left">
                 <p className="text-white font-bold text-lg">Log Run</p>
-                <p className="text-white/60 text-xs font-medium">Record activity</p>
+                <p className="text-white/70 text-xs font-medium">Record activity</p>
               </div>
             </motion.button>
           </LogRunModal>
@@ -311,7 +314,7 @@ return (
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.25 }}
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               hapticLight();
@@ -324,20 +327,15 @@ return (
                 setShowCheckinModal(true);
               }
             }}
-            className={`w-full flex items-center gap-4 p-5 rounded-2xl transition-all ${
+            className={`w-full flex items-center gap-4 p-5 transition-all ${
               hasCheckedInToday 
-                ? "bg-[#0D0D0D] border border-[#30D158]/40" 
-                : "bg-gradient-to-br from-[#30D158] to-[#34C759]"
+                ? "btn-glass-completed" 
+                : "btn-premium-green"
             }`}
-            style={{ 
-              boxShadow: hasCheckedInToday 
-                ? '0 0 20px rgba(48,209,88,0.2)' 
-                : '0 0 30px rgba(48,209,88,0.4)' 
-            }}
           >
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-              hasCheckedInToday ? "bg-[#30D158]/20" : "bg-white/20"
-            }`}>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center backdrop-blur-sm ${
+              hasCheckedInToday ? "bg-[#30D158]/15" : "bg-white/20"
+            }`} style={{ boxShadow: hasCheckedInToday ? '0 0 15px rgba(48,209,88,0.2)' : 'inset 0 0 12px rgba(255,255,255,0.15)' }}>
               <Activity 
                 className={`w-6 h-6 ${hasCheckedInToday ? "text-[#30D158]" : "text-white"}`}
                 style={hasCheckedInToday ? { filter: 'drop-shadow(0 0 4px rgba(48,209,88,0.6))' } : {}}
@@ -377,7 +375,7 @@ return (
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
-            className="premium-card overflow-hidden"
+            className="glass-card-glow"
           >
             {/* Top accent */}
             <div className="h-[2px] bg-gradient-to-r from-transparent via-[#30D158] to-transparent" />
@@ -405,7 +403,7 @@ return (
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
-          className="premium-card relative overflow-hidden"
+          className="glass-card-premium relative overflow-hidden"
         >
           {/* Gradient accent line at top */}
           <div className="h-[2px] bg-gradient-to-r from-[#FF4500] via-[#00D4FF] to-[#AF52DE]" />
@@ -468,7 +466,8 @@ return (
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 + i * 0.1 }}
-                  className="flex-shrink-0 w-[140px] p-4 rounded-xl bg-[#0D0D0D] border border-white/5 hover:border-white/10 transition-all"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className="flex-shrink-0 w-[140px] p-4 glass-subtle hover:border-white/10 transition-all"
                 >
                   <div 
                     className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 ${getRunStyles(run.run_type).bg}`}

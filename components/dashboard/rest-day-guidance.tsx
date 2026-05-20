@@ -145,7 +145,7 @@ export function RestDayGuidance() {
   
   if (isLoading) {
     return (
-      <div className="premium-card p-5 animate-pulse">
+      <div className="glass-card-premium p-5 animate-pulse">
         <div className="h-4 bg-white/5 rounded w-32 mb-4" />
         <div className="space-y-3">
           <div className="h-16 bg-white/5 rounded" />
@@ -189,7 +189,7 @@ export function RestDayGuidance() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="premium-card overflow-hidden"
+      className="glass-card-glow overflow-hidden"
     >
       {/* Top accent */}
       <div className="h-[2px] bg-gradient-to-r from-transparent via-[#30D158] to-transparent" />

@@ -104,7 +104,7 @@ export function GentleReminder() {
         initial={{ opacity: 0, y: -10, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.98 }}
-        className="premium-card overflow-hidden"
+        className="glass-subtle overflow-hidden"
         style={{ borderColor: `${reminder.color}20` }}
       >
         <div className="flex items-start gap-3 p-4">

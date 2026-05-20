@@ -195,7 +195,7 @@ export function AchievementBadges() {
 
   return (
     <>
-      <div className="premium-card overflow-hidden">
+      <div className="glass-card-premium overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-white/[0.04]">
           <div className="flex items-center justify-between">

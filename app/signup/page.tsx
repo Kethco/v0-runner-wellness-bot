@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { PRODUCTS } from "@/lib/products";
+import { MeshBackground } from "@/components/mesh-background";
 
 type UserType = "athlete" | "coach";
 type PlanId = string;
@@ -127,9 +128,10 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen mesh-gradient-bg noise-texture">
+      <MeshBackground />
       {/* Header */}
-      <header className="border-b border-border/50">
+      <header className="relative z-10 glass-header">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">

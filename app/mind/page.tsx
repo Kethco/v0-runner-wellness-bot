@@ -19,6 +19,7 @@ import { EmotionalPatterns } from "@/components/emotional-patterns";
 import { RaceDayPrep } from "@/components/race-day-prep";
 import { ComebackJourney } from "@/components/comeback-journey";
 import useSWR from "swr";
+import { MeshBackground } from "@/components/mesh-background";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -52,9 +53,12 @@ export default function MindPage() {
   }, [insightsData]);
   
 return (
-  <div className="min-h-screen bg-background text-foreground pb-28">
+  <div className="min-h-screen mesh-gradient-bg noise-texture text-foreground pb-28">
+      {/* Animated mesh background */}
+      <MeshBackground />
+      
       {/* Header - Fixed with solid background */}
-      <header className="fixed-header-safe z-50 border-b border-[#3A3A3C]">
+      <header className="fixed-header-safe glass-header z-50">
         <div className="px-5 py-4 flex items-center gap-4">
           {mode !== "home" ? (
             <motion.button

@@ -31,6 +31,7 @@ import { BottomNav } from "@/components/bottom-nav";
 import { LifeEventsManager } from "@/components/life-events-manager";
 import { GoalProgressionCard } from "@/components/dashboard/goal-progression-card";
 import { motion, AnimatePresence } from "framer-motion";
+import { MeshBackground } from "@/components/mesh-background";
 
 interface Goal {
   id: string;
@@ -306,10 +307,11 @@ function GoalsPageContent() {
   const isUnauthorized = error?.message === "Unauthorized";
 
 return (
-  <div className="min-h-screen bg-background pb-32">
+  <div className="min-h-screen mesh-gradient-bg noise-texture pb-32">
+      <MeshBackground />
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-[70px]">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-[70px]">
         {/* Add Goal Button - Top */}
         <div className="flex justify-end mb-4">
           <Dialog open={isDialogOpen} onOpenChange={(open) => {

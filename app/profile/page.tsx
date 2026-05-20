@@ -56,6 +56,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "next-themes";
+import { MeshBackground } from "@/components/mesh-background";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -149,7 +150,8 @@ export default function ProfilePage() {
   };
 
 return (
-  <div className="min-h-screen bg-black atmospheric-bg noise-overlay">
+  <div className="min-h-screen mesh-gradient-bg noise-texture">
+      <MeshBackground />
       <Navbar />
       
       <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mt-[70px] pb-32">

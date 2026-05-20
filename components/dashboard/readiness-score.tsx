@@ -46,7 +46,7 @@ export function ReadinessScore() {
 
   if (isLoading) {
     return (
-      <div className="premium-card p-5 animate-pulse">
+      <div className="glass-card-premium p-5 animate-pulse">
         <div className="flex items-center gap-4">
           <div className="w-28 h-28 rounded-full bg-white/5" />
           <div className="flex-1 space-y-3">
@@ -94,7 +94,7 @@ export function ReadinessScore() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="premium-card overflow-hidden"
+      className="glass-card-glow overflow-hidden"
     >
       {/* Top accent gradient */}
       <div 

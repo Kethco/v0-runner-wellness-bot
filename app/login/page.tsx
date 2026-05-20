@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
+import { MeshBackground } from "@/components/mesh-background";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -86,8 +87,9 @@ export default function LoginPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex min-h-screen">
+    <div className="min-h-screen mesh-gradient-bg noise-texture">
+      <MeshBackground />
+      <div className="relative z-10 flex min-h-screen">
         {/* Left side - Benefits (hidden on mobile) */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#FF4500] via-[#FF6B00] to-[#FF8C00] p-12 flex-col justify-between">
           <div>

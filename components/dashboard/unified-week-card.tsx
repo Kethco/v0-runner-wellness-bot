@@ -262,7 +262,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="premium-card relative overflow-hidden"
+        className="glass-card-glow relative overflow-hidden"
       >
         {/* Top gradient line */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF4500] to-transparent" />
