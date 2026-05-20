@@ -9,11 +9,32 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Try to get existing streak
   const { data: streak, error } = await supabase
     .from("streaks")
     .select("*")
     .eq("user_id", user.id)
     .single();
+
+  // If no streak exists, create one
+  if (error && error.code === "PGRST116") {
+    const { data: newStreak, error: createError } = await supabase
+      .from("streaks")
+      .insert({
+        user_id: user.id,
+        current_streak: 0,
+        longest_streak: 0,
+        last_checkin_date: null
+      })
+      .select()
+      .single();
+    
+    if (createError) {
+      return NextResponse.json({ error: createError.message }, { status: 500 });
+    }
+    
+    return NextResponse.json({ streak: newStreak });
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

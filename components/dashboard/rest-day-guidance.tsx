@@ -180,7 +180,9 @@ export function RestDayGuidance() {
     });
   };
   
-  const completedCount = completedActivities.size;
+  // Only count completed activities that are in the current activities list
+  const validCompletedIds = activities.map(a => a.id);
+  const completedCount = [...completedActivities].filter(id => validCompletedIds.includes(id)).length;
   const totalCount = activities.length;
   
   return (
