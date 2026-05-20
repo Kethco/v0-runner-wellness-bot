@@ -15,6 +15,7 @@ import { RunVisualization } from "@/components/run-visualization";
 import { SelfCompassionReset } from "@/components/self-compassion-reset";
 import { DailyIntentionCard } from "@/components/daily-intention-card";
 import { ProgressEcho } from "@/components/progress-echo";
+import { EmotionalPatterns } from "@/components/emotional-patterns";
 import useSWR from "swr";
 
 const fetcher = async (url: string) => {
@@ -323,6 +324,9 @@ function HomeView({
 
       {/* Weekly Progress Echo */}
       <ProgressEcho />
+
+      {/* Emotional Patterns & Insights */}
+      <EmotionalPatterns />
       
       {/* Daily Wisdom */}
       <motion.div
