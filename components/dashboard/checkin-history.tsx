@@ -70,14 +70,9 @@ export function CheckInHistory() {
     fetchHistory();
   }, []);
 
+  // Don't show loading skeleton - parent handles initial load
   if (isLoading) {
-    return (
-      <Card className="bg-card border-border p-5">
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      </Card>
-    );
+    return null;
   }
 
   if (history.length === 0) {

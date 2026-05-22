@@ -142,13 +142,6 @@
     @apply border-border outline-ring/50;
   }
   
-  html {
-    /* Smooth scrolling disabled to prevent jank - native scroll is more performant */
-    scroll-behavior: auto;
-    /* Prevent overscroll bounce on iOS */
-    overscroll-behavior-y: none;
-  }
-  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -164,19 +157,6 @@
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight;
   }
-}
-
-/* Prevent layout shifts - cards have intrinsic minimum heights */
-.glass-card-premium,
-.glass-card-glow,
-.glass-subtle {
-  contain: layout style;
-}
-
-/* Sections that can appear/disappear should have minimum heights when visible */
-.glass-card-premium:not(:empty),
-.glass-card-glow:not(:empty) {
-  min-height: 100px;
 }
 
 /* ========================================

@@ -179,9 +179,9 @@ export default function Dashboard() {
   
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   
-  // Wait for all critical data to load before showing dashboard
-  // This prevents the "popping" effect as components load individually
-  const isDataReady = !isProfileLoading && !isCheckinsLoading && !isRunsLoading && !isWeekPlanLoading && !isStreakLoading && !isInsightsLoading && !isAiAdviceLoading && !isWeatherLoading;
+  // Only wait for the most critical data - profile, checkins, runs
+  // Other data can load after initial render
+  const isDataReady = !isProfileLoading && !isCheckinsLoading && !isRunsLoading;
   
   // Show loading state while checking auth or waiting for critical data
   if (authLoading || !user || !isDataReady) {

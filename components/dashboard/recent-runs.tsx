@@ -75,29 +75,9 @@ export function RecentRuns() {
 
   const runs: Run[] = data?.runs || [];
 
+  // Don't show loading skeleton - parent handles initial load
   if (isLoading) {
-    return (
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Recent Runs
-          </p>
-        </div>
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="border-white/10 p-4 animate-pulse" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white/5 rounded-lg" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-32 bg-white/5 rounded" />
-                  <div className="h-3 w-24 bg-white/5 rounded" />
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (runs.length === 0) {

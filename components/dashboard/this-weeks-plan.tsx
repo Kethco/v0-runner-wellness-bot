@@ -126,24 +126,7 @@ export function ThisWeeksPlan() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <Card className="border-border bg-card animate-pulse">
-        <CardHeader className="pb-3">
-          <div className="h-5 bg-muted rounded w-32" />
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {[...Array(7)].map((_, i) => (
-              <div key={i} className="w-16 h-20 bg-muted rounded-lg shrink-0" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error || !data) {
+  if (isLoading || error || !data) {
     return null;
   }
 

@@ -77,22 +77,9 @@ export function TrendsChart() {
     readiness: toPercentage(c.readiness || 3),
   }));
 
+  // Don't show loading skeleton - parent handles initial load
   if (isLoading) {
-    return (
-      <Card className="bg-card border-border p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-bold">Wellness Trends</h3>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              Last 7 days
-            </p>
-          </div>
-        </div>
-        <div className="h-64 w-full flex items-center justify-center">
-          <div className="text-sm text-muted-foreground">Loading trends...</div>
-        </div>
-      </Card>
-    );
+    return null;
   }
 
   if (chartData.length === 0) {
