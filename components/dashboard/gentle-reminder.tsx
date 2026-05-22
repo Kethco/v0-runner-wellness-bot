@@ -1,6 +1,5 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, X, Heart, Zap, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
 import useSWR from "swr";
@@ -95,28 +94,24 @@ export function GentleReminder() {
   const reminder = reminders[0];
   
   if (!reminder) {
-    return null;
+    return <></>;
   }
   
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: -10, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -10, scale: 0.98 }}
-        className="glass-subtle overflow-hidden"
-        style={{ borderColor: `${reminder.color}20` }}
-      >
-        <div className="flex items-start gap-3 p-4">
-          <div 
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: `${reminder.color}15` }}
-          >
-            <reminder.icon className="w-4 h-4" style={{ color: reminder.color }} />
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <p className="text-white font-semibold text-[13px] mb-0.5">{reminder.title}</p>
+    <div
+      className="glass-subtle overflow-hidden"
+      style={{ borderColor: `${reminder.color}20` }}
+    >
+      <div className="flex items-start gap-3 p-4">
+        <div 
+          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: `${reminder.color}15` }}
+        >
+          <reminder.icon className="w-4 h-4" style={{ color: reminder.color }} />
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold text-[13px] mb-0.5">{reminder.title}</p>
             <p className="text-white/50 text-[12px] leading-relaxed">{reminder.message}</p>
           </div>
           
@@ -127,7 +122,6 @@ export function GentleReminder() {
             <X className="w-3.5 h-3.5 text-white/30" />
           </button>
         </div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
   );
 }

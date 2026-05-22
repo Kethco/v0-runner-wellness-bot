@@ -22,7 +22,8 @@ function TrendArrow({ current, previous }: { current: number; previous: number }
 export function WeeklySummary() {
   const { data } = useSWR("/api/wellness-insights");
 
-  if (!data?.insights) return null;
+  // Return empty fragment to prevent layout shifts
+  if (!data?.insights) return <></>;
 
   const { weeklyStats, previousWeekStats, patterns, bestDay } = data.insights;
 
@@ -31,8 +32,8 @@ export function WeeklySummary() {
   const dayOfWeek = today.getDay();
   const isRecapDay = dayOfWeek === 0 || dayOfWeek === 1; // Sun or Mon
   
-  if (!isRecapDay && !weeklyStats) return null;
-  if (!weeklyStats) return null;
+  if (!isRecapDay && !weeklyStats) return <></>;
+  if (!weeklyStats) return <></>;
 
   const stats = [
     {

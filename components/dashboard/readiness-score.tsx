@@ -44,10 +44,11 @@ export function ReadinessScore() {
   const todayStr = new Date().toISOString().split("T")[0];
   const hasCheckedInToday = todayCheckin?.date === todayStr;
 
+  // Show skeleton during loading - same height as loaded content
   if (isLoading) {
     return (
-      <div className="glass-card-premium p-5 animate-pulse">
-        <div className="flex items-center gap-4">
+      <div className="glass-card-premium p-5 min-h-[148px]">
+        <div className="flex items-center gap-4 animate-pulse">
           <div className="w-28 h-28 rounded-full bg-white/5" />
           <div className="flex-1 space-y-3">
             <div className="h-4 bg-white/5 rounded w-24" />
@@ -58,9 +59,10 @@ export function ReadinessScore() {
       </div>
     );
   }
-
+  
+  // Return empty fragment to prevent layout shift (component doesn't render anything but takes no space)
   if (!data?.readiness) {
-    return null;
+    return <></>;
   }
 
   const { readiness, patterns: insights, recoverySuggestions: tips, weeklyStats } = data;

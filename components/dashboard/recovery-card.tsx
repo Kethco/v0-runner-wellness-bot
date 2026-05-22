@@ -178,8 +178,9 @@ export function RecoveryCard() {
   const todayCheckin = insightsData?.todayCheckin;
   
   // Don't show if readiness is high (they don't need recovery tips)
+  // Return empty fragment instead of null to prevent layout shifts
   if (!readiness || readiness.score >= 80) {
-    return null;
+    return <></>;
   }
   
   // Use actual check-in data, with fallbacks

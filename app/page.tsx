@@ -174,8 +174,20 @@ export default function Dashboard() {
   
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   
+  // Check if critical data is still loading
+  const isCriticalDataLoading = isProfileLoading || isWeekPlanLoading || isCheckinsLoading;
+  
   // Show loading state while checking auth or redirecting
   if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardSkeleton />
+      </div>
+    );
+  }
+  
+  // Show skeleton while critical data loads to prevent layout shifts
+  if (isCriticalDataLoading) {
     return (
       <div className="min-h-screen bg-background">
         <DashboardSkeleton />
@@ -240,16 +252,15 @@ return (
               <TrialCountdown />
               
               {/* Streak Badge */}
-              <motion.div 
-                whileTap={{ scale: 0.95 }}
-                className="relative flex items-center gap-1.5 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-3 py-2 rounded-full"
+              <div 
+                className="relative flex items-center gap-1.5 bg-gradient-to-r from-[#FF4500] to-[#FF6B00] px-3 py-2 rounded-full active:scale-95 transition-transform"
                 style={{ boxShadow: '0 0 20px rgba(255,69,0,0.4)' }}
               >
                 <Flame className="w-4 h-4 text-white" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} />
-                  <span className="relative text-white font-bold text-sm">
+                  <span className="relative text-white font-bold text-sm min-w-[16px] text-center">
                     {currentStreak === null ? "-" : <CountingNumber value={currentStreak} duration={1} />}
                   </span>
-              </motion.div>
+              </div>
             </div>
           </div>
           
@@ -301,20 +312,10 @@ return (
         <RaceCountdown />
 
         {/* Action Buttons */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="grid grid-cols-2 gap-4"
-        >
+        <div className="grid grid-cols-2 gap-4">
           <LogRunModal onRunLogged={() => { mutateRuns(); mutateWeekPlan(); }}>
-            <motion.button
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-4 p-5 btn-premium-orange transition-all"
+            <button
+              className="w-full flex items-center gap-4 p-5 btn-premium-orange transition-all active:scale-[0.98]"
             >
               <div 
                 className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm"
@@ -326,15 +327,10 @@ return (
                 <p className="text-white font-bold text-lg">Log Run</p>
                 <p className="text-white/70 text-xs font-medium">Record activity</p>
               </div>
-            </motion.button>
+            </button>
           </LogRunModal>
 
-          <motion.button
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25 }}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={() => {
               hapticLight();
               if (hasCheckedInToday) {
@@ -346,7 +342,7 @@ return (
                 setShowCheckinModal(true);
               }
             }}
-            className={`w-full flex items-center gap-4 p-5 transition-all ${
+            className={`w-full flex items-center gap-4 p-5 transition-all active:scale-[0.98] ${
               hasCheckedInToday 
                 ? "btn-glass-completed" 
                 : "btn-premium-green"
@@ -368,8 +364,8 @@ return (
                 {hasCheckedInToday ? "All set today" : "Daily wellness"}
               </p>
             </div>
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
 
         {/* Gentle Reminder (shows when needed) */}
         <GentleReminder />
