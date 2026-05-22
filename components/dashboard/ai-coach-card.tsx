@@ -26,7 +26,7 @@ interface AIAdviceResponse {
 
 // Coach personality
 const COACH = {
-  name: "Coach Z",
+  name: "Coach Alex",
 };
 
 interface CoachMessage {
