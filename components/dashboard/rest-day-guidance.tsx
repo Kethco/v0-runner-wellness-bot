@@ -123,7 +123,7 @@ function getPersonalizedActivities(data: {
 }
 
 export function RestDayGuidance({ isRestDay = false }: { isRestDay?: boolean }) {
-  const { data: insightsData, isLoading } = useSWR("/api/wellness-insights");
+  const { data: insightsData } = useSWR("/api/wellness-insights");
   const { data: checkinData } = useSWR("/api/checkins?limit=1");
   const todayStr = new Date().toISOString().split("T")[0];
   const storageKey = `rest-day-activities-${todayStr}`;
@@ -143,21 +143,9 @@ export function RestDayGuidance({ isRestDay = false }: { isRestDay?: boolean }) 
   const todayCheckin = checkinData?.checkins?.[0];
   const hasCheckedInToday = todayCheckin?.date === todayStr;
   
-  // Don't render if not a rest day
+  // Don't render if not a rest day - parent handles loading state
   if (!isRestDay) {
     return null;
-  }
-  
-  if (isLoading) {
-    return (
-      <div className="glass-card-premium p-5 animate-pulse">
-        <div className="h-4 bg-white/5 rounded w-32 mb-4" />
-        <div className="space-y-3">
-          <div className="h-16 bg-white/5 rounded" />
-          <div className="h-16 bg-white/5 rounded" />
-        </div>
-      </div>
-    );
   }
   
   const weeklyStats = insightsData?.weeklyStats;

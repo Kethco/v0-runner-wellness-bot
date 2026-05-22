@@ -37,30 +37,14 @@ function getTrend(current: number, average: number): "up" | "down" | "stable" {
 }
 
 export function ReadinessScore() {
-  const { data, isLoading } = useSWR("/api/wellness-insights");
+  const { data } = useSWR("/api/wellness-insights");
   const { data: checkinData } = useSWR("/api/checkins?limit=1");
   
   const todayCheckin = checkinData?.checkins?.[0];
   const todayStr = new Date().toISOString().split("T")[0];
   const hasCheckedInToday = todayCheckin?.date === todayStr;
-
-  // Show skeleton during loading - same height as loaded content
-  if (isLoading) {
-    return (
-      <div className="glass-card-premium p-5 min-h-[148px]">
-        <div className="flex items-center gap-4 animate-pulse">
-          <div className="w-28 h-28 rounded-full bg-white/5" />
-          <div className="flex-1 space-y-3">
-            <div className="h-4 bg-white/5 rounded w-24" />
-            <div className="h-6 bg-white/5 rounded w-32" />
-            <div className="h-3 bg-white/5 rounded w-40" />
-          </div>
-        </div>
-      </div>
-    );
-  }
   
-  // Return empty fragment to prevent layout shift (component doesn't render anything but takes no space)
+  // Return empty fragment if no data - parent handles loading state
   if (!data?.readiness) {
     return <></>;
   }

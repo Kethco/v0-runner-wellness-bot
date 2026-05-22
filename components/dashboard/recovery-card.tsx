@@ -153,7 +153,7 @@ function getRecoveryTips(data: {
 }
 
 export function RecoveryCard() {
-  const { data: insightsData, isLoading } = useSWR("/api/wellness-insights");
+  const { data: insightsData } = useSWR("/api/wellness-insights");
   const { data: runsData } = useSWR("/api/runs?days=1");
   
   const hasRunToday = runsData?.runs?.some((r: { date: string }) => {
@@ -161,24 +161,11 @@ export function RecoveryCard() {
     return r.date?.split("T")[0] === today;
   });
   
-  if (isLoading) {
-    return (
-      <div className="rounded-2xl border border-white/10 p-5 animate-pulse" style={{ backgroundColor: 'rgba(13, 13, 13, 0.97)' }}>
-        <div className="h-4 bg-white/5 rounded w-32 mb-4" />
-        <div className="space-y-3">
-          <div className="h-12 bg-white/5 rounded" />
-          <div className="h-12 bg-white/5 rounded" />
-        </div>
-      </div>
-    );
-  }
-  
   const readiness = insightsData?.readiness;
   const weeklyStats = insightsData?.weeklyStats;
   const todayCheckin = insightsData?.todayCheckin;
   
-  // Don't show if readiness is high (they don't need recovery tips)
-  // Return empty fragment instead of null to prevent layout shifts
+  // Don't show if no data or readiness is high - parent handles loading state
   if (!readiness || readiness.score >= 80) {
     return <></>;
   }

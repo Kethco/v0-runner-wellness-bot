@@ -49,42 +49,18 @@ const ICON_MAP: Record<string, typeof Sun> = {
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function WeatherStrip() {
-  const { data, error, isLoading } = useSWR<WeatherData>("/api/weather", fetcher, {
+  const { data, error } = useSWR<WeatherData>("/api/weather", fetcher, {
     revalidateOnFocus: false,
     dedupingInterval: 1000 * 60 * 30, // Cache for 30 minutes
   });
 
-  if (isLoading) {
-    return (
-      <div className="mt-4 pt-4 border-t border-white/10">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-3 h-3 bg-white/20 rounded-full animate-pulse" />
-          <div className="w-20 h-3 bg-white/20 rounded animate-pulse" />
-        </div>
-        <div className="flex justify-between">
-          {[...Array(7)].map((_, i) => (
-            <div key={i} className="flex flex-col items-center gap-1">
-              <div className="w-6 h-3 bg-white/10 rounded animate-pulse" />
-              <div className="w-5 h-5 bg-white/10 rounded-full animate-pulse" />
-              <div className="w-8 h-3 bg-white/10 rounded animate-pulse" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
+  // Parent handles loading state - just return null if no data
   if (error || !data?.forecast || data.forecast.length === 0) {
-    return null; // Silently fail - weather is nice to have, not critical
+    return null;
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
-      className="mt-4 pt-4 border-t border-white/10"
-    >
+    <div className="mt-4 pt-4 border-t border-white/10">
       {/* Location header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
@@ -182,6 +158,6 @@ export function WeatherStrip() {
           </span>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

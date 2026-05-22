@@ -75,6 +75,11 @@ export default function Dashboard() {
     user ? `/api/training-plan/week?tz=${encodeURIComponent(userTimezone)}` : null
   );
   
+  // Additional data that child components need - fetch at parent to prevent individual loading states
+  const { data: wellnessInsights, isLoading: isInsightsLoading } = useSWR(user ? "/api/wellness-insights" : null);
+  const { data: aiAdviceData, isLoading: isAiAdviceLoading } = useSWR(user ? "/api/ai-advice" : null);
+  const { data: weatherData, isLoading: isWeatherLoading } = useSWR(user ? "/api/weather" : null);
+  
   // Get today's workout from the week plan
   const todayWorkout = weekPlanData?.todayWorkout;
   
@@ -174,8 +179,12 @@ export default function Dashboard() {
   
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   
-  // Show loading state while checking auth or redirecting
-  if (authLoading || !user) {
+  // Wait for all critical data to load before showing dashboard
+  // This prevents the "popping" effect as components load individually
+  const isDataReady = !isProfileLoading && !isCheckinsLoading && !isRunsLoading && !isWeekPlanLoading && !isStreakLoading && !isInsightsLoading && !isAiAdviceLoading && !isWeatherLoading;
+  
+  // Show loading state while checking auth or waiting for critical data
+  if (authLoading || !user || !isDataReady) {
     return (
       <div className="min-h-screen bg-background">
         <DashboardSkeleton />

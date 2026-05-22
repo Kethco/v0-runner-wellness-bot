@@ -143,14 +143,13 @@ function computeBadges(stats: {
 
 export function AchievementBadges() {
   const { user } = useAuth();
-  const { data: runsData, isLoading: isRunsLoading } = useSWR(user ? "/api/runs?days=365" : null);
-  const { data: streakData, isLoading: isStreakLoading } = useSWR(user ? "/api/streak" : null);
-  const { data: checkinsData, isLoading: isCheckinsLoading } = useSWR(user ? "/api/checkins?limit=365" : null);
+  const { data: runsData } = useSWR(user ? "/api/runs?days=365" : null);
+  const { data: streakData } = useSWR(user ? "/api/streak" : null);
+  const { data: checkinsData } = useSWR(user ? "/api/checkins?limit=365" : null);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const { shareToSocial } = useShareCard();
 
-  const isLoading = isRunsLoading || isStreakLoading || isCheckinsLoading;
   const runs = runsData?.runs || [];
   const checkins = checkinsData?.checkins || [];
 
@@ -193,30 +192,6 @@ export function AchievementBadges() {
       return () => clearTimeout(timer);
     }
   }, [selectedBadge]);
-
-  // Show loading skeleton while data is being fetched
-  if (isLoading) {
-    return (
-      <div className="glass-card-premium overflow-hidden">
-        <div className="p-4 border-b border-white/[0.04]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/5 animate-pulse" />
-            <div className="space-y-2">
-              <div className="h-4 w-24 bg-white/5 rounded animate-pulse" />
-              <div className="h-3 w-16 bg-white/5 rounded animate-pulse" />
-            </div>
-          </div>
-        </div>
-        <div className="p-4">
-          <div className="flex flex-wrap gap-2">
-            {[1,2,3,4,5].map(i => (
-              <div key={i} className="w-10 h-10 rounded-xl bg-white/5 animate-pulse" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
