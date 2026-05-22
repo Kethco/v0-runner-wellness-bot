@@ -46,13 +46,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background" style={{ backgroundColor: '#FF6B00' }} suppressHydrationWarning>
       <head>
-        {/* Prevent white flash - set orange background immediately */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function() {
-            document.documentElement.style.backgroundColor = '#FF6B00';
-            document.body && (document.body.style.backgroundColor = '#FF6B00');
-          })();
-        `}} />
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
