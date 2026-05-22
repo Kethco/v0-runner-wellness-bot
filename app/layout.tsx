@@ -46,6 +46,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background" style={{ backgroundColor: '#FF6B00' }} suppressHydrationWarning>
       <head>
+        {/* Prevent white flash - set orange background immediately */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            document.documentElement.style.backgroundColor = '#FF6B00';
+            document.body && (document.body.style.backgroundColor = '#FF6B00');
+          })();
+        `}} />
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -57,7 +64,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://js.stripe.com" />
         <link rel="dns-prefetch" href="https://api.stripe.com" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans antialiased`} style={{ backgroundColor: '#FF6B00' }} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <SWRProvider>
             <AuthProvider>
