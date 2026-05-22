@@ -33,7 +33,6 @@ import { MeshBackground } from "@/components/mesh-background";
 import { DailyQuote } from "@/components/dashboard/daily-quote";
 import { WeeklyChallenges } from "@/components/dashboard/weekly-challenges";
 import { AICoachCard } from "@/components/dashboard/ai-coach-card";
-import { useSplash } from "@/components/splash-screen";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -44,7 +43,6 @@ const fetcher = async (url: string) => {
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const { signalDataReady } = useSplash();
   
   // ALL HOOKS MUST BE AT THE TOP - before any conditional returns
   const [showCheckinModal, setShowCheckinModal] = useState(false);
@@ -199,13 +197,6 @@ export default function Dashboard() {
     !isRunsYearLoading &&
     !isCheckinsYearLoading
   );
-
-  // Signal to splash screen that data is ready
-  useEffect(() => {
-    if (isDataReady && user && !authLoading) {
-      signalDataReady();
-    }
-  }, [isDataReady, user, authLoading, signalDataReady]);
   
   // Show loading state while checking auth or waiting for ALL data
   if (authLoading || !user || !isDataReady) {
