@@ -1,11 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { Sparkles, RefreshCw, ChevronRight, Brain } from "lucide-react";
+import { Sparkles, RefreshCw, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useSWR from "swr";
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -257,29 +256,14 @@ export function AICoachCard() {
           </div>
         </div>
 
-        {/* Action Link */}
-        <Link href="/mind" className="block mt-4">
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:border-white/[0.08] transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-lg ${style.iconBg} opacity-80 flex items-center justify-center`}>
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-sm text-white/70">Chat with {COACH.name}</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-white/30" />
-          </motion.div>
-        </Link>
-
-        {/* SMS tip */}
-        <div className="mt-3 pt-3 border-t border-white/[0.04]">
-          <p className="text-[10px] text-white/30">
-            Text <span className="font-mono text-[#FF4500]">ai</span> to +1 844 503 0386 anytime for instant coaching
-          </p>
-        </div>
+        {/* Wellness Check-in Prompt (if not checked in) */}
+        {!hasCheckedIn && (
+          <div className="mt-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+            <p className="text-xs text-white/50 text-center">
+              Complete your daily check-in for personalized advice
+            </p>
+          </div>
+        )}
       </div>
     </motion.div>
   );
