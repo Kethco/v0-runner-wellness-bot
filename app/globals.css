@@ -660,16 +660,23 @@
     radial-gradient(ellipse 80% 60% at 90% 20%, rgba(139, 69, 255, 0.08) 0%, transparent 45%),
     radial-gradient(ellipse 60% 50% at 50% 100%, rgba(255, 140, 0, 0.06) 0%, transparent 40%),
     radial-gradient(ellipse 40% 30% at 20% 60%, rgba(0, 150, 255, 0.04) 0%, transparent 35%);
+  /* GPU acceleration for smooth scroll */
+  transform: translateZ(0);
+  will-change: auto;
 }
 
-/* Animated mesh blobs */
+/* Static mesh blobs - no animations for better scroll performance */
 .mesh-blob {
   position: fixed;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
+  filter: blur(60px);
+  opacity: 0.4;
   pointer-events: none;
   z-index: 0;
+  /* GPU acceleration for smooth scrolling */
+  transform: translateZ(0);
+  will-change: auto;
+  backface-visibility: hidden;
 }
 
 .mesh-blob-1 {
@@ -678,7 +685,6 @@
   background: radial-gradient(circle, rgba(255, 69, 0, 0.15) 0%, transparent 70%);
   top: -200px;
   left: -100px;
-  animation: blob-drift-1 20s ease-in-out infinite;
 }
 
 .mesh-blob-2 {
@@ -687,7 +693,6 @@
   background: radial-gradient(circle, rgba(139, 69, 255, 0.12) 0%, transparent 70%);
   top: 30%;
   right: -150px;
-  animation: blob-drift-2 25s ease-in-out infinite;
 }
 
 .mesh-blob-3 {
@@ -696,7 +701,6 @@
   background: radial-gradient(circle, rgba(255, 140, 0, 0.1) 0%, transparent 70%);
   bottom: -100px;
   left: 20%;
-  animation: blob-drift-3 22s ease-in-out infinite;
 }
 
 .mesh-blob-4 {
@@ -705,44 +709,18 @@
   background: radial-gradient(circle, rgba(0, 200, 255, 0.08) 0%, transparent 70%);
   top: 50%;
   left: -100px;
-  animation: blob-drift-4 18s ease-in-out infinite;
-}
-
-@keyframes blob-drift-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(50px, 30px) scale(1.05); }
-  50% { transform: translate(20px, 60px) scale(0.95); }
-  75% { transform: translate(-30px, 20px) scale(1.02); }
-}
-
-@keyframes blob-drift-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-40px, 50px) scale(1.08); }
-  66% { transform: translate(30px, -30px) scale(0.92); }
-}
-
-@keyframes blob-drift-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  20% { transform: translate(60px, -20px) scale(1.03); }
-  40% { transform: translate(30px, 40px) scale(0.97); }
-  60% { transform: translate(-40px, 20px) scale(1.05); }
-  80% { transform: translate(-20px, -30px) scale(0.98); }
-}
-
-@keyframes blob-drift-4 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(70px, -40px) scale(1.1); }
 }
 
 /* ========================================
    GLASS MORPHISM CARDS - PREMIUM
+   Performance optimized: reduced blur, GPU acceleration
    ======================================== */
 
 .glass-card-premium {
   position: relative;
-  background: rgba(18, 18, 20, 0.75);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  background: rgba(18, 18, 20, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 1.5rem;
   box-shadow: 
@@ -750,6 +728,9 @@
     0 2px 8px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 0 80px rgba(255, 107, 0, 0.02);
+  /* GPU acceleration */
+  transform: translateZ(0);
+  will-change: auto;
 }
 
 .glass-card-premium::before {
@@ -766,9 +747,9 @@
 /* Glass card with accent glow */
 .glass-card-glow {
   position: relative;
-  background: rgba(20, 20, 22, 0.8);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  background: rgba(20, 20, 22, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 1.5rem;
   overflow: hidden;
@@ -776,6 +757,9 @@
     0 8px 32px rgba(0, 0, 0, 0.35),
     0 2px 8px rgba(0, 0, 0, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  /* GPU acceleration */
+  transform: translateZ(0);
+  will-change: auto;
 }
 
 .glass-card-glow::before {
@@ -801,19 +785,22 @@
 
 /* Subtle glass for smaller elements */
 .glass-subtle {
-  background: rgba(28, 28, 30, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(28, 28, 30, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 1rem;
+  transform: translateZ(0);
 }
 
-/* Glass header */
+/* Glass header - fixed element needs GPU acceleration */
 .glass-header {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transform: translateZ(0);
+  will-change: auto;
 }
 
 /* ========================================
@@ -958,6 +945,7 @@
 
 /* ========================================
    NOISE TEXTURE - REFINED
+   GPU accelerated for smooth scroll
    ======================================== */
 
 .noise-texture::after {
@@ -971,6 +959,8 @@
   opacity: 0.02;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   z-index: 9998;
+  transform: translateZ(0);
+  will-change: auto;
 }
 
 /* ========================================
@@ -978,11 +968,13 @@
    ======================================== */
 
 .bottom-nav-premium {
-  background: rgba(10, 10, 12, 0.92);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
+  background: rgba(10, 10, 12, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3);
+  transform: translateZ(0);
+  will-change: auto;
 }
 
 .bottom-nav-premium::before {
