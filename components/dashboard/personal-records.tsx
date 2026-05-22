@@ -192,7 +192,7 @@ export function PersonalRecordsCard() {
                           border: `1px solid ${topPRs[1].color}40`
                         }}
                       >
-                        <topPRs[1].icon className="w-5 h-5" style={{ color: topPRs[1].color }} />
+                        {(() => { const Icon = topPRs[1].icon; return <Icon className="w-5 h-5" style={{ color: topPRs[1].color }} />; })()}
                       </div>
                       <span className="text-[10px] text-white/60 font-medium">{topPRs[1].shortName}</span>
                     </button>
@@ -217,7 +217,7 @@ export function PersonalRecordsCard() {
                           boxShadow: '0 0 20px rgba(255,215,0,0.3)'
                         }}
                       >
-                        <topPRs[0].icon className="w-6 h-6 text-amber-400" />
+                        {(() => { const Icon = topPRs[0].icon; return <Icon className="w-6 h-6 text-amber-400" />; })()}
                       </div>
                       <span className="text-xs text-amber-400 font-bold">{topPRs[0].shortName}</span>
                     </button>
@@ -241,7 +241,7 @@ export function PersonalRecordsCard() {
                           border: `1px solid ${topPRs[2].color}40`
                         }}
                       >
-                        <topPRs[2].icon className="w-5 h-5" style={{ color: topPRs[2].color }} />
+                        {(() => { const Icon = topPRs[2].icon; return <Icon className="w-5 h-5" style={{ color: topPRs[2].color }} />; })()}
                       </div>
                       <span className="text-[10px] text-white/60 font-medium">{topPRs[2].shortName}</span>
                     </button>
