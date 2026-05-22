@@ -74,7 +74,16 @@ export default function Dashboard() {
     fetcher,
     swrOptions
   );
-  const { data: weekPlanData, isLoading: isWeekPlanLoading, mutate: mutateWeekPlan } = useSWR(user ? "/api/training-plan/week" : null, fetcher, swrOptions);
+  
+  // Get user's timezone for API calls
+  const userTimezone = typeof window !== "undefined" 
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone 
+    : "UTC";
+  const { data: weekPlanData, isLoading: isWeekPlanLoading, mutate: mutateWeekPlan } = useSWR(
+    user ? `/api/training-plan/week?tz=${encodeURIComponent(userTimezone)}` : null, 
+    fetcher, 
+    swrOptions
+  );
   
   // Get today's workout from the week plan
   const todayWorkout = weekPlanData?.todayWorkout;
