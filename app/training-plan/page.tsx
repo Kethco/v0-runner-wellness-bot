@@ -214,11 +214,7 @@ export default function TrainingPlanPage() {
       
       <main className="px-5 py-6 mt-16 space-y-6">
         {/* Plan Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="goal-card-border relative overflow-hidden p-5"
-        >
+        <div className="goal-card-border relative overflow-hidden p-5">
           <div className="absolute -top-20 -right-20 w-48 h-48 bg-[#FF4500] rounded-full blur-[100px] opacity-20" />
           
           <div className="relative z-10">
@@ -257,23 +253,18 @@ export default function TrainingPlanPage() {
                 <span>{Math.round((currentWeek / totalWeeks) * 100)}% complete</span>
               </div>
               <div className="h-2 bg-[#2A2A2A] rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(currentWeek / totalWeeks) * 100}%` }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-[#FF4500] to-[#FFD700] rounded-full"
+                <div
+                  className="h-full bg-gradient-to-r from-[#FF4500] to-[#FFD700] rounded-full transition-all duration-500"
+                  style={{ width: `${(currentWeek / totalWeeks) * 100}%` }}
                 />
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Training Redistribution Alert */}
         {redistributionMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <div>
             <Alert className={`border ${
               redistributionSummary.redistributedMiles >= redistributionSummary.skippedMiles * 0.9
                 ? "border-green-500/30 bg-green-500/10"
@@ -287,7 +278,7 @@ export default function TrainingPlanPage() {
                 {redistributionMessage}
               </AlertDescription>
             </Alert>
-          </motion.div>
+          </div>
         )}
 
         {/* Week Selector */}
@@ -366,12 +357,8 @@ export default function TrainingPlanPage() {
                   const isRest = workout.workout_type === "rest";
 
                   return (
-                    <motion.div
+                    <div
                       key={workout.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{ delay: i * 0.05 }}
                       className={`p-4 rounded-xl border transition-all ${
                         isBlocked
                           ? "bg-red-500/10 border-red-500/30 opacity-60"
@@ -465,10 +452,10 @@ export default function TrainingPlanPage() {
                           )}
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
-              </AnimatePresence>
+              </div>
             </div>
           </CardContent>
         </Card>

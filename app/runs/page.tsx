@@ -187,22 +187,13 @@ export default function RunsPage() {
       ) : (
       <main className="container max-w-lg mx-auto px-4 pt-4 mt-[80px]">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-5"
-        >
+        <div className="flex items-center justify-between mb-5">
           <h1 className="text-2xl font-bold">Runs</h1>
           <LogRunModal onRunLogged={() => mutate()} />
-        </motion.div>
+        </div>
 
         {/* Summary Stats Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-5"
-        >
+        <div className="mb-5">
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
             <div className="flex-shrink-0 bg-[#141414] border border-[#2A2A2A] rounded-xl px-4 py-3 min-w-[100px]">
               <div className="flex items-center gap-2 mb-1">
@@ -236,15 +227,10 @@ export default function RunsPage() {
               <p className="text-xl font-bold text-white">{stats.totalMiles.toFixed(0)}<span className="text-sm font-normal text-white/40 ml-1">mi</span></p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* View Toggle & Month Navigator */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="flex items-center justify-between mb-4"
-        >
+        <div className="flex items-center justify-between mb-4">
           <div className="flex bg-[#1A1A1A] rounded-lg p-0.5">
             <button
               onClick={() => setViewMode("recent")}
@@ -277,19 +263,12 @@ export default function RunsPage() {
               </Button>
             </div>
           )}
-        </motion.div>
+        </div>
 
         {/* Monthly Stats (Calendar View) */}
-        <AnimatePresence mode="wait">
-          {viewMode === "calendar" && (
-            <motion.div
-              key="calendar-stats"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-4"
-            >
-              <Card className="bg-[#141414] border-[#2A2A2A] p-4">
+        {viewMode === "calendar" && (
+          <div className="mb-4">
+            <Card className="bg-[#141414] border-[#2A2A2A] p-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-[#FF4500]">{stats.monthlyMiles.toFixed(1)}</p>
@@ -301,9 +280,8 @@ export default function RunsPage() {
                   </div>
                 </div>
               </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        )}
 
         {/* Timeline View */}
         <div className="space-y-3">
@@ -317,13 +295,8 @@ export default function RunsPage() {
     color="#FF4500"
   />
           ) : (
-            groupedRuns.map((group, groupIndex) => (
-              <motion.div
-                key={group.date}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.05 * Math.min(groupIndex, 10) }}
-              >
+            groupedRuns.map((group) => (
+              <div key={group.date}>
                 {/* Date Header */}
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -413,7 +386,7 @@ export default function RunsPage() {
                     </Card>
                   );
                 })}
-              </motion.div>
+              </div>
             ))
           )}
         </div>
