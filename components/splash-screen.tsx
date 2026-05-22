@@ -135,8 +135,8 @@ export function SplashProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Minimum splash duration for branding
-    const minDuration = 1200;
+    // Minimum splash duration for branding - longer to allow dashboard to fully load
+    const minDuration = 2200;
     const startTime = Date.now();
 
     const completeSplash = () => {
@@ -154,8 +154,8 @@ export function SplashProvider({ children }: { children: ReactNode }) {
     } else {
       const handleLoad = () => completeSplash();
       window.addEventListener("load", handleLoad);
-      // Fallback timeout
-      const timeout = setTimeout(completeSplash, 2500);
+      // Fallback timeout - increased to allow more loading time
+      const timeout = setTimeout(completeSplash, 4000);
       
       return () => {
         window.removeEventListener("load", handleLoad);
