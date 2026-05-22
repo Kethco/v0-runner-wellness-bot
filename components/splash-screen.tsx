@@ -6,11 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 interface SplashContextType {
   isLoading: boolean;
   hideSplash: () => void;
+  signalDataReady: () => void;
 }
 
 const SplashContext = createContext<SplashContextType>({
   isLoading: true,
   hideSplash: () => {},
+  signalDataReady: () => {},
 });
 
 export const useSplash = () => useContext(SplashContext);
@@ -114,6 +116,8 @@ const SPLASH_SESSION_KEY = "runner_wellness_splash_shown";
 export function SplashProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const [dataReady, setDataReady] = useState(false);
 
   const hideSplash = useCallback(() => {
     setIsLoading(false);
@@ -122,6 +126,17 @@ export function SplashProvider({ children }: { children: ReactNode }) {
       sessionStorage.setItem(SPLASH_SESSION_KEY, "true");
     }
   }, []);
+
+  const signalDataReady = useCallback(() => {
+    setDataReady(true);
+  }, []);
+
+  // Hide splash when BOTH min time elapsed AND data is ready
+  useEffect(() => {
+    if (minTimeElapsed && dataReady) {
+      hideSplash();
+    }
+  }, [minTimeElapsed, dataReady, hideSplash]);
 
   useEffect(() => {
     setMounted(true);
@@ -132,37 +147,28 @@ export function SplashProvider({ children }: { children: ReactNode }) {
     if (alreadyShownThisSession) {
       // Skip splash if already shown this session
       setIsLoading(false);
+      setMinTimeElapsed(true);
+      setDataReady(true);
       return;
     }
 
-    // Minimum splash duration for branding - longer to allow dashboard to fully load
-    const minDuration = 2200;
-    const startTime = Date.now();
+    // Minimum splash duration for branding
+    const minDuration = 1800;
+    
+    const minTimer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, minDuration);
 
-    const completeSplash = () => {
-      const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, minDuration - elapsed);
+    // Fallback timeout - if data never signals ready, hide after max time
+    const maxTimeout = setTimeout(() => {
+      setDataReady(true);
+    }, 5000);
       
-      setTimeout(() => {
-        hideSplash();
-      }, remaining);
+    return () => {
+      clearTimeout(minTimer);
+      clearTimeout(maxTimeout);
     };
-
-    // Hide splash when the window fully loads
-    if (document.readyState === "complete") {
-      completeSplash();
-    } else {
-      const handleLoad = () => completeSplash();
-      window.addEventListener("load", handleLoad);
-      // Fallback timeout - increased to allow more loading time
-      const timeout = setTimeout(completeSplash, 4000);
-      
-      return () => {
-        window.removeEventListener("load", handleLoad);
-        clearTimeout(timeout);
-      };
-    }
-  }, [hideSplash]);
+  }, []);
 
   // Show splash when returning to the app after being in background
   useEffect(() => {
@@ -203,7 +209,7 @@ export function SplashProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SplashContext.Provider value={{ isLoading, hideSplash }}>
+    <SplashContext.Provider value={{ isLoading, hideSplash, signalDataReady }}>
       <AnimatePresence mode="wait">
         {isLoading && <SplashScreen key="splash" />}
       </AnimatePresence>
