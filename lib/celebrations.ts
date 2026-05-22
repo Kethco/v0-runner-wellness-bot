@@ -70,12 +70,128 @@ export function fireConfettiCannon() {
   })();
 }
 
+// Fireworks effect for major achievements
+export function fireFireworks() {
+  const duration = 3000;
+  const animationEnd = Date.now() + duration;
+  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+  const interval = setInterval(function() {
+    const timeLeft = animationEnd - Date.now();
+
+    if (timeLeft <= 0) {
+      return clearInterval(interval);
+    }
+
+    const particleCount = 50 * (timeLeft / duration);
+    
+    // Random position fireworks
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: Math.random() * 0.4 + 0.1, y: Math.random() * 0.3 },
+      colors: ["#FF4500", "#FFD700", "#FF6B00"],
+    });
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: Math.random() * 0.4 + 0.5, y: Math.random() * 0.3 },
+      colors: ["#30D158", "#00D4FF", "#FF4500"],
+    });
+  }, 250);
+}
+
+// Emoji rain effect
+export function fireEmojiRain(emoji: string = "🏃") {
+  const scalar = 2;
+  const shapes = confetti.shapeFromText({ text: emoji, scalar });
+
+  const defaults = {
+    spread: 180,
+    ticks: 100,
+    gravity: 0.8,
+    decay: 0.94,
+    startVelocity: 20,
+    shapes: [shapes],
+    scalar,
+    zIndex: 9999,
+  };
+
+  function shoot() {
+    confetti({
+      ...defaults,
+      particleCount: 15,
+      origin: { x: Math.random(), y: -0.1 },
+    });
+  }
+
+  // Multiple bursts
+  setTimeout(shoot, 0);
+  setTimeout(shoot, 100);
+  setTimeout(shoot, 200);
+  setTimeout(shoot, 300);
+}
+
+// Star burst for PRs and records
+export function fireStarBurst() {
+  const count = 200;
+  const defaults = {
+    origin: { y: 0.6 },
+    zIndex: 9999,
+  };
+
+  function fire(particleRatio: number, opts: confetti.Options) {
+    confetti({
+      ...defaults,
+      ...opts,
+      particleCount: Math.floor(count * particleRatio),
+    });
+  }
+
+  fire(0.25, {
+    spread: 26,
+    startVelocity: 55,
+    colors: ["#FFD700"],
+  });
+  fire(0.2, {
+    spread: 60,
+    colors: ["#FF4500", "#FFD700"],
+  });
+  fire(0.35, {
+    spread: 100,
+    decay: 0.91,
+    scalar: 0.8,
+    colors: ["#FF6B00", "#FF4500", "#FFD700"],
+  });
+  fire(0.1, {
+    spread: 120,
+    startVelocity: 25,
+    decay: 0.92,
+    scalar: 1.2,
+    colors: ["#30D158", "#FFD700"],
+  });
+  fire(0.1, {
+    spread: 120,
+    startVelocity: 45,
+    colors: ["#FF4500", "#FF6B00"],
+  });
+}
+
 // Celebrate logging a run
-export function celebrateRun() {
+export function celebrateRun(miles?: number) {
   const message = RUN_MESSAGES[Math.floor(Math.random() * RUN_MESSAGES.length)];
   
   hapticSuccess();
-  fireConfetti("light");
+  
+  // Bigger celebration for longer runs
+  if (miles && miles >= 10) {
+    fireStarBurst();
+    fireEmojiRain("🏃");
+  } else if (miles && miles >= 5) {
+    fireConfetti("heavy");
+  } else {
+    fireConfetti("light");
+  }
   
   toast({
     title: message.title,
@@ -113,9 +229,14 @@ export function celebrateStreakMilestone(streak: number) {
   const milestone = STREAK_MILESTONES[streak];
   if (!milestone) return false;
   
-  if (milestone.intensity === "heavy") {
+  if (streak >= 100) {
+    hapticHeavy();
+    fireFireworks();
+    fireEmojiRain("🔥");
+  } else if (milestone.intensity === "heavy") {
     hapticHeavy();
     fireConfettiCannon();
+    fireEmojiRain("🔥");
   } else if (milestone.intensity === "medium") {
     hapticSuccess();
     fireConfetti("medium");
@@ -180,4 +301,44 @@ export function checkMilestone(
   }
   
   return null;
+}
+
+// Celebrate a new Personal Record
+export function celebratePersonalRecord(recordType: string) {
+  const messages: Record<string, { title: string; description: string }> = {
+    pace: { title: "New PR! Fastest Pace!", description: "You've just set a new personal best pace!" },
+    distance: { title: "New PR! Longest Run!", description: "Your longest run ever. Incredible!" },
+    time: { title: "New PR! Longest Duration!", description: "Your longest time on feet. Amazing endurance!" },
+    weekly: { title: "New PR! Best Week!", description: "Your highest weekly mileage ever!" },
+    monthly: { title: "New PR! Best Month!", description: "Your highest monthly mileage. Legendary!" },
+    default: { title: "New Personal Record!", description: "You've outdone yourself!" },
+  };
+
+  const message = messages[recordType] || messages.default;
+  
+  hapticHeavy();
+  fireStarBurst();
+  
+  setTimeout(() => {
+    fireEmojiRain("⭐");
+  }, 500);
+  
+  toast({
+    title: message.title,
+    description: message.description,
+    duration: 5000,
+  });
+}
+
+// Celebrate completing a challenge
+export function celebrateChallengeComplete(challengeName: string) {
+  hapticHeavy();
+  fireConfettiCannon();
+  fireEmojiRain("🏆");
+  
+  toast({
+    title: "Challenge Complete!",
+    description: `You crushed "${challengeName}"!`,
+    duration: 5000,
+  });
 }

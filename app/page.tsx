@@ -30,6 +30,9 @@ import { UnifiedWeekCard } from "@/components/dashboard/unified-week-card";
 import { CountingNumber } from "@/components/ui/animated-number";
 import { RaceCountdown } from "@/components/dashboard/race-countdown";
 import { MeshBackground } from "@/components/mesh-background";
+import { DailyQuote } from "@/components/dashboard/daily-quote";
+import { WeeklyChallenges } from "@/components/dashboard/weekly-challenges";
+import { AICoachCard } from "@/components/dashboard/ai-coach-card";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -68,7 +71,6 @@ export default function Dashboard() {
   const { data: checkinsData, isLoading: isCheckinsLoading, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher, swrOptions);
   const { data: runsData, isLoading: isRunsLoading, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher, swrOptions);
   const { data: profileData, isLoading: isProfileLoading, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher, swrOptions);
-  const { data: aiAdvice } = useSWR(user ? "/api/ai-advice" : null, fetcher, { revalidateOnMount: true });
   const { data: streakData, isLoading: isStreakLoading, mutate: mutateStreak } = useSWR(
     user ? "/api/streak" : null, 
     fetcher,
@@ -427,50 +429,14 @@ return (
           </motion.div>
         )}
 
+        {/* Daily Motivational Quote */}
+        <DailyQuote />
+
         {/* AI Coach Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
-          className="glass-card-premium relative overflow-hidden"
-        >
-          {/* Gradient accent line at top */}
-          <div className="h-[2px] bg-gradient-to-r from-[#FF4500] via-[#00D4FF] to-[#AF52DE]" />
-          
-          {/* Ambient glow */}
-          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-[#00D4FF]/15 to-[#AF52DE]/10 rounded-full blur-3xl" />
-          
-          <div className="relative z-10 p-5">
-            <div className="flex items-center gap-4 mb-4">
-              {/* Pulsing Brain Icon */}
-              <div className="relative w-12 h-12">
-                {/* Pulsing glow rings */}
-                <motion.div
-                  className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#00D4FF] to-[#AF52DE] opacity-30"
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.15, 0.3] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                />
-                
-                {/* Main brain container */}
-                <div 
-                  className="relative w-full h-full rounded-xl bg-gradient-to-br from-[#00D4FF] to-[#AF52DE] flex items-center justify-center overflow-hidden"
-                  style={{ boxShadow: '0 0 24px rgba(0, 212, 255, 0.4)' }}
-                >
-                  <Brain className="w-6 h-6 text-white" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} />
-                </div>
-              </div>
-              <div>
-                <h3 className="text-white font-bold text-lg flex items-center gap-2">
-                  AI Coach
-                  <Sparkles className="w-4 h-4 text-[#00D4FF]" style={{ filter: 'drop-shadow(0 0 4px rgba(0,212,255,0.6))' }} />
-                </h3>
-                <p className="text-white/40 text-sm">Your personalized guidance</p>
-              </div>
-            </div>
-            
-            <ExpandableAdvice advice={aiAdvice?.advice} />
-          </div>
-        </motion.div>
+        <AICoachCard />
+
+        {/* Weekly Challenges */}
+        <WeeklyChallenges />
 
         {/* Recent Runs */}
         {runs.length > 0 && (
@@ -602,31 +568,6 @@ return (
         </DialogContent>
 </Dialog>
   </div>
-  );
-}
-
-function ExpandableAdvice({ advice }: { advice?: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const defaultText = "Complete your daily check-in to receive personalized training insights.";
-  const displayText = advice || defaultText;
-  
-  return (
-    <div>
-      <p className={`text-[#E5E5EA] text-base leading-relaxed ${!expanded ? "line-clamp-2" : ""}`}>
-        {displayText}
-      </p>
-      
-      {advice && advice.length > 100 && (
-        <motion.button
-          whileHover={{ x: 4 }}
-          onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-[#00D4FF] font-semibold text-sm mt-4"
-        >
-          {expanded ? "Show less" : "Get full advice"}
-          <ChevronRight className={`w-4 h-4 transition-transform ${expanded ? "rotate-90" : ""}`} />
-        </motion.button>
-      )}
-    </div>
   );
 }
 

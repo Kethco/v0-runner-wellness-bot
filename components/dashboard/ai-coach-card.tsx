@@ -1,10 +1,11 @@
 "use client";
 
-import { Sparkles, RefreshCw } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { useMemo } from "react";
+import { Sparkles, RefreshCw, ChevronRight, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useSWR from "swr";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -24,154 +25,262 @@ interface AIAdviceResponse {
   } | null;
 }
 
-// Animated Brain SVG with neural pulse effect
-function PulsingBrain() {
-  return (
-    <div className="relative w-10 h-10">
-      {/* Pulsing glow rings */}
-      <motion.div
-        className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF4500] to-[#00D4FF] opacity-20"
-        animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.1, 0.2] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-      />
-      <motion.div
-        className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#FF4500] to-[#00D4FF] opacity-10"
-        animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0.05, 0.1] }}
-        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
-      />
-      
-      {/* Main brain container */}
-      <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-[#FF4500] to-[#00D4FF] flex items-center justify-center overflow-hidden">
-        {/* Neural connection dots */}
-        <motion.div
-          className="absolute w-1 h-1 bg-white/60 rounded-full"
-          style={{ top: '20%', left: '25%' }}
-          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-          transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
-        />
-        <motion.div
-          className="absolute w-1 h-1 bg-white/60 rounded-full"
-          style={{ top: '35%', right: '20%' }}
-          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-          transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
-        />
-        <motion.div
-          className="absolute w-1 h-1 bg-white/60 rounded-full"
-          style={{ bottom: '30%', left: '30%' }}
-          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-          transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
-        />
-        <motion.div
-          className="absolute w-1 h-1 bg-white/60 rounded-full"
-          style={{ bottom: '25%', right: '25%' }}
-          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-          transition={{ duration: 1.5, repeat: Infinity, delay: 0.9 }}
-        />
-        
-        {/* Brain icon */}
-        <svg 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          className="w-5 h-5 text-white drop-shadow-lg"
-          stroke="currentColor" 
-          strokeWidth="1.5"
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        >
-          <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
-          <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
-          <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
-          <path d="M17.599 6.5a3 3 0 0 0 .399-1.375" />
-          <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
-          <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
-          <path d="M19.938 10.5a4 4 0 0 1 .585.396" />
-          <path d="M6 18a4 4 0 0 1-1.967-.516" />
-          <path d="M19.967 17.484A4 4 0 0 1 18 18" />
-        </svg>
-      </div>
-    </div>
-  );
+// Coach personality
+const COACH = {
+  name: "Coach Alex",
+};
+
+interface CoachMessage {
+  greeting: string;
+  observation: string;
+  suggestion: string;
+  tone: "energetic" | "gentle" | "motivational" | "caring";
 }
 
+function getTimeOfDay(): "morning" | "afternoon" | "evening" | "night" {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "morning";
+  if (hour >= 12 && hour < 17) return "afternoon";
+  if (hour >= 17 && hour < 21) return "evening";
+  return "night";
+}
+
+function generateCoachMessage(
+  checkin: AIAdviceResponse["todayCheckin"] | null,
+  hasCheckedIn: boolean
+): CoachMessage {
+  const timeOfDay = getTimeOfDay();
+  
+  // Time-based greetings
+  const greetings = {
+    morning: ["Good morning!", "Rise and shine!", "Morning!"],
+    afternoon: ["Hey there!", "Good afternoon!", "Hi!"],
+    evening: ["Good evening!", "Hope you had a great day!"],
+    night: ["Still up?", "Evening!"],
+  };
+  const greeting = greetings[timeOfDay][Math.floor(Math.random() * greetings[timeOfDay].length)];
+
+  if (!hasCheckedIn || !checkin) {
+    return {
+      greeting,
+      observation: timeOfDay === "morning" 
+        ? "Haven't checked in yet today?" 
+        : "How are you feeling today?",
+      suggestion: "A quick wellness check-in helps me give you personalized advice!",
+      tone: "gentle",
+    };
+  }
+
+  const { sleep_rating, energy, soreness, readiness } = checkin;
+  let observation = "";
+  let suggestion = "";
+  let tone: CoachMessage["tone"] = "motivational";
+
+  // Low energy + poor sleep
+  if (energy <= 2 && sleep_rating <= 2) {
+    observation = "I notice you're feeling tired and didn't sleep well.";
+    suggestion = timeOfDay === "morning" 
+      ? "Consider a light 15-20 minute walk instead of a hard workout. Recovery is training too!"
+      : "Get to bed early tonight - your body is asking for rest.";
+    tone = "caring";
+  }
+  // High soreness
+  else if (soreness >= 4) {
+    observation = "Your muscles are quite sore today.";
+    suggestion = "Focus on foam rolling and gentle stretching. Maybe a yoga session would help with recovery.";
+    tone = "gentle";
+  }
+  // Great readiness
+  else if (readiness >= 4 && energy >= 4) {
+    observation = "You're feeling strong and ready today!";
+    suggestion = "This is a great day to push a bit harder. Your body is primed for performance!";
+    tone = "energetic";
+  }
+  // Good sleep but moderate energy
+  else if (sleep_rating >= 4 && energy >= 3) {
+    observation = "Good rest last night!";
+    suggestion = "You've got a solid foundation today. Trust your training and enjoy the run!";
+    tone = "motivational";
+  }
+  // Moderate energy
+  else if (energy >= 3) {
+    observation = "You're in a good spot today.";
+    suggestion = "Listen to your body and enjoy whatever movement feels right.";
+    tone = "motivational";
+  }
+  // Low readiness
+  else if (readiness <= 2) {
+    observation = "Your body needs some extra care today.";
+    suggestion = "Light movement, hydration, and good nutrition will help you bounce back.";
+    tone = "caring";
+  }
+  // Default
+  else {
+    observation = "Every day is different, and that's okay.";
+    suggestion = "Do what feels right - even a short walk counts as progress.";
+    tone = "caring";
+  }
+
+  return { greeting, observation, suggestion, tone };
+}
+
+const TONE_STYLES = {
+  energetic: {
+    gradient: "from-[#FF4500] to-[#FFD700]",
+    iconBg: "bg-gradient-to-br from-[#FF4500] to-[#FF6B00]",
+    iconShadow: "shadow-[#FF4500]/30",
+    accentLine: "from-[#FF4500] via-[#FFD700] to-[#FF4500]",
+    glowColor: "from-[#FF4500]/15 to-[#FFD700]/10",
+  },
+  gentle: {
+    gradient: "from-[#AF52DE] to-[#00D4FF]",
+    iconBg: "bg-gradient-to-br from-[#AF52DE] to-[#00D4FF]",
+    iconShadow: "shadow-[#AF52DE]/30",
+    accentLine: "from-[#AF52DE] via-[#00D4FF] to-[#AF52DE]",
+    glowColor: "from-[#AF52DE]/15 to-[#00D4FF]/10",
+  },
+  motivational: {
+    gradient: "from-[#00D4FF] to-[#30D158]",
+    iconBg: "bg-gradient-to-br from-[#00D4FF] to-[#30D158]",
+    iconShadow: "shadow-[#00D4FF]/30",
+    accentLine: "from-[#00D4FF] via-[#30D158] to-[#00D4FF]",
+    glowColor: "from-[#00D4FF]/15 to-[#30D158]/10",
+  },
+  caring: {
+    gradient: "from-[#FF6B6B] to-[#AF52DE]",
+    iconBg: "bg-gradient-to-br from-[#FF6B6B] to-[#AF52DE]",
+    iconShadow: "shadow-[#FF6B6B]/30",
+    accentLine: "from-[#FF6B6B] via-[#AF52DE] to-[#FF6B6B]",
+    glowColor: "from-[#FF6B6B]/15 to-[#AF52DE]/10",
+  },
+};
+
 export function AICoachCard() {
-  // Fetch latest AI advice with auto-refresh every 30 seconds
   const { data, isLoading, mutate } = useSWR<AIAdviceResponse>(
     "/api/ai-advice",
     fetcher,
     { 
-      refreshInterval: 30000,
+      refreshInterval: 60000,
       revalidateOnFocus: true,
+      revalidateOnMount: true,
     }
   );
 
-  const advice = data?.advice;
-  const hasCheckedIn = data?.hasCheckedInToday;
+  const hasCheckedIn = data?.hasCheckedInToday ?? false;
+  const checkin = data?.todayCheckin ?? null;
+  const apiAdvice = data?.advice;
+
+  const coachMessage = useMemo(
+    () => generateCoachMessage(checkin, hasCheckedIn),
+    [checkin, hasCheckedIn]
+  );
+
+  const style = TONE_STYLES[coachMessage.tone];
 
   return (
-    <Card className="bg-[#141414] border-[#2A2A2A] p-5 relative overflow-hidden">
-      {/* Subtle gradient accent at top */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FF4500] via-[#00D4FF] to-[#AF52DE]" />
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
+      className="glass-card-premium relative overflow-hidden"
+    >
+      {/* Gradient accent line at top */}
+      <div className={`h-[2px] bg-gradient-to-r ${style.accentLine}`} />
       
       {/* Ambient glow */}
-      <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-[#FF4500]/10 to-[#00D4FF]/5 rounded-full blur-3xl" />
+      <div className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${style.glowColor} rounded-full blur-3xl`} />
       
-      <div className="relative z-10">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <PulsingBrain />
-            <div>
-              <p className="text-base font-bold text-white flex items-center gap-2">
-                AI Coach
-                <Sparkles className="w-4 h-4 text-[#00D4FF]" />
-              </p>
-              <p className="text-xs text-[#6E6E73]">
-                Your personalized guidance companion
-              </p>
+      <div className="relative z-10 p-5">
+        <div className="flex items-start gap-4">
+          {/* Coach Avatar */}
+          <div className="relative flex-shrink-0">
+            <motion.div
+              className={`absolute inset-0 rounded-xl bg-gradient-to-br ${style.gradient} opacity-30`}
+              animate={{ scale: [1, 1.15, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <div className={`relative w-12 h-12 rounded-xl ${style.iconBg} shadow-lg ${style.iconShadow} flex items-center justify-center`}>
+              <Brain className="w-6 h-6 text-white" />
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="w-8 h-8 text-[#6E6E73] hover:text-white hover:bg-[#2A2A2A]"
-            onClick={() => mutate()}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-          </Button>
-        </div>
 
-        {isLoading && !advice ? (
-          <div className="flex items-center gap-2 text-sm text-[#6E6E73]">
-            <RefreshCw className="w-4 h-4 animate-spin" />
-            <span>Analyzing your wellness data...</span>
-          </div>
-        ) : advice ? (
-          <div>
-            <p className="text-sm text-[#E5E5EA] leading-relaxed whitespace-pre-line">
-              {advice}
-            </p>
-            {data?.source === "sms" && (
-              <p className="text-[10px] text-[#6E6E73] mt-2">
-                Generated from your SMS check-in
-              </p>
+          {/* Message Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white">{COACH.name}</h3>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-white/40 font-medium flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" />
+                  AI Coach
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-7 h-7 text-white/30 hover:text-white hover:bg-white/5"
+                onClick={() => mutate()}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              </Button>
+            </div>
+            
+            {isLoading && !apiAdvice && !checkin ? (
+              <div className="flex items-center gap-2 text-sm text-white/50">
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Analyzing your wellness data...</span>
+              </div>
+            ) : apiAdvice ? (
+              // Show API-generated advice if available
+              <div className="space-y-2">
+                <p className={`text-base font-semibold bg-gradient-to-r ${style.gradient} bg-clip-text text-transparent`}>
+                  {coachMessage.greeting}
+                </p>
+                <p className="text-sm text-white/80 leading-relaxed whitespace-pre-line">
+                  {apiAdvice}
+                </p>
+              </div>
+            ) : (
+              // Show generated contextual message
+              <div className="space-y-2">
+                <p className={`text-base font-semibold bg-gradient-to-r ${style.gradient} bg-clip-text text-transparent`}>
+                  {coachMessage.greeting}
+                </p>
+                <p className="text-sm text-white/70 leading-relaxed">
+                  {coachMessage.observation}
+                </p>
+                <p className="text-sm text-white/90 leading-relaxed font-medium">
+                  {coachMessage.suggestion}
+                </p>
+              </div>
             )}
           </div>
-        ) : hasCheckedIn ? (
-          <p className="text-sm text-[#6E6E73]">
-            Generating your personalized advice...
-          </p>
-        ) : (
-          <p className="text-sm text-[#6E6E73]">
-            Complete your daily check-in to get personalized AI coaching advice based on your wellness data.
-          </p>
-        )}
+        </div>
 
-        <div className="mt-4 pt-3 border-t border-[#2A2A2A] flex items-center justify-between">
-          <p className="text-[10px] text-[#6E6E73]">
-            Text <span className="font-mono text-[#FF4500]">ai</span> to +1 844 503 0386 anytime
+        {/* Action Link */}
+        <Link href="/mind" className="block mt-4">
+          <motion.div
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="flex items-center justify-between p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:border-white/[0.08] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-lg ${style.iconBg} opacity-80 flex items-center justify-center`}>
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-sm text-white/70">Chat with {COACH.name}</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-white/30" />
+          </motion.div>
+        </Link>
+
+        {/* SMS tip */}
+        <div className="mt-3 pt-3 border-t border-white/[0.04]">
+          <p className="text-[10px] text-white/30">
+            Text <span className="font-mono text-[#FF4500]">ai</span> to +1 844 503 0386 anytime for instant coaching
           </p>
         </div>
       </div>
-    </Card>
+    </motion.div>
   );
 }
