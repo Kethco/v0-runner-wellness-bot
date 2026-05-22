@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { Sparkles, RefreshCw, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useSWR from "swr";
-import { motion } from "framer-motion";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -177,12 +176,7 @@ export function AICoachCard() {
   const style = TONE_STYLES[coachMessage.tone];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
-      className="glass-card-premium relative overflow-hidden"
-    >
+    <div className="glass-card-premium relative overflow-hidden min-h-[180px]">
       {/* Gradient accent line at top */}
       <div className={`h-[2px] bg-gradient-to-r ${style.accentLine}`} />
       
@@ -193,11 +187,7 @@ export function AICoachCard() {
         <div className="flex items-start gap-4">
           {/* Coach Avatar */}
           <div className="relative flex-shrink-0">
-            <motion.div
-              className={`absolute inset-0 rounded-xl bg-gradient-to-br ${style.gradient} opacity-30`}
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            />
+            <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${style.gradient} opacity-30`} />
             <div className={`relative w-12 h-12 rounded-xl ${style.iconBg} shadow-lg ${style.iconShadow} flex items-center justify-center`}>
               <Brain className="w-6 h-6 text-white" />
             </div>
@@ -265,6 +255,6 @@ export function AICoachCard() {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

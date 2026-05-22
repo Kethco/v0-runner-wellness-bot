@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Target, Trophy, Flame, Clock, Footprints, CheckCircle2, ChevronRight, Sparkles, Lock } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Target, Trophy, Flame, Clock, Footprints, CheckCircle2, Sparkles } from "lucide-react";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/auth-context";
 import { celebrateChallengeComplete } from "@/lib/celebrations";
@@ -167,11 +166,7 @@ export function WeeklyChallenges() {
   });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass-card-premium overflow-hidden"
-    >
+    <div className="glass-card-premium overflow-hidden min-h-[280px]">
       {/* Header */}
       <div className="p-4 border-b border-white/[0.04]">
         <div className="flex items-center justify-between">
@@ -192,36 +187,30 @@ export function WeeklyChallenges() {
         
         {/* Progress bar */}
         <div className="mt-3 h-1.5 bg-white/5 rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${(completedCount / challenges.length) * 100}%` }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="h-full bg-gradient-to-r from-[#FF4500] to-[#30D158] rounded-full"
+          <div
+            style={{ width: `${(completedCount / challenges.length) * 100}%` }}
+            className="h-full bg-gradient-to-r from-[#FF4500] to-[#30D158] rounded-full transition-all duration-500"
           />
         </div>
       </div>
 
       {/* Challenges list */}
       <div className="p-3 space-y-2">
-        <AnimatePresence>
-          {challenges.map((challenge, index) => {
-            const IconComponent = ICON_MAP[challenge.icon];
-            const difficultyStyle = DIFFICULTY_COLORS[challenge.difficulty];
-            const progress = Math.min((challenge.current / challenge.target) * 100, 100);
+        {challenges.map((challenge) => {
+          const IconComponent = ICON_MAP[challenge.icon];
+          const difficultyStyle = DIFFICULTY_COLORS[challenge.difficulty];
+          const progress = Math.min((challenge.current / challenge.target) * 100, 100);
 
-            return (
-              <motion.div
-                key={challenge.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => hapticLight()}
-                className={`relative p-3 rounded-xl border transition-all ${
-                  challenge.completed
-                    ? "bg-[#30D158]/5 border-[#30D158]/20"
-                    : "bg-white/[0.02] border-white/[0.04] hover:border-white/[0.08]"
-                }`}
-              >
+          return (
+            <div
+              key={challenge.id}
+              onClick={() => hapticLight()}
+              className={`relative p-3 rounded-xl border transition-all ${
+                challenge.completed
+                  ? "bg-[#30D158]/5 border-[#30D158]/20"
+                  : "bg-white/[0.02] border-white/[0.04] hover:border-white/[0.08]"
+              }`}
+            >
                 <div className="flex items-center gap-3">
                   {/* Icon */}
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
@@ -254,10 +243,9 @@ export function WeeklyChallenges() {
                     {!challenge.completed && (
                       <div className="mt-2 flex items-center gap-2">
                         <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${progress}%` }}
-                            className={`h-full rounded-full ${
+                          <div
+                            style={{ width: `${progress}%` }}
+                            className={`h-full rounded-full transition-all duration-500 ${
                               progress >= 100 
                                 ? "bg-[#30D158]" 
                                 : "bg-gradient-to-r from-[#FF4500] to-[#FF6B00]"
@@ -287,11 +275,10 @@ export function WeeklyChallenges() {
                     </span>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
-        </AnimatePresence>
       </div>
-    </motion.div>
+    </div>
   );
 }

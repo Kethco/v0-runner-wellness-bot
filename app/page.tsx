@@ -390,12 +390,7 @@ return (
 
         {/* Wellness Metrics */}
         {todayCheckin && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
-            className="glass-card-glow"
-          >
+          <div className="glass-card-glow">
             {/* Top accent */}
             <div className="h-[2px] bg-gradient-to-r from-transparent via-[#30D158] to-transparent" />
             
@@ -414,7 +409,7 @@ return (
                 <MetricOrb icon={Gauge} label="Ready" value={todayCheckin.readiness} color="#00D4FF" />
               </div>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Daily Motivational Quote */}
@@ -428,28 +423,18 @@ return (
 
         {/* Recent Runs */}
         {runs.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, type: "spring", stiffness: 100 }}
-          >
+          <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-white font-bold text-lg">Recent Runs</h3>
-              <Link href="/runs">
-                <motion.div whileHover={{ x: 4 }} className="flex items-center gap-1 text-[#FF4500] font-semibold text-sm">
-                  View all <ChevronRight className="w-4 h-4" />
-                </motion.div>
+              <Link href="/runs" className="flex items-center gap-1 text-[#FF4500] font-semibold text-sm hover:gap-2 transition-all">
+                View all <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
             
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
-              {runs.slice(0, 3).map((run: { id: string; miles: number; date: string; run_type: string; pace?: string }, i: number) => (
-                <motion.div
+              {runs.slice(0, 3).map((run: { id: string; miles: number; date: string; run_type: string; pace?: string }) => (
+                <div
                   key={run.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
-                  whileHover={{ scale: 1.02, y: -2 }}
                   className="flex-shrink-0 w-[140px] p-4 glass-subtle hover:border-white/10 transition-all"
                 >
                   <div 
@@ -462,10 +447,10 @@ return (
                   <p className="text-white/40 text-xs mt-0.5">
                     {new Date(run.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Achievement Badges */}

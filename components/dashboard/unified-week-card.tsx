@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { getLocalDateString, getUserTimezone } from "@/lib/utils";
 import { WeatherStrip } from "./weather-strip";
+import { CountingNumber } from "@/components/ui/animated-number";
 
 const fetcher = (url: string) => fetch(url, { credentials: "include" }).then(res => res.json());
 
@@ -265,11 +266,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card-glow relative overflow-hidden"
-      >
+      <div className="glass-card-glow relative overflow-hidden min-h-[400px]">
         {/* Top gradient line */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF4500] to-transparent" />
         
@@ -301,13 +298,9 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
               </p>
               {/* Mileage display */}
               <div className="flex items-baseline gap-1.5">
-                <motion.span 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-5xl font-black text-white tracking-tight leading-none"
-                >
-                  {displayCompletedMiles.toFixed(1)}
-                </motion.span>
+                <span className="text-5xl font-black text-white tracking-tight leading-none">
+                  <CountingNumber value={completedMiles} decimals={1} />
+                </span>
                 <span className="text-white/30 text-lg font-medium">
                   / {displayPlannedMiles.toFixed(0)} mi
                 </span>
@@ -365,14 +358,9 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 </defs>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <motion.span 
-                  className="text-2xl font-black text-white leading-none"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
+                <span className="text-2xl font-black text-white leading-none">
                   <CountUp target={Math.round(progressPercent)} />%
-                </motion.span>
+                </span>
                 <span className="text-[10px] text-white/40 font-medium mt-0.5">complete</span>
               </div>
             </div>
@@ -380,11 +368,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
           {/* Wellness Alert (if low readiness) */}
           {hasPlan && planData?.todayAdjustment && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-4 p-3.5 rounded-xl bg-amber-500/8 border border-amber-500/20 backdrop-blur-sm"
-            >
+            <div className="mb-4 p-3.5 rounded-xl bg-amber-500/8 border border-amber-500/20 backdrop-blur-sm">
               <div className="flex items-start gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
                   <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
@@ -399,17 +383,12 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Today's Workout Card */}
           {hasPlan && planData?.todayWorkout && planData.todayWorkout.workout_type !== "rest" && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="mb-5 p-4 rounded-xl bg-[#1C1C1E] border border-white/10 hover:border-white/15 transition-all"
-            >
+            <div className="mb-5 p-4 rounded-xl bg-[#1C1C1E] border border-white/10 hover:border-white/15 transition-all">
               <div className="flex items-center gap-4">
                 <div 
                   className="w-12 h-12 rounded-xl flex items-center justify-center"
@@ -431,7 +410,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-white truncate">
-                    Today �� {planData.todayWorkout.title}
+                    Today · {planData.todayWorkout.title}
                   </p>
                   <p className="text-xs text-white/50 truncate mt-0.5">
                     {planData.todayWorkout.target_miles ? `${planData.todayWorkout.target_miles} mi` : ""} 
@@ -440,7 +419,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                 </div>
                 <ChevronRight className="w-5 h-5 text-white/30" />
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Weekly Workout Strip */}
@@ -586,7 +565,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
           {/* Weather Forecast Strip */}
           <WeatherStrip />
         </div>
-      </motion.div>
+      </div>
 
       {/* Adjustment Dialog */}
       <Dialog open={showAdjustmentDialog} onOpenChange={setShowAdjustmentDialog}>

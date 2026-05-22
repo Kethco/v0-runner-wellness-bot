@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Quote, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useMemo } from "react";
 
 // Curated running and wellness motivational quotes
@@ -52,12 +51,7 @@ export function DailyQuote() {
   const quote = useMemo(() => getDailyQuote(), []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="glass-subtle p-4 relative overflow-hidden"
-    >
+    <div className="glass-subtle p-4 relative overflow-hidden min-h-[100px]">
       {/* Subtle accent */}
       <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF6B00] to-transparent opacity-60" />
       
@@ -73,13 +67,13 @@ export function DailyQuote() {
             Daily Inspiration
           </p>
           <p className="text-sm text-white/80 leading-relaxed italic">
-            "{quote.text}"
+            &ldquo;{quote.text}&rdquo;
           </p>
           <p className="text-xs text-white/40 mt-2">
             — {quote.author}
           </p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
