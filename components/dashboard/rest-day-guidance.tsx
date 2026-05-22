@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { 
   Moon, Droplets, StretchVertical, Heart, Footprints,
-  Wind, Coffee, BedDouble, Sparkles, ChevronRight
+  Wind, Coffee, BedDouble, Sparkles, ChevronRight, Check
 } from "lucide-react";
 import useSWR from "swr";
 import { useState, useEffect } from "react";

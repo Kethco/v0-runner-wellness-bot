@@ -986,3 +986,56 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.2), transparent);
 }
+
+/* ========================================
+   MOBILE PERFORMANCE OPTIMIZATIONS
+   Disable expensive effects on mobile for smooth scrolling
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Disable backdrop blur on mobile - major performance killer */
+  .glass-card-premium,
+  .glass-card-glow,
+  .glass-subtle,
+  .glass-header,
+  .bottom-nav-premium {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  /* Use solid backgrounds instead */
+  .glass-card-premium {
+    background: rgba(18, 18, 20, 0.98) !important;
+  }
+  
+  .glass-card-glow {
+    background: rgba(20, 20, 22, 0.98) !important;
+  }
+  
+  .glass-subtle {
+    background: rgba(28, 28, 30, 0.98) !important;
+  }
+  
+  .glass-header {
+    background: rgba(0, 0, 0, 0.98) !important;
+  }
+  
+  .bottom-nav-premium {
+    background: rgba(10, 10, 12, 0.98) !important;
+  }
+  
+  /* Hide mesh blobs on mobile - they cause scroll jank */
+  .mesh-blob {
+    display: none !important;
+  }
+  
+  /* Reduce blur on mesh gradient background */
+  .mesh-gradient-bg::before {
+    opacity: 0.5;
+  }
+  
+  /* Disable noise texture on mobile */
+  .noise-texture::after {
+    display: none !important;
+  }
+}
