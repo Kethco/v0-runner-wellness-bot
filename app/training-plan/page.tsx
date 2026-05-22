@@ -346,7 +346,6 @@ export default function TrainingPlanPage() {
 
             {/* Workouts List */}
             <div className="space-y-3">
-              <AnimatePresence mode="wait">
                 {processedWeekData?.workouts.map((workout, i) => {
                   const workoutStyle = WORKOUT_ICONS[workout.workout_type] || WORKOUT_ICONS.easy;
                   const IconComponent = workoutStyle.icon;
