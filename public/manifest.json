@@ -4,8 +4,8 @@
   "description": "Track your wellness, optimize your training",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#e85c4a",
+  "background_color": "#FF6B00",
+  "theme_color": "#FF6B00",
   "icons": [
     {
       "src": "/icons/icon-192x192.jpg",
