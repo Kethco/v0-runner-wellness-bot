@@ -137,16 +137,10 @@ export function WeeklyChallenges() {
   const { user } = useAuth();
   const [celebratedIds, setCelebratedIds] = useState<Set<string>>(new Set());
   
-  const swrOptions = { 
-    revalidateOnMount: true, 
-    revalidateOnFocus: true,
-    dedupingInterval: 2000 
-  };
-  
-  const { data: runsData } = useSWR(user ? "/api/runs?days=7" : null, fetcher, swrOptions);
-  const { data: checkinsData } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher, swrOptions);
-  const { data: streakData } = useSWR(user ? "/api/streak" : null, fetcher, swrOptions);
-  const { data: profileData } = useSWR(user ? "/api/profile" : null, fetcher, swrOptions);
+  const { data: runsData } = useSWR(user ? "/api/runs?days=7" : null);
+  const { data: checkinsData } = useSWR(user ? "/api/checkins?limit=7" : null);
+  const { data: streakData } = useSWR(user ? "/api/streak" : null);
+  const { data: profileData } = useSWR(user ? "/api/profile" : null);
 
   const runs = runsData?.runs || [];
   const checkins = checkinsData?.checkins || [];

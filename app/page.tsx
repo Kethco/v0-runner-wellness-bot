@@ -61,30 +61,18 @@ export default function Dashboard() {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   });
   
-  // Data fetching hooks - revalidate on mount and focus to ensure fresh data
-  const swrOptions = { 
-    revalidateOnMount: true, 
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    dedupingInterval: 2000
-  };
-  const { data: checkinsData, isLoading: isCheckinsLoading, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null, fetcher, swrOptions);
-  const { data: runsData, isLoading: isRunsLoading, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null, fetcher, swrOptions);
-  const { data: profileData, isLoading: isProfileLoading, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null, fetcher, swrOptions);
-  const { data: streakData, isLoading: isStreakLoading, mutate: mutateStreak } = useSWR(
-    user ? "/api/streak" : null, 
-    fetcher,
-    swrOptions
-  );
+  // Data fetching hooks - global SWR config handles caching and revalidation
+  const { data: checkinsData, isLoading: isCheckinsLoading, mutate: mutateCheckins } = useSWR(user ? "/api/checkins?limit=7" : null);
+  const { data: runsData, isLoading: isRunsLoading, mutate: mutateRuns } = useSWR(user ? "/api/runs?days=7" : null);
+  const { data: profileData, isLoading: isProfileLoading, mutate: mutateProfile } = useSWR(user ? "/api/profile" : null);
+  const { data: streakData, isLoading: isStreakLoading, mutate: mutateStreak } = useSWR(user ? "/api/streak" : null);
   
   // Get user's timezone for API calls
   const userTimezone = typeof window !== "undefined" 
     ? Intl.DateTimeFormat().resolvedOptions().timeZone 
     : "UTC";
   const { data: weekPlanData, isLoading: isWeekPlanLoading, mutate: mutateWeekPlan } = useSWR(
-    user ? `/api/training-plan/week?tz=${encodeURIComponent(userTimezone)}` : null, 
-    fetcher, 
-    swrOptions
+    user ? `/api/training-plan/week?tz=${encodeURIComponent(userTimezone)}` : null
   );
   
   // Get today's workout from the week plan

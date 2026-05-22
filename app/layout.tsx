@@ -9,6 +9,7 @@ import { TrialBanner } from '@/components/dashboard/trial-banner'
 import { Toaster } from '@/components/ui/toaster'
 import { TrialExpiredBlocker } from '@/components/trial-expired-blocker'
 import { SplashProvider } from '@/components/splash-screen'
+import { SWRProvider } from '@/components/swr-provider'
 import './globals.css'
 
 const inter = Inter({ 
@@ -58,16 +59,18 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <SplashProvider>
-              <UpdateBanner />
-              <TrialBanner />
-              {children}
-              <InstallPrompt />
-              <Toaster />
-              <TrialExpiredBlocker />
-            </SplashProvider>
-          </AuthProvider>
+          <SWRProvider>
+            <AuthProvider>
+              <SplashProvider>
+                <UpdateBanner />
+                <TrialBanner />
+                {children}
+                <InstallPrompt />
+                <Toaster />
+                <TrialExpiredBlocker />
+              </SplashProvider>
+            </AuthProvider>
+          </SWRProvider>
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

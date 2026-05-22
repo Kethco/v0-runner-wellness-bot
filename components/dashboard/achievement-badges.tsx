@@ -143,15 +143,9 @@ function computeBadges(stats: {
 
 export function AchievementBadges() {
   const { user } = useAuth();
-  const swrOptions = { 
-    revalidateOnMount: true,
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
-    dedupingInterval: 2000
-  };
-  const { data: runsData, isLoading: isRunsLoading } = useSWR(user ? "/api/runs?days=365" : null, fetcher, swrOptions);
-  const { data: streakData, isLoading: isStreakLoading } = useSWR(user ? "/api/streak" : null, fetcher, swrOptions);
-  const { data: checkinsData, isLoading: isCheckinsLoading } = useSWR(user ? "/api/checkins?limit=365" : null, fetcher, swrOptions);
+  const { data: runsData, isLoading: isRunsLoading } = useSWR(user ? "/api/runs?days=365" : null);
+  const { data: streakData, isLoading: isStreakLoading } = useSWR(user ? "/api/streak" : null);
+  const { data: checkinsData, isLoading: isCheckinsLoading } = useSWR(user ? "/api/checkins?limit=365" : null);
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const { shareToSocial } = useShareCard();
