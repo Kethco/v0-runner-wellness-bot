@@ -455,7 +455,6 @@ export default function TrainingPlanPage() {
                 );
               })}
             </div>
-          </div>
           </CardContent>
         </Card>
 
