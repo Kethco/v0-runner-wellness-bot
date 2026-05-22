@@ -346,116 +346,116 @@ export default function TrainingPlanPage() {
 
             {/* Workouts List */}
             <div className="space-y-3">
-                {processedWeekData?.workouts.map((workout, i) => {
-                  const workoutStyle = WORKOUT_ICONS[workout.workout_type] || WORKOUT_ICONS.easy;
-                  const IconComponent = workoutStyle.icon;
-                  const isToday = workout.scheduled_date === today;
-                  const isPast = workout.scheduled_date < today;
-                  const isCompleted = workout.status === "completed";
-                  const isBlocked = workout.status === "blocked" || workout.status === "skipped";
-                  const isRest = workout.workout_type === "rest";
+              {processedWeekData?.workouts.map((workout, i) => {
+                const workoutStyle = WORKOUT_ICONS[workout.workout_type] || WORKOUT_ICONS.easy;
+                const IconComponent = workoutStyle.icon;
+                const isToday = workout.scheduled_date === today;
+                const isPast = workout.scheduled_date < today;
+                const isCompleted = workout.status === "completed";
+                const isBlocked = workout.status === "blocked" || workout.status === "skipped";
+                const isRest = workout.workout_type === "rest";
 
-                  return (
-                    <div
-                      key={workout.id}
-                      className={`p-4 rounded-xl border transition-all ${
-                        isBlocked
-                          ? "bg-red-500/10 border-red-500/30 opacity-60"
-                          : isToday
-                          ? "bg-[#FF4500]/10 border-[#FF4500]/30 ring-1 ring-[#FF4500]"
-                          : isCompleted
-                          ? "bg-[#30D158]/10 border-[#30D158]/30"
-                          : "bg-card border-border"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Icon */}
-                        <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                            isBlocked ? "bg-red-500/20" : isCompleted ? "bg-[#30D158]" : workoutStyle.bg
-                          }`}
-                        >
-                          {isBlocked ? (
-                            <X className="w-5 h-5 text-red-500" />
-                          ) : isCompleted ? (
-                            <CheckCircle2 className="w-5 h-5 text-white" />
-                          ) : (
-                            <IconComponent className="w-5 h-5" style={{ color: workoutStyle.color }} />
+                return (
+                  <div
+                    key={workout.id}
+                    className={`p-4 rounded-xl border transition-all ${
+                      isBlocked
+                        ? "bg-red-500/10 border-red-500/30 opacity-60"
+                        : isToday
+                        ? "bg-[#FF4500]/10 border-[#FF4500]/30 ring-1 ring-[#FF4500]"
+                        : isCompleted
+                        ? "bg-[#30D158]/10 border-[#30D158]/30"
+                        : "bg-card border-border"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Icon */}
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          isBlocked ? "bg-red-500/20" : isCompleted ? "bg-[#30D158]" : workoutStyle.bg
+                        }`}
+                      >
+                        {isBlocked ? (
+                          <X className="w-5 h-5 text-red-500" />
+                        ) : isCompleted ? (
+                          <CheckCircle2 className="w-5 h-5 text-white" />
+                        ) : (
+                          <IconComponent className="w-5 h-5" style={{ color: workoutStyle.color }} />
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm font-semibold ${
+                            isBlocked ? "text-red-500" : isCompleted ? "text-[#30D158]" : "text-foreground"
+                          }`}>
+                            {workout.day_of_week}
+                          </p>
+                          {isBlocked && (
+                            <Badge className="text-[10px] h-4 bg-red-500/20 text-red-500">Blocked</Badge>
+                          )}
+                          {workout.adjustment_note && !isBlocked && (
+                            <Badge className="text-[10px] h-4 bg-blue-500/20 text-blue-400">Adjusted</Badge>
+                          )}
+                          {isToday && !isBlocked && (
+                            <Badge className="text-[10px] h-4 bg-[#FF4500] text-white">Today</Badge>
+                          )}
+                          {isCompleted && (
+                            <Badge className="text-[10px] h-4 bg-[#30D158]/20 text-[#30D158]">Done</Badge>
                           )}
                         </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className={`text-sm font-semibold ${
-                              isBlocked ? "text-red-500" : isCompleted ? "text-[#30D158]" : "text-foreground"
-                            }`}>
-                              {workout.day_of_week}
-                            </p>
-                            {isBlocked && (
-                              <Badge className="text-[10px] h-4 bg-red-500/20 text-red-500">Blocked</Badge>
+                        
+                        <p className={`text-base font-medium mt-0.5 ${
+                          isBlocked ? "text-red-500/70 line-through" : isRest ? "text-muted-foreground" : "text-foreground"
+                        }`}>
+                          {workout.title}
+                        </p>
+                        
+                        {workout.adjustment_note && !isBlocked && (
+                          <p className="text-xs text-blue-400/70 mt-1">
+                            {workout.adjustment_note}
+                          </p>
+                        )}
+                        
+                        {isBlocked && workout.blocked_reason && (
+                          <p className="text-xs text-red-500/70 mt-1">
+                            {workout.blocked_reason}
+                          </p>
+                        )}
+                        
+                        {!isRest && !isBlocked && (
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                            {workout.target_miles && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {workout.target_miles} mi
+                              </span>
                             )}
-                            {workout.adjustment_note && !isBlocked && (
-                              <Badge className="text-[10px] h-4 bg-blue-500/20 text-blue-400">Adjusted</Badge>
+                            {workout.target_duration_minutes && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {workout.target_duration_minutes} min
+                              </span>
                             )}
-                            {isToday && !isBlocked && (
-                              <Badge className="text-[10px] h-4 bg-[#FF4500] text-white">Today</Badge>
-                            )}
-                            {isCompleted && (
-                              <Badge className="text-[10px] h-4 bg-[#30D158]/20 text-[#30D158]">Done</Badge>
+                            {workout.target_pace_zone && (
+                              <span className="capitalize">{workout.target_pace_zone} pace</span>
                             )}
                           </div>
-                          
-                          <p className={`text-base font-medium mt-0.5 ${
-                            isBlocked ? "text-red-500/70 line-through" : isRest ? "text-muted-foreground" : "text-foreground"
-                          }`}>
-                            {workout.title}
+                        )}
+                        
+                        {workout.description && !isRest && (
+                          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                            {workout.description}
                           </p>
-                          
-                          {workout.adjustment_note && !isBlocked && (
-                            <p className="text-xs text-blue-400/70 mt-1">
-                              {workout.adjustment_note}
-                            </p>
-                          )}
-                          
-                          {isBlocked && workout.blocked_reason && (
-                            <p className="text-xs text-red-500/70 mt-1">
-                              {workout.blocked_reason}
-                            </p>
-                          )}
-                          
-                          {!isRest && !isBlocked && (
-                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                              {workout.target_miles && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  {workout.target_miles} mi
-                                </span>
-                              )}
-                              {workout.target_duration_minutes && (
-                                <span className="flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {workout.target_duration_minutes} min
-                                </span>
-                              )}
-                              {workout.target_pace_zone && (
-                                <span className="capitalize">{workout.target_pace_zone} pace</span>
-                              )}
-                            </div>
-                          )}
-                          
-                          {workout.description && !isRest && (
-                            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                              {workout.description}
-                            </p>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
             </div>
+          </div>
           </CardContent>
         </Card>
 
