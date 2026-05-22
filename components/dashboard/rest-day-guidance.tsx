@@ -122,7 +122,7 @@ function getPersonalizedActivities(data: {
   return [...new Map(activities.map(a => [a.id, a])).values()].slice(0, 4);
 }
 
-export function RestDayGuidance() {
+export function RestDayGuidance({ isRestDay = false }: { isRestDay?: boolean }) {
   const { data: insightsData, isLoading } = useSWR("/api/wellness-insights");
   const { data: checkinData } = useSWR("/api/checkins?limit=1");
   const todayStr = new Date().toISOString().split("T")[0];
@@ -142,6 +142,11 @@ export function RestDayGuidance() {
   
   const todayCheckin = checkinData?.checkins?.[0];
   const hasCheckedInToday = todayCheckin?.date === todayStr;
+  
+  // Don't render if not a rest day
+  if (!isRestDay) {
+    return null;
+  }
   
   if (isLoading) {
     return (

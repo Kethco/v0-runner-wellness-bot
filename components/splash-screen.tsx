@@ -179,13 +179,13 @@ export function SplashProvider({ children }: { children: ReactNode }) {
         // User returned to the app
         const timeAway = Date.now() - hiddenTime;
         
-        // Show splash if away for more than 30 seconds
-        if (timeAway > 30000) {
+        // Show splash if away for more than 5 seconds
+        if (timeAway > 5000) {
           setIsLoading(true);
           // Auto-hide after brief display
           setTimeout(() => {
             setIsLoading(false);
-          }, 800);
+          }, 1000);
         }
         wasHidden = false;
       }

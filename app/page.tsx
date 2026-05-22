@@ -174,20 +174,8 @@ export default function Dashboard() {
   
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   
-  // Check if critical data is still loading
-  const isCriticalDataLoading = isProfileLoading || isWeekPlanLoading || isCheckinsLoading;
-  
   // Show loading state while checking auth or redirecting
   if (authLoading || !user) {
-    return (
-      <div className="min-h-screen bg-background">
-        <DashboardSkeleton />
-      </div>
-    );
-  }
-  
-  // Show skeleton while critical data loads to prevent layout shifts
-  if (isCriticalDataLoading) {
     return (
       <div className="min-h-screen bg-background">
         <DashboardSkeleton />
@@ -300,7 +288,7 @@ return (
         />
       </header>
 
-      <main className="dashboard-content relative z-10 px-5 py-6 space-y-6 mt-[175px]">
+      <main className="relative z-10 px-5 py-6 space-y-6 mt-[175px]">
         {/* Unified This Week Card */}
         <UnifiedWeekCard 
           weeklyMiles={weeklyMiles} 
@@ -376,37 +364,35 @@ return (
         {/* Recovery Card (shows when readiness is low) */}
         <RecoveryCard />
         
-        {/* Rest Day Guidance (shows on rest days) */}
-        {isRestDay && (
-          <RestDayGuidance />
-        )}
+        {/* Rest Day Guidance - component handles its own visibility */}
+        <RestDayGuidance isRestDay={isRestDay} />
 
         {/* Weekly Wellness Summary (shows Sun/Mon) */}
         <WeeklySummary />
 
-        {/* Wellness Metrics */}
-        {todayCheckin && (
-          <div className="glass-card-glow">
-            {/* Top accent */}
-            <div className="h-[2px] bg-gradient-to-r from-transparent via-[#30D158] to-transparent" />
+        {/* Wellness Metrics - Always render card structure for stable layout */}
+        <div className="glass-card-glow" style={{ display: todayCheckin ? 'block' : 'none' }}>
+          {/* Top accent */}
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-[#30D158] to-transparent" />
+          
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-white font-bold text-lg">Today&apos;s Wellness</h3>
+              <span className="text-xs font-bold text-[#30D158] px-3 py-1.5 bg-[#30D158]/15 rounded-full border border-[#30D158]/30">
+                Logged
+              </span>
+            </div>
             
-            <div className="p-5">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-white font-bold text-lg">Today&apos;s Wellness</h3>
-                <span className="text-xs font-bold text-[#30D158] px-3 py-1.5 bg-[#30D158]/15 rounded-full border border-[#30D158]/30">
-                  Logged
-                </span>
-              </div>
-              
+            {todayCheckin && (
               <div className="grid grid-cols-4 gap-3">
                 <MetricOrb icon={Moon} label="Sleep" value={todayCheckin.sleep_rating} color="#AF52DE" />
                 <MetricOrb icon={Battery} label="Energy" value={todayCheckin.energy} color="#30D158" />
                 <MetricOrb icon={Heart} label="Sore" value={todayCheckin.soreness} color="#FF6B6B" />
                 <MetricOrb icon={Gauge} label="Ready" value={todayCheckin.readiness} color="#00D4FF" />
               </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Daily Motivational Quote */}
         <DailyQuote />
@@ -417,37 +403,35 @@ return (
         {/* Weekly Challenges */}
         <WeeklyChallenges />
 
-        {/* Recent Runs */}
-        {runs.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-bold text-lg">Recent Runs</h3>
-              <Link href="/runs" className="flex items-center gap-1 text-[#FF4500] font-semibold text-sm hover:gap-2 transition-all">
-                View all <ChevronRight className="w-4 h-4" />
-              </Link>
-            </div>
-            
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
-              {runs.slice(0, 3).map((run: { id: string; miles: number; date: string; run_type: string; pace?: string }) => (
-                <div
-                  key={run.id}
-                  className="flex-shrink-0 w-[140px] p-4 glass-subtle hover:border-white/10 transition-all"
-                >
-                  <div 
-                    className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 ${getRunStyles(run.run_type).bg}`}
-                    style={{ boxShadow: `0 0 16px ${getRunStyles(run.run_type).glow || 'rgba(255,69,0,0.3)'}` }}
-                  >
-                    <Zap className={`w-5 h-5 ${getRunStyles(run.run_type).text}`} />
-                  </div>
-                  <p className="text-white font-bold text-lg">{run.miles} mi</p>
-                  <p className="text-white/40 text-xs mt-0.5">
-                    {new Date(run.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </p>
-                </div>
-              ))}
-            </div>
+        {/* Recent Runs - Use CSS display to prevent layout shift */}
+        <div style={{ display: runs.length > 0 ? 'block' : 'none' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-bold text-lg">Recent Runs</h3>
+            <Link href="/runs" className="flex items-center gap-1 text-[#FF4500] font-semibold text-sm hover:gap-2 transition-all">
+              View all <ChevronRight className="w-4 h-4" />
+            </Link>
           </div>
-        )}
+          
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 scrollbar-hide">
+            {runs.slice(0, 3).map((run: { id: string; miles: number; date: string; run_type: string; pace?: string }) => (
+              <div
+                key={run.id}
+                className="flex-shrink-0 w-[140px] p-4 glass-subtle hover:border-white/10 transition-all"
+              >
+                <div 
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 ${getRunStyles(run.run_type).bg}`}
+                  style={{ boxShadow: `0 0 16px ${getRunStyles(run.run_type).glow || 'rgba(255,69,0,0.3)'}` }}
+                >
+                  <Zap className={`w-5 h-5 ${getRunStyles(run.run_type).text}`} />
+                </div>
+                <p className="text-white font-bold text-lg">{run.miles} mi</p>
+                <p className="text-white/40 text-xs mt-0.5">
+                  {new Date(run.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Achievement Badges */}
         <AchievementBadges />
