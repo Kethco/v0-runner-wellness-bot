@@ -1,11 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* CRITICAL: Prevent white flash on app load - must be first */
-html, body {
-  background-color: #FF6B00 !important;
-}
-
 @custom-variant dark (&:is(.dark *));
 
 :root {
