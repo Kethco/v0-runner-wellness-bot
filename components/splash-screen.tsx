@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SplashContextType {
@@ -71,7 +71,7 @@ function SplashScreen() {
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.5, ease: "easeInOut" }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       className="fixed inset-0 z-[9999] bg-[#FF4500] flex items-center justify-center"
     >
       {/* Subtle gradient overlay for depth */}
@@ -81,7 +81,7 @@ function SplashScreen() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10"
       >
         <RunnerWellnessLogo className="w-72 h-auto" />
@@ -91,12 +91,12 @@ function SplashScreen() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.3 }}
+        transition={{ delay: 0.3, duration: 0.3 }}
         className="absolute bottom-16 left-1/2 -translate-x-1/2"
       >
         <motion.div
           animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
           className="flex gap-1.5"
         >
           <div className="w-1.5 h-1.5 bg-white/50 rounded-full" />
@@ -108,42 +108,94 @@ function SplashScreen() {
   );
 }
 
+// Session key to track if we've shown splash this session
+const SPLASH_SESSION_KEY = "runner_wellness_splash_shown";
+
 export function SplashProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
+  const hideSplash = useCallback(() => {
+    setIsLoading(false);
+    // Mark that we've shown splash this session
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(SPLASH_SESSION_KEY, "true");
+    }
+  }, []);
+
   useEffect(() => {
     setMounted(true);
     
-    // Minimum splash duration for branding + time for initial data load
-    const minDuration = 1500; // 1.5 seconds minimum
+    // Check if splash was already shown this session (browser tab)
+    const alreadyShownThisSession = sessionStorage.getItem(SPLASH_SESSION_KEY) === "true";
+    
+    if (alreadyShownThisSession) {
+      // Skip splash if already shown this session
+      setIsLoading(false);
+      return;
+    }
+
+    // Minimum splash duration for branding
+    const minDuration = 1200;
     const startTime = Date.now();
 
-    const hideSplash = () => {
+    const completeSplash = () => {
       const elapsed = Date.now() - startTime;
       const remaining = Math.max(0, minDuration - elapsed);
       
       setTimeout(() => {
-        setIsLoading(false);
+        hideSplash();
       }, remaining);
     };
 
-    // Hide splash when the window fully loads or after timeout
+    // Hide splash when the window fully loads
     if (document.readyState === "complete") {
-      hideSplash();
+      completeSplash();
     } else {
-      window.addEventListener("load", hideSplash);
-      // Fallback timeout in case load event doesn't fire
-      const timeout = setTimeout(hideSplash, 3000);
+      const handleLoad = () => completeSplash();
+      window.addEventListener("load", handleLoad);
+      // Fallback timeout
+      const timeout = setTimeout(completeSplash, 2500);
       
       return () => {
-        window.removeEventListener("load", hideSplash);
+        window.removeEventListener("load", handleLoad);
         clearTimeout(timeout);
       };
     }
-  }, []);
+  }, [hideSplash]);
 
-  const hideSplash = () => setIsLoading(false);
+  // Show splash when returning to the app after being in background
+  useEffect(() => {
+    if (!mounted) return;
+
+    let wasHidden = false;
+    let hiddenTime = 0;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        wasHidden = true;
+        hiddenTime = Date.now();
+      } else if (wasHidden) {
+        // User returned to the app
+        const timeAway = Date.now() - hiddenTime;
+        
+        // Show splash if away for more than 30 seconds
+        if (timeAway > 30000) {
+          setIsLoading(true);
+          // Auto-hide after brief display
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 800);
+        }
+        wasHidden = false;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [mounted]);
 
   // Don't render splash on server
   if (!mounted) {

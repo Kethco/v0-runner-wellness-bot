@@ -300,7 +300,7 @@ return (
         />
       </header>
 
-      <main className="relative z-10 px-5 py-6 space-y-6 mt-[175px]">
+      <main className="dashboard-content relative z-10 px-5 py-6 space-y-6 mt-[175px]">
         {/* Unified This Week Card */}
         <UnifiedWeekCard 
           weeklyMiles={weeklyMiles} 

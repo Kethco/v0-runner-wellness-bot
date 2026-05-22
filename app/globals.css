@@ -141,11 +141,22 @@
   * {
     @apply border-border outline-ring/50;
   }
+  
+  html {
+    scroll-behavior: auto;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+    overscroll-behavior-y: none;
+  }
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Prevent layout shifts during scroll */
+    overflow-x: hidden;
+    min-height: 100dvh;
   }
   
   /* Improved text readability */
@@ -155,6 +166,22 @@
   
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight;
+  }
+  
+  /* Dashboard content container - prevents layout shift */
+  .dashboard-content {
+    contain: layout style;
+  }
+  
+  /* Card containers - prevent reflow */
+  .glass-card-premium,
+  .glass-card-glow,
+  .glass-subtle,
+  .premium-card,
+  .glass-card {
+    contain: layout style paint;
+    transform: translateZ(0);
+    will-change: auto;
   }
 }
 

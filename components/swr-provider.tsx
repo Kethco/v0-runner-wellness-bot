@@ -16,21 +16,21 @@ export function SWRProvider({ children }: { children: ReactNode }) {
         fetcher,
         // Keep previous data while revalidating - prevents blank flashes
         keepPreviousData: true,
-        // Revalidate on mount, focus, and reconnect
+        // Only revalidate on mount, not on focus (this causes jank)
         revalidateOnMount: true,
-        revalidateOnFocus: true,
-        revalidateOnReconnect: true,
-        // Dedupe requests within 5 seconds
-        dedupingInterval: 5000,
-        // Cache data for 10 minutes before considering it stale
-        focusThrottleInterval: 60000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        // Dedupe requests within 30 seconds - longer to prevent frequent refetches
+        dedupingInterval: 30000,
+        // Don't automatically revalidate stale data
+        revalidateIfStale: false,
         // Error retry configuration
-        errorRetryCount: 3,
-        errorRetryInterval: 1000,
-        // Show stale data while revalidating
-        revalidateIfStale: true,
+        errorRetryCount: 2,
+        errorRetryInterval: 3000,
         // Suspense mode off to handle loading states manually
         suspense: false,
+        // Don't poll for updates
+        refreshInterval: 0,
       }}
     >
       {children}
