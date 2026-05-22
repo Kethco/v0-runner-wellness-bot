@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Trophy, Timer, Flame, Target, Zap, Star, X, Medal, Crown } from "lucide-react";
+import { Trophy, Timer, Flame, Target, Zap, Star, X, Medal, Crown, Lock } from "lucide-react";
 import useSWR from "swr";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -270,34 +270,37 @@ export function PersonalRecordsCard() {
                     className={`flex-shrink-0 flex flex-col items-center p-3 rounded-xl transition-all ${
                       hasPR 
                         ? 'bg-[#1C1C1E] border border-white/10 hover:border-white/20' 
-                        : 'bg-white/[0.02] border border-dashed border-white/10 hover:border-white/20'
+                        : 'bg-gradient-to-b from-white/[0.06] to-white/[0.02] border border-white/15 hover:border-white/30'
                     }`}
                     style={{ minWidth: '72px' }}
                   >
                     <div 
-                      className={`w-10 h-10 rounded-lg flex items-center justify-center mb-2 ${
-                        hasPR ? '' : 'opacity-40'
-                      }`}
+                      className="w-10 h-10 rounded-lg flex items-center justify-center mb-2 relative"
                       style={{ 
                         background: hasPR 
                           ? `linear-gradient(135deg, ${pr.color}25 0%, ${pr.color}10 100%)`
-                          : 'rgba(255,255,255,0.05)',
-                        border: hasPR ? `1px solid ${pr.color}40` : '1px dashed rgba(255,255,255,0.1)'
+                          : `linear-gradient(135deg, ${pr.color}15 0%, ${pr.color}05 100%)`,
+                        border: hasPR ? `1px solid ${pr.color}40` : `1px solid ${pr.color}30`
                       }}
                     >
                       <Icon 
                         className="w-5 h-5" 
-                        style={{ color: hasPR ? pr.color : 'rgba(255,255,255,0.3)' }} 
+                        style={{ color: hasPR ? pr.color : `${pr.color}90` }} 
                       />
+                      {!hasPR && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white/10 border border-white/20 flex items-center justify-center">
+                          <Lock className="w-2.5 h-2.5 text-white/60" />
+                        </div>
+                      )}
                     </div>
-                    <span className={`text-[10px] font-bold ${hasPR ? 'text-white' : 'text-white/40'}`}>
+                    <span className={`text-[10px] font-bold ${hasPR ? 'text-white' : 'text-white/70'}`}>
                       {pr.shortName}
                     </span>
                     <span 
                       className="text-[11px] font-mono font-bold mt-0.5"
-                      style={{ color: hasPR ? pr.color : 'rgba(255,255,255,0.25)' }}
+                      style={{ color: hasPR ? pr.color : `${pr.color}70` }}
                     >
-                      {hasPR ? pr.time : '—:——'}
+                      {hasPR ? pr.time : 'UNLOCK'}
                     </span>
                   </button>
                 );
