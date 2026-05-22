@@ -15,38 +15,94 @@ const SplashContext = createContext<SplashContextType>({
 
 export const useSplash = () => useContext(SplashContext);
 
+// Premium wordmark logo component
+function RunnerWellnessLogo({ className = "" }: { className?: string }) {
+  return (
+    <svg 
+      viewBox="0 0 280 60" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-label="Runner Wellness"
+    >
+      {/* RUNNER - Premium refined typography */}
+      <text
+        x="140"
+        y="28"
+        textAnchor="middle"
+        fill="white"
+        fontFamily="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        fontWeight="600"
+        fontSize="26"
+        letterSpacing="0.18em"
+      >
+        RUNNER
+      </text>
+      
+      {/* WELLNESS - Slightly lighter weight for elegant hierarchy */}
+      <text
+        x="140"
+        y="52"
+        textAnchor="middle"
+        fill="white"
+        fontFamily="system-ui, -apple-system, 'Segoe UI', sans-serif"
+        fontWeight="300"
+        fontSize="18"
+        letterSpacing="0.35em"
+      >
+        WELLNESS
+      </text>
+      
+      {/* Subtle accent line between words */}
+      <rect
+        x="95"
+        y="33"
+        width="90"
+        height="1"
+        fill="white"
+        opacity="0.4"
+      />
+    </svg>
+  );
+}
+
 function SplashScreen() {
   return (
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
       className="fixed inset-0 z-[9999] bg-[#FF4500] flex items-center justify-center"
     >
+      {/* Subtle gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10" />
+      
       {/* Logo container */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex flex-col items-center"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10"
       >
-        {/* App Logo/Name */}
-        <h1 className="text-white font-black text-4xl tracking-tight uppercase">
-          Runner
-        </h1>
-        <h2 className="text-white font-black text-4xl tracking-tight uppercase -mt-1">
-          Wellness
-        </h2>
+        <RunnerWellnessLogo className="w-72 h-auto" />
       </motion.div>
       
-      {/* Subtle pulse animation at bottom */}
+      {/* Subtle loading indicator at bottom */}
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ opacity: [0.3, 0.6, 0.3] }}
-        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-20 left-1/2 -translate-x-1/2"
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.3 }}
+        className="absolute bottom-16 left-1/2 -translate-x-1/2"
       >
-        <div className="w-10 h-1 bg-white/40 rounded-full" />
+        <motion.div
+          animate={{ opacity: [0.3, 0.7, 0.3] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          className="flex gap-1.5"
+        >
+          <div className="w-1.5 h-1.5 bg-white/50 rounded-full" />
+          <div className="w-1.5 h-1.5 bg-white/50 rounded-full" />
+          <div className="w-1.5 h-1.5 bg-white/50 rounded-full" />
+        </motion.div>
       </motion.div>
     </motion.div>
   );
