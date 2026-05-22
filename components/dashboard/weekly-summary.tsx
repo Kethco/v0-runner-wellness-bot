@@ -71,11 +71,7 @@ export function WeeklySummary() {
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass-card-premium overflow-hidden"
-    >
+    <div className="glass-card-premium overflow-hidden">
       {/* Top accent */}
       <div className="h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent" />
       
@@ -98,12 +94,9 @@ export function WeeklySummary() {
       {/* Stats grid */}
       <div className="p-5">
         <div className="grid grid-cols-2 gap-3">
-          {stats.map((stat, i) => (
-            <motion.div
+          {stats.map((stat) => (
+            <div
               key={stat.label}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
               className="flex items-center gap-3 p-4 rounded-xl bg-[#1C1C1E] border border-white/5 hover:border-white/10 transition-all"
             >
               <div 
@@ -128,7 +121,7 @@ export function WeeklySummary() {
                   <TrendArrow current={stat.current} previous={stat.prev} />
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
@@ -152,6 +145,6 @@ export function WeeklySummary() {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

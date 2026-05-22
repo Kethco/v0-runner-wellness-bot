@@ -181,11 +181,7 @@ export function RecoveryCard() {
   });
   
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass-card-glow overflow-hidden"
-    >
+    <div className="glass-card-glow overflow-hidden">
       {/* Top accent */}
       <div className="h-[2px] bg-gradient-to-r from-transparent via-[#AF52DE] to-transparent" />
       
@@ -209,12 +205,9 @@ export function RecoveryCard() {
         </div>
         
         <div className="space-y-3">
-          {tips.map((tip, i) => (
-            <motion.div
+          {tips.map((tip) => (
+            <div
               key={tip.title}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
               className="flex items-center gap-4 p-4 rounded-xl bg-[#1C1C1E] border border-white/5 hover:border-white/10 transition-all"
             >
               <div 
@@ -248,7 +241,7 @@ export function RecoveryCard() {
                   Priority
                 </span>
               )}
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
@@ -264,6 +257,6 @@ export function RecoveryCard() {
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

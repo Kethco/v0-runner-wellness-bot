@@ -77,11 +77,7 @@ export function ReadinessScore() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass-card-glow overflow-hidden"
-    >
+    <div className="glass-card-glow overflow-hidden">
       {/* Top accent gradient */}
       <div 
         className="h-[2px]" 
@@ -122,18 +118,10 @@ export function ReadinessScore() {
           {/* Score Ring */}
           <div className="relative w-28 h-28 flex-shrink-0">
             {/* Glow effect */}
-            <motion.div 
-              className="absolute inset-[-6px] rounded-full"
+            <div 
+              className="absolute inset-[-6px] rounded-full opacity-50"
               style={{ 
                 background: `radial-gradient(circle, ${scoreColor}30 0%, transparent 70%)`,
-              }}
-              animate={{ 
-                opacity: [0.4, 0.7, 0.4],
-              }}
-              transition={{ 
-                duration: 3, 
-                repeat: Infinity, 
-                ease: "easeInOut" 
               }}
             />
             
@@ -146,28 +134,22 @@ export function ReadinessScore() {
                 fill="none" 
               />
               {/* Progress arc */}
-              <motion.circle
+              <circle
                 cx="50" cy="50" r="42"
                 stroke={scoreColor}
                 strokeWidth="8"
                 fill="none"
                 strokeLinecap="round"
-                initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
-                animate={{ strokeDashoffset }}
-                transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
-                style={{ filter: `drop-shadow(0 0 8px ${scoreColor})` }}
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+                style={{ filter: `drop-shadow(0 0 8px ${scoreColor})`, transition: 'stroke-dashoffset 0.5s ease-out' }}
               />
             </svg>
             
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <motion.span 
-                className="text-3xl font-black text-white leading-none"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
+              <span className="text-3xl font-black text-white leading-none">
                 {score}
-              </motion.span>
+              </span>
               <span 
                 className="text-[10px] font-bold uppercase tracking-wider mt-1"
                 style={{ color: scoreColor }}
@@ -193,11 +175,9 @@ export function ReadinessScore() {
                   </div>
                 </div>
                 <div className="h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
-                  <motion.div 
+                  <div 
                     className="h-full rounded-full bg-[#AF52DE]"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(sleepRating / 4) * 100}%` }}
-                    transition={{ duration: 0.8, delay: 0.3 }}
+                    style={{ width: `${(sleepRating / 4) * 100}%`, transition: 'width 0.3s ease-out' }}
                   />
                 </div>
               </div>
@@ -217,11 +197,9 @@ export function ReadinessScore() {
                   </div>
                 </div>
                 <div className="h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
-                  <motion.div 
+                  <div 
                     className="h-full rounded-full bg-[#FFD60A]"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(energyLevel / 5) * 100}%` }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
+                    style={{ width: `${(energyLevel / 5) * 100}%`, transition: 'width 0.3s ease-out' }}
                   />
                 </div>
               </div>
@@ -240,14 +218,13 @@ export function ReadinessScore() {
                   </span>
                 </div>
                 <div className="h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
-                  <motion.div 
+                  <div 
                     className="h-full rounded-full"
                     style={{ 
-                      backgroundColor: sorenessLevel <= 2 ? "#30D158" : sorenessLevel === 3 ? "#FFD60A" : "#FF453A" 
+                      backgroundColor: sorenessLevel <= 2 ? "#30D158" : sorenessLevel === 3 ? "#FFD60A" : "#FF453A",
+                      width: `${(sorenessLevel / 4) * 100}%`,
+                      transition: 'width 0.3s ease-out'
                     }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(sorenessLevel / 4) * 100}%` }}
-                    transition={{ duration: 0.8, delay: 0.5 }}
                   />
                 </div>
               </div>
@@ -306,6 +283,6 @@ export function ReadinessScore() {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

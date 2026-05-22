@@ -179,11 +179,7 @@ export function RestDayGuidance({ isRestDay = false }: { isRestDay?: boolean }) 
   const totalCount = activities.length;
   
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass-card-glow overflow-hidden"
-    >
+    <div className="glass-card-glow overflow-hidden">
       {/* Top accent */}
       <div className="h-[2px] bg-gradient-to-r from-transparent via-[#30D158] to-transparent" />
       
@@ -233,14 +229,11 @@ export function RestDayGuidance({ isRestDay = false }: { isRestDay?: boolean }) 
         
         {/* Activities */}
         <div className="space-y-3">
-          {activities.map((activity, i) => {
+          {activities.map((activity) => {
             const isCompleted = completedActivities.has(activity.id);
             return (
-              <motion.button
+              <button
                 key={activity.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
                 onClick={() => toggleActivity(activity.id)}
                 className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
                   isCompleted 
@@ -258,15 +251,9 @@ export function RestDayGuidance({ isRestDay = false }: { isRestDay?: boolean }) 
                   }}
                 >
                   {isCompleted ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="w-5 h-5 rounded-full bg-[#30D158] flex items-center justify-center"
-                    >
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </motion.div>
+                    <div className="scale-100 transition-transform">
+                      <Check className="w-5 h-5 text-[#30D158]" style={{ filter: 'drop-shadow(0 0 4px rgba(48,209,88,0.6))' }} />
+                    </div>
                   ) : (
                     <activity.icon 
                       className="w-5 h-5" 
@@ -293,24 +280,20 @@ export function RestDayGuidance({ isRestDay = false }: { isRestDay?: boolean }) 
                 <ChevronRight className={`w-4 h-4 transition-transform ${
                   isCompleted ? "text-[#30D158] rotate-90" : "text-white/30"
                 }`} />
-              </motion.button>
+              </button>
             );
           })}
         </div>
         
         {/* Completion message */}
         {completedCount === totalCount && totalCount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-5 p-4 bg-[#30D158]/20 border border-[#30D158]/30 rounded-xl text-center"
-          >
+          <div className="mt-5 p-4 bg-[#30D158]/20 border border-[#30D158]/30 rounded-xl text-center">
             <p className="text-[#30D158] font-bold text-sm">
               Amazing! You&apos;ve completed all recovery activities today.
             </p>
-          </motion.div>
+          </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
