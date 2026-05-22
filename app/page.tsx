@@ -80,6 +80,10 @@ export default function Dashboard() {
   const { data: aiAdviceData, isLoading: isAiAdviceLoading } = useSWR(user ? "/api/ai-advice" : null);
   const { data: weatherData, isLoading: isWeatherLoading } = useSWR(user ? "/api/weather" : null);
   
+  // Achievement badges needs longer date ranges - fetch here so data is cached for child components
+  const { isLoading: isRunsYearLoading } = useSWR(user ? "/api/runs?days=365" : null);
+  const { isLoading: isCheckinsYearLoading } = useSWR(user ? "/api/checkins?limit=365" : null);
+  
   // Get today's workout from the week plan
   const todayWorkout = weekPlanData?.todayWorkout;
   
@@ -179,11 +183,22 @@ export default function Dashboard() {
   
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   
-  // Only wait for the most critical data - profile, checkins, runs
-  // Other data can load after initial render
-  const isDataReady = !isProfileLoading && !isCheckinsLoading && !isRunsLoading;
+  // Wait for ALL data before rendering to prevent empty gaps during scroll
+  // This ensures the entire page renders as one solid block
+  const isDataReady = (
+    !isProfileLoading && 
+    !isCheckinsLoading && 
+    !isRunsLoading && 
+    !isWeekPlanLoading && 
+    !isStreakLoading && 
+    !isInsightsLoading && 
+    !isAiAdviceLoading && 
+    !isWeatherLoading &&
+    !isRunsYearLoading &&
+    !isCheckinsYearLoading
+  );
   
-  // Show loading state while checking auth or waiting for critical data
+  // Show loading state while checking auth or waiting for ALL data
   if (authLoading || !user || !isDataReady) {
     return (
       <div className="min-h-screen bg-background">
