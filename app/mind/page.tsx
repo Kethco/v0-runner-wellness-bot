@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Sparkles, Sun, Moon as MoonIcon, Heart, Wind, 
   ArrowLeft, Check, ChevronRight, Flame, 
-  CloudRain, Smile, Frown, Meh, Zap, Coffee, Flag, Sunrise
+  CloudRain, Smile, Frown, Meh, Zap, Coffee, Flag, Sunrise,
+  Mountain, Shield
 } from "lucide-react";
 import Link from "next/link";
 import { BottomNav } from "@/components/bottom-nav";
@@ -18,6 +19,9 @@ import { ProgressEcho } from "@/components/progress-echo";
 import { EmotionalPatterns } from "@/components/emotional-patterns";
 import { RaceDayPrep } from "@/components/race-day-prep";
 import { ComebackJourney } from "@/components/comeback-journey";
+import { MentalToughness } from "@/components/mental-toughness";
+import { SleepStories } from "@/components/sleep-stories";
+import { MantrasBuilder } from "@/components/mantras-builder";
 import useSWR from "swr";
 import { MeshBackground } from "@/components/mesh-background";
 
@@ -34,6 +38,9 @@ export default function MindPage() {
   const [showCompassionReset, setShowCompassionReset] = useState(false);
   const [showRaceDayPrep, setShowRaceDayPrep] = useState(false);
   const [showComebackJourney, setShowComebackJourney] = useState(false);
+  const [showMentalToughness, setShowMentalToughness] = useState(false);
+  const [showSleepStories, setShowSleepStories] = useState(false);
+  const [showMantrasBuilder, setShowMantrasBuilder] = useState(false);
   const [compassionTrigger, setCompassionTrigger] = useState<"bad_run" | "low_energy" | "high_soreness" | "manual">("manual");
   const { data: reflectionsData, mutate } = useSWR("/api/reflections", fetcher);
   const { data: insightsData } = useSWR("/api/wellness-insights", fetcher);
@@ -100,6 +107,9 @@ return (
               setShowCompassionReset={setShowCompassionReset}
               setShowRaceDayPrep={setShowRaceDayPrep}
               setShowComebackJourney={setShowComebackJourney}
+              setShowMentalToughness={setShowMentalToughness}
+              setShowSleepStories={setShowSleepStories}
+              setShowMantrasBuilder={setShowMantrasBuilder}
               compassionTrigger={compassionTrigger}
               journalData={journalData}
             />
@@ -156,6 +166,27 @@ return (
         )}
       </AnimatePresence>
 
+      {/* Mental Toughness Modal */}
+      <AnimatePresence>
+        {showMentalToughness && (
+          <MentalToughness onClose={() => setShowMentalToughness(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Sleep Stories Modal */}
+      <AnimatePresence>
+        {showSleepStories && (
+          <SleepStories onClose={() => setShowSleepStories(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Mantras Builder Modal */}
+      <AnimatePresence>
+        {showMantrasBuilder && (
+          <MantrasBuilder onClose={() => setShowMantrasBuilder(false)} />
+        )}
+      </AnimatePresence>
+
       {/* Bottom Navigation */}
       <BottomNav />
     </div>
@@ -202,6 +233,9 @@ function HomeView({
   setShowCompassionReset,
   setShowRaceDayPrep,
   setShowComebackJourney,
+  setShowMentalToughness,
+  setShowSleepStories,
+  setShowMantrasBuilder,
   compassionTrigger,
   journalData 
 }: { 
@@ -209,6 +243,9 @@ function HomeView({
   setShowCompassionReset: (show: boolean) => void;
   setShowRaceDayPrep: (show: boolean) => void;
   setShowComebackJourney: (show: boolean) => void;
+  setShowMentalToughness: (show: boolean) => void;
+  setShowSleepStories: (show: boolean) => void;
+  setShowMantrasBuilder: (show: boolean) => void;
   compassionTrigger: "bad_run" | "low_energy" | "high_soreness" | "manual";
   journalData: { total: number; avgMoodImprovement: number } | null;
 }) {
@@ -544,6 +581,57 @@ function HomeView({
           <div className="flex-1 text-left">
             <p className="text-white font-bold text-lg">Comeback Journey</p>
             <p className="text-[#8E8E93] text-sm">Support when taking time off</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
+        </motion.button>
+
+        {/* Mental Toughness Training */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => setShowMentalToughness(true)}
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#FF9500]/15 to-[#FF9500]/5 border border-[#FF9500]/25 hover:border-[#FF9500]/40 transition-colors"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#FF9500]/15 flex items-center justify-center">
+            <Mountain className="w-7 h-7 text-[#FF9500]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Mental Toughness</p>
+            <p className="text-[#8E8E93] text-sm">Build resilience for hard runs</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
+        </motion.button>
+
+        {/* Sleep Stories */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => setShowSleepStories(true)}
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#AF52DE]/15 to-[#AF52DE]/5 border border-[#AF52DE]/25 hover:border-[#AF52DE]/40 transition-colors"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#AF52DE]/15 flex items-center justify-center">
+            <MoonIcon className="w-7 h-7 text-[#AF52DE]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Sleep Stories</p>
+            <p className="text-[#8E8E93] text-sm">Drift off to peaceful sleep</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
+        </motion.button>
+
+        {/* Running Mantras */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => setShowMantrasBuilder(true)}
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#FFD60A]/15 to-[#FFD60A]/5 border border-[#FFD60A]/25 hover:border-[#FFD60A]/40 transition-colors"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#FFD60A]/15 flex items-center justify-center">
+            <Shield className="w-7 h-7 text-[#FFD60A]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Running Mantras</p>
+            <p className="text-[#8E8E93] text-sm">Build your power phrases</p>
           </div>
           <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
         </motion.button>
