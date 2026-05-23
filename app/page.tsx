@@ -183,23 +183,35 @@ export default function Dashboard() {
   
   const userName = profile?.first_name || user?.user_metadata?.first_name || "Runner";
   
-  // Wait for ALL data before rendering to prevent empty gaps during scroll
-  // This ensures the entire page renders as one solid block
-  const isDataReady = (
-    !isProfileLoading && 
-    !isCheckinsLoading && 
-    !isRunsLoading && 
-    !isWeekPlanLoading && 
-    !isStreakLoading && 
-    !isInsightsLoading && 
-    !isAiAdviceLoading && 
-    !isWeatherLoading &&
-    !isRunsYearLoading &&
-    !isCheckinsYearLoading
+  // Check if we have cached data (prevents skeleton flash when returning to app)
+  const hasData = !!(
+    checkinsData !== undefined &&
+    runsData !== undefined &&
+    profileData !== undefined &&
+    streakData !== undefined &&
+    weekPlanData !== undefined &&
+    wellnessInsights !== undefined &&
+    aiAdviceData !== undefined &&
+    weatherData !== undefined
   );
   
-  // Show loading state while checking auth or waiting for ALL data
-  if (authLoading || !user || !isDataReady) {
+  // Only show skeleton on initial load when no data exists yet
+  // Don't show skeleton when returning to app (data is cached)
+  const isInitialLoading = !hasData && (
+    isProfileLoading || 
+    isCheckinsLoading || 
+    isRunsLoading || 
+    isWeekPlanLoading || 
+    isStreakLoading || 
+    isInsightsLoading || 
+    isAiAdviceLoading || 
+    isWeatherLoading ||
+    isRunsYearLoading ||
+    isCheckinsYearLoading
+  );
+  
+  // Show loading state while checking auth or on initial load only
+  if (authLoading || !user || isInitialLoading) {
     return (
       <div className="min-h-screen bg-background">
         <DashboardSkeleton />

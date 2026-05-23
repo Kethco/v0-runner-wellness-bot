@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Set initial background to match splash screen - prevents white flash on iOS */
+html {
+  background-color: #FF6B00;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
