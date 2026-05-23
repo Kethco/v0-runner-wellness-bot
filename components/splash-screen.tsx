@@ -68,15 +68,26 @@ function RunnerWellnessLogo({ className = "" }: { className?: string }) {
 function SplashScreen() {
   return (
     <motion.div
-      initial={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      initial={{ opacity: 1, y: 0 }}
+      exit={{ 
+        opacity: 0, 
+        y: "-100%",
+        transition: { 
+          duration: 0.35, 
+          ease: [0.4, 0, 0.2, 1] // Custom ease for native-like feel
+        }
+      }}
       className="fixed inset-0 z-[9999] flex items-center justify-center"
       style={{ backgroundColor: "#FF4500" }}
     >
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
+        exit={{ 
+          opacity: 0, 
+          y: -20,
+          transition: { duration: 0.2, ease: "easeIn" }
+        }}
         transition={{ duration: 0.5 }}
       >
         <RunnerWellnessLogo className="w-72 h-auto" />
