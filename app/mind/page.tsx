@@ -6,7 +6,7 @@ import {
   Sparkles, Sun, Moon as MoonIcon, Heart, Wind, 
   ArrowLeft, Check, ChevronRight, Flame, 
   CloudRain, Smile, Frown, Meh, Zap, Coffee, Flag, Sunrise,
-  Mountain, Shield
+  Mountain, Shield, Dumbbell
 } from "lucide-react";
 import Link from "next/link";
 import { BottomNav } from "@/components/bottom-nav";
@@ -22,6 +22,7 @@ import { ComebackJourney } from "@/components/comeback-journey";
 import { MentalToughness } from "@/components/mental-toughness";
 import { SleepStories } from "@/components/sleep-stories";
 import { MantrasBuilder } from "@/components/mantras-builder";
+import { MobilityHub } from "@/components/mobility-hub";
 import useSWR from "swr";
 import { MeshBackground } from "@/components/mesh-background";
 
@@ -41,6 +42,7 @@ export default function MindPage() {
   const [showMentalToughness, setShowMentalToughness] = useState(false);
   const [showSleepStories, setShowSleepStories] = useState(false);
   const [showMantrasBuilder, setShowMantrasBuilder] = useState(false);
+  const [showMobilityHub, setShowMobilityHub] = useState(false);
   const [compassionTrigger, setCompassionTrigger] = useState<"bad_run" | "low_energy" | "high_soreness" | "manual">("manual");
   const { data: reflectionsData, mutate } = useSWR("/api/reflections", fetcher);
   const { data: insightsData } = useSWR("/api/wellness-insights", fetcher);
@@ -110,6 +112,7 @@ return (
               setShowMentalToughness={setShowMentalToughness}
               setShowSleepStories={setShowSleepStories}
               setShowMantrasBuilder={setShowMantrasBuilder}
+              setShowMobilityHub={setShowMobilityHub}
               compassionTrigger={compassionTrigger}
               journalData={journalData}
             />
@@ -187,6 +190,13 @@ return (
         )}
       </AnimatePresence>
 
+      {/* Mobility Hub Modal */}
+      <AnimatePresence>
+        {showMobilityHub && (
+          <MobilityHub onClose={() => setShowMobilityHub(false)} />
+        )}
+      </AnimatePresence>
+
       {/* Bottom Navigation */}
       <BottomNav />
     </div>
@@ -236,6 +246,7 @@ function HomeView({
   setShowMentalToughness,
   setShowSleepStories,
   setShowMantrasBuilder,
+  setShowMobilityHub,
   compassionTrigger,
   journalData 
 }: { 
@@ -246,6 +257,7 @@ function HomeView({
   setShowMentalToughness: (show: boolean) => void;
   setShowSleepStories: (show: boolean) => void;
   setShowMantrasBuilder: (show: boolean) => void;
+  setShowMobilityHub: (show: boolean) => void;
   compassionTrigger: "bad_run" | "low_energy" | "high_soreness" | "manual";
   journalData: { total: number; avgMoodImprovement: number } | null;
 }) {
@@ -632,6 +644,23 @@ function HomeView({
           <div className="flex-1 text-left">
             <p className="text-white font-bold text-lg">Running Mantras</p>
             <p className="text-[#8E8E93] text-sm">Build your power phrases</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
+        </motion.button>
+
+        {/* Mobility Hub */}
+        <motion.button
+          whileHover={{ scale: 1.01, x: 4 }}
+          whileTap={{ scale: 0.99 }}
+          onClick={() => setShowMobilityHub(true)}
+          className="w-full flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-r from-[#30D158]/15 to-[#30D158]/5 border border-[#30D158]/25 hover:border-[#30D158]/40 transition-colors"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-[#30D158]/15 flex items-center justify-center">
+            <Dumbbell className="w-7 h-7 text-[#30D158]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-white font-bold text-lg">Mobility Hub</p>
+            <p className="text-[#8E8E93] text-sm">Stretches, strength & recovery</p>
           </div>
           <ChevronRight className="w-5 h-5 text-[#6E6E73]" />
         </motion.button>
