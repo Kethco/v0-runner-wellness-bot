@@ -125,31 +125,94 @@ export function SleepStories({ onClose }: SleepStoriesProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentParagraph, setCurrentParagraph] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const story = SLEEP_STORIES.find(s => s.id === selectedStory);
 
-  // Auto-advance paragraphs when playing
+  // Check for speech synthesis support
   useEffect(() => {
-    if (isPlaying && story) {
-      timerRef.current = setInterval(() => {
-        setCurrentParagraph(prev => {
-          if (prev < story.paragraphs.length - 1) {
-            return prev + 1;
-          } else {
-            setIsPlaying(false);
-            return prev;
-          }
-        });
-      }, 15000); // 15 seconds per paragraph
+    if (typeof window !== 'undefined' && !('speechSynthesis' in window)) {
+      setSpeechSupported(false);
     }
+  }, []);
 
+  // Text-to-speech narration
+  const speak = (text: string) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || isMuted) return;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.85; // Slower for sleep stories
+    utterance.pitch = 0.95; // Slightly lower pitch for calming effect
+    utterance.volume = isMuted ? 0 : 1;
+    
+    // Try to get a calming voice
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => 
+      v.name.includes('Samantha') || 
+      v.name.includes('Karen') || 
+      v.name.includes('Daniel') ||
+      v.name.includes('Google UK English Female') ||
+      v.lang.startsWith('en')
+    );
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    
+    utterance.onend = () => {
+      // Move to next paragraph when speech ends
+      if (story && currentParagraph < story.paragraphs.length - 1) {
+        setTimeout(() => {
+          setCurrentParagraph(prev => prev + 1);
+        }, 2000); // 2 second pause between paragraphs
+      } else {
+        setIsPlaying(false);
+      }
+    };
+    
+    utteranceRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Speak current paragraph when it changes or when playing starts
+  useEffect(() => {
+    if (isPlaying && story && !isMuted) {
+      speak(story.paragraphs[currentParagraph]);
+    }
+    
     return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [currentParagraph, isPlaying, story, isMuted]);
+
+  // Handle mute changes
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (isMuted) {
+        window.speechSynthesis.cancel();
+      } else if (isPlaying && story) {
+        speak(story.paragraphs[currentParagraph]);
+      }
+    }
+  }, [isMuted]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
-  }, [isPlaying, story]);
+  }, []);
 
   const handleStartStory = (storyId: string) => {
     setSelectedStory(storyId);
@@ -158,7 +221,21 @@ export function SleepStories({ onClose }: SleepStoriesProps) {
   };
 
   const togglePlayPause = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (isPlaying) {
+        window.speechSynthesis.cancel();
+      }
+    }
     setIsPlaying(!isPlaying);
+  };
+
+  const handleClose = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSelectedStory(null);
+    setCurrentParagraph(0);
+    setIsPlaying(false);
   };
 
   return (
@@ -311,11 +388,7 @@ export function SleepStories({ onClose }: SleepStoriesProps) {
                   </button>
 
                   <button
-                    onClick={() => {
-                      setSelectedStory(null);
-                      setCurrentParagraph(0);
-                      setIsPlaying(false);
-                    }}
+                    onClick={handleClose}
                     className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center"
                   >
                     <X className="w-5 h-5 text-white" />
@@ -325,6 +398,12 @@ export function SleepStories({ onClose }: SleepStoriesProps) {
                 <p className="text-center text-[#8E8E93] text-sm mt-4">
                   {currentParagraph + 1} of {story.paragraphs.length}
                 </p>
+
+                {!speechSupported && (
+                  <p className="text-center text-[#FF9500] text-xs mt-2">
+                    Audio narration not supported on this browser
+                  </p>
+                )}
               </div>
             </motion.div>
           )}
