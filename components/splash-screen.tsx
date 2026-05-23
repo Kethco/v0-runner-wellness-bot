@@ -100,10 +100,10 @@ export function SplashProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMounted(true);
     
-    // Simple timeout - hide splash after 2 seconds
+    // Simple timeout - hide splash after 1.8 seconds
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 1800);
       
     return () => {
       clearTimeout(timer);
