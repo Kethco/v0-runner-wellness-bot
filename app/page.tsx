@@ -271,9 +271,9 @@ return (
                 style={{ boxShadow: '0 0 16px rgba(255,69,0,0.4)' }}
               >
                 <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                  {user?.user_metadata?.avatar_url ? (
+                  {(profileData?.profile?.avatar_url || user?.user_metadata?.avatar_url) ? (
                     <img 
-                      src={user.user_metadata.avatar_url} 
+                      src={profileData?.profile?.avatar_url || user?.user_metadata?.avatar_url} 
                       alt={userName}
                       className="w-full h-full object-cover"
                     />

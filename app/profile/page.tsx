@@ -53,6 +53,7 @@ import {
   Download,
   MapPin,
   Sparkles,
+  Camera,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
@@ -88,6 +89,54 @@ export default function ProfilePage() {
   });
   const [privacyMode, setPrivacyMode] = useState<"solo" | "coach">("solo");
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Initialize avatar URL from profile data
+  useEffect(() => {
+    if (profileData?.profile?.avatar_url) {
+      setAvatarUrl(profileData.profile.avatar_url);
+    } else if (user?.user_metadata?.avatar_url) {
+      setAvatarUrl(user.user_metadata.avatar_url);
+    }
+  }, [profileData, user]);
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Invalid file", description: "Please select an image file", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Image must be less than 5MB", variant: "destructive" });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/avatar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+      setAvatarUrl(data.url);
+      toast({ title: "Avatar updated", description: "Your profile picture has been updated" });
+    } catch {
+      toast({ title: "Upload failed", description: "Could not upload image. Please try again.", variant: "destructive" });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   // Initialize edited profile when data loads
   useEffect(() => {
@@ -169,14 +218,29 @@ return (
           {/* Profile Header Card - Always Visible */}
           <div className="section-card p-6">
               <div className="flex items-center gap-5">
-                {/* Styled Avatar with Initials Badge */}
-                <div className="relative">
+                {/* Styled Avatar with Upload */}
+                <div className="relative group">
                   <Avatar className="w-20 h-20 avatar-ring-glow">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarImage src={avatarUrl || user?.user_metadata?.avatar_url} />
                     <AvatarFallback className="bg-gradient-to-br from-[#FF6B00] to-[#FF4500] text-white text-xl font-bold">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
+                  {/* Upload overlay */}
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                      disabled={isUploadingAvatar}
+                    />
+                    {isUploadingAvatar ? (
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    ) : (
+                      <Camera className="w-6 h-6 text-white" />
+                    )}
+                  </label>
                   {/* Status indicator */}
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#30D158] rounded-full border-2 border-black flex items-center justify-center shadow-lg">
                     <CheckCircle className="w-3.5 h-3.5 text-white" />
@@ -186,7 +250,8 @@ return (
                 <div className="flex-1">
                   <h2 className="text-xl font-bold text-white">{displayName}</h2>
                   <p className="text-sm text-[#8E8E93]">{user?.email}</p>
-                  <div className="flex flex-wrap gap-2 mt-3">
+                  <p className="text-xs text-[#636366] mt-1">Hover avatar to change photo</p>
+                  <div className="flex flex-wrap gap-2 mt-2">
                     <span className="premium-badge px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
                       <Activity className="w-3 h-3" />
                       Runner
