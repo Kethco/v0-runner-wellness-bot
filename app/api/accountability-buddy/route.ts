@@ -10,18 +10,10 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get active buddy connection
+  // Get active buddy connection (simple query without joins)
   const { data: connection } = await supabase
     .from("accountability_buddies")
-    .select(`
-      *,
-      buddy:profiles!accountability_buddies_buddy_id_fkey(
-        id, first_name, last_name, avatar_url, email
-      ),
-      inviter:profiles!accountability_buddies_user_id_fkey(
-        id, first_name, last_name, avatar_url, email
-      )
-    `)
+    .select("*")
     .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
     .eq("status", "active")
     .single();
@@ -30,15 +22,26 @@ export async function GET() {
     // Check for pending invites sent TO this user
     const { data: pendingInvite } = await supabase
       .from("accountability_buddies")
-      .select("*, inviter:profiles!accountability_buddies_user_id_fkey(first_name, last_name, email)")
+      .select("*")
       .eq("buddy_id", user.id)
       .eq("status", "pending")
       .single();
 
+    // Get inviter profile if there's a pending invite
+    let inviterProfile = null;
+    if (pendingInvite) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("id", pendingInvite.user_id)
+        .single();
+      inviterProfile = profile;
+    }
+
     // Check for pending invites sent BY this user
     const { data: sentInvite } = await supabase
       .from("accountability_buddies")
-      .select("*, invited:profiles!accountability_buddies_buddy_id_fkey(first_name, last_name, email)")
+      .select("*")
       .eq("user_id", user.id)
       .eq("status", "pending")
       .single();
@@ -47,7 +50,7 @@ export async function GET() {
       connection: null, 
       buddy: null,
       buddyStats: null,
-      pendingInvite,
+      pendingInvite: pendingInvite ? { ...pendingInvite, inviter: inviterProfile } : null,
       sentInvite,
     });
   }
@@ -55,7 +58,13 @@ export async function GET() {
   // Determine who the buddy is
   const iAmInviter = connection.user_id === user.id;
   const buddyId = iAmInviter ? connection.buddy_id : connection.user_id;
-  const buddyProfile = iAmInviter ? connection.buddy : connection.inviter;
+
+  // Get buddy's profile separately
+  const { data: buddyProfile } = await supabase
+    .from("profiles")
+    .select("id, first_name, last_name, email")
+    .eq("id", buddyId)
+    .single();
 
   // Get buddy's streak and recent activity
   const today = new Date().toISOString().split("T")[0];
