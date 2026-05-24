@@ -269,7 +269,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
   return (
     <>
-      <div className="glass-card-glow relative overflow-hidden min-h-[400px]">
+      <div className="glass-card-glow card-lift relative overflow-hidden min-h-[400px]">
         {/* Top gradient line */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF4500] to-transparent" />
         
@@ -317,7 +317,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
             </div>
             
             {/* Progress Ring with Glow */}
-            <div className="relative w-28 h-28 flex-shrink-0">
+            <div className="relative w-28 h-28 flex-shrink-0 breathe-glow rounded-full">
               {/* Outer glow ring */}
               <motion.div 
                 className="absolute inset-[-4px] rounded-full"

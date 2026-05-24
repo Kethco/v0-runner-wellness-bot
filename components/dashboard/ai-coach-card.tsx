@@ -176,7 +176,7 @@ export function AICoachCard() {
   const style = TONE_STYLES[coachMessage.tone];
 
   return (
-    <div className="glass-card-premium relative overflow-hidden min-h-[180px]">
+    <div className="glass-card-premium card-lift relative overflow-hidden min-h-[180px]">
       {/* Gradient accent line at top */}
       <div className={`h-[2px] bg-gradient-to-r ${style.accentLine}`} />
       
