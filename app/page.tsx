@@ -270,10 +270,18 @@ return (
                 className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF4500] to-[#FF6B00] p-[2px]"
                 style={{ boxShadow: '0 0 16px rgba(255,69,0,0.4)' }}
               >
-                <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
-                  <span className="text-base font-bold text-white">
-                    {userName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                  </span>
+                <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+                  {user?.user_metadata?.avatar_url ? (
+                    <img 
+                      src={user.user_metadata.avatar_url} 
+                      alt={userName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-base font-bold text-white">
+                      {userName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                    </span>
+                  )}
                 </div>
               </div>
               {/* Online indicator */}
