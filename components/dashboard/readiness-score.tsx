@@ -171,13 +171,13 @@ export function ReadinessScore() {
                   <span className="text-xs text-white/60">Sleep</span>
                   <div className="flex items-center gap-1">
                     <TrendIcon trend={sleepTrend} />
-                    <span className="text-sm font-bold text-white">{sleepRating}/4</span>
+                    <span className="text-sm font-bold text-white">{sleepRating}/5</span>
                   </div>
                 </div>
                 <div className="h-1.5 bg-white/10 rounded-full mt-1 overflow-hidden">
                   <div 
                     className="h-full rounded-full bg-[#AF52DE]"
-                    style={{ width: `${(sleepRating / 4) * 100}%`, transition: 'width 0.3s ease-out' }}
+                    style={{ width: `${(sleepRating / 5) * 100}%`, transition: 'width 0.3s ease-out' }}
                   />
                 </div>
               </div>

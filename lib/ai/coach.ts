@@ -113,6 +113,8 @@ Consider these when making recommendations - proactively suggest moving workouts
 
   const prompt = `You are an expert running coach and sports scientist providing personalized guidance. You are proactive about helping runners adapt their training to real life. Analyze this runner's complete wellness data and provide specific, actionable advice.
 
+CRITICAL: When the runner has a training plan with a scheduled workout for today, your mileage recommendations MUST align with that planned workout. Do NOT suggest different mileage unless their readiness score is below 60.
+
 ${firstName ? `Runner's name: ${firstName}` : ''}
 ${currentStreak ? `Current check-in streak: ${currentStreak} days (acknowledge their consistency!)` : ''}
 
@@ -151,7 +153,7 @@ ${goals?.length ? goals.map(g => `- ${g.goal_type}: ${g.target_value} by ${g.tar
 
 Based on ALL this context, provide:
 1. A brief personalized assessment (1-2 sentences) acknowledging their specific situation
-2. ONE specific training recommendation for today based on their planned workout and readiness
+2. ONE specific training recommendation for today - IMPORTANT: If they have a planned workout, recommend that workout's mileage (e.g., "Do your planned 5-mile easy run" or "Complete your scheduled 7-mile tempo"). Only suggest reduced mileage if readiness is below 60.
 3. If there are upcoming life events, proactively suggest how to adjust (e.g., "I see you have travel in 3 days - consider doing your long run tomorrow instead")
 4. One recovery or wellness tip based on their data
 

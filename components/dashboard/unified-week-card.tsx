@@ -161,15 +161,17 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
   // Overlay plan workouts and completed runs on matching dates
   const chartData = (() => {
     const days = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
-    const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     
-    // Calculate current calendar week (Monday to Sunday) using local timezone
-    const today = new Date();
-    const weekStart = new Date(today);
-    const dayOfWeek = today.getDay();
+    // Parse todayStr to get a date object in local context
+    // todayStr is already in user's timezone (YYYY-MM-DD format)
+    const [year, month, day] = todayStr.split('-').map(Number);
+    const todayLocal = new Date(year, month - 1, day); // month is 0-indexed
+    
+    // Calculate current calendar week (Monday to Sunday) using the local date
+    const dayOfWeek = todayLocal.getDay(); // 0 = Sunday
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    weekStart.setDate(today.getDate() + mondayOffset);
-    weekStart.setHours(0, 0, 0, 0);
+    const weekStart = new Date(todayLocal);
+    weekStart.setDate(todayLocal.getDate() + mondayOffset);
     
     // Create a map of workouts by scheduled_date from the plan
     const workoutsByDate: Record<string, any> = {};
@@ -181,10 +183,11 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
       });
     }
     
-    return days.map((day, i) => {
+    return days.map((d, i) => {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
-      const dateStr = date.toISOString().split("T")[0];
+      // Format as YYYY-MM-DD using local date parts (not UTC)
+      const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
       
       // Check if there's a planned workout for this date
       const workout = workoutsByDate[dateStr];
@@ -208,7 +211,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
       const miles = completedMiles > 0 ? completedMiles : targetMiles;
       
       return {
-        day,
+        day: d,
         date: dateStr,
         miles,
         targetMiles,
