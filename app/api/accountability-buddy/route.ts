@@ -10,13 +10,22 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get active buddy connection (simple query without joins)
-  const { data: connection } = await supabase
+  // Get active buddy connection - check both directions separately to avoid or() issues
+  const { data: connectionAsInviter } = await supabase
     .from("accountability_buddies")
     .select("*")
-    .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+    .eq("user_id", user.id)
     .eq("status", "active")
-    .single();
+    .maybeSingle();
+
+  const { data: connectionAsBuddy } = await supabase
+    .from("accountability_buddies")
+    .select("*")
+    .eq("buddy_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const connection = connectionAsInviter || connectionAsBuddy;
 
   if (!connection) {
     // Check for pending invites sent TO this user
@@ -25,7 +34,7 @@ export async function GET() {
       .select("*")
       .eq("buddy_id", user.id)
       .eq("status", "pending")
-      .single();
+      .maybeSingle();
 
     // Get inviter profile if there's a pending invite
     let inviterProfile = null;
@@ -34,7 +43,7 @@ export async function GET() {
         .from("profiles")
         .select("first_name, last_name, email")
         .eq("id", pendingInvite.user_id)
-        .single();
+        .maybeSingle();
       inviterProfile = profile;
     }
 
@@ -44,7 +53,7 @@ export async function GET() {
       .select("*")
       .eq("user_id", user.id)
       .eq("status", "pending")
-      .single();
+      .maybeSingle();
 
     return NextResponse.json({ 
       connection: null, 
@@ -168,13 +177,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "You cannot invite yourself" }, { status: 400 });
     }
 
-    // Check for existing connection for either user
-    const { data: existingConnection } = await supabase
+    // Check for existing connection for either user (check separately)
+    const { data: existingAsInviter } = await supabase
       .from("accountability_buddies")
-      .select("id, status")
-      .or(`and(user_id.eq.${user.id},status.in.(active,pending)),and(buddy_id.eq.${user.id},status.in.(active,pending)),and(user_id.eq.${buddyProfile.id},status.in.(active,pending)),and(buddy_id.eq.${buddyProfile.id},status.in.(active,pending))`)
-      .limit(1)
-      .single();
+      .select("id")
+      .eq("user_id", user.id)
+      .in("status", ["active", "pending"])
+      .maybeSingle();
+
+    const { data: existingAsBuddy } = await supabase
+      .from("accountability_buddies")
+      .select("id")
+      .eq("buddy_id", user.id)
+      .in("status", ["active", "pending"])
+      .maybeSingle();
+
+    const { data: targetAsInviter } = await supabase
+      .from("accountability_buddies")
+      .select("id")
+      .eq("user_id", buddyProfile.id)
+      .in("status", ["active", "pending"])
+      .maybeSingle();
+
+    const { data: targetAsBuddy } = await supabase
+      .from("accountability_buddies")
+      .select("id")
+      .eq("buddy_id", buddyProfile.id)
+      .in("status", ["active", "pending"])
+      .maybeSingle();
+
+    const existingConnection = existingAsInviter || existingAsBuddy || targetAsInviter || targetAsBuddy;
 
     if (existingConnection) {
       return NextResponse.json({ 
@@ -227,13 +259,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invite ID required" }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { error: err1 } = await supabase
       .from("accountability_buddies")
       .delete()
       .eq("id", inviteId)
-      .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`);
+      .eq("user_id", user.id);
 
-    if (error) {
+    const { error: err2 } = await supabase
+      .from("accountability_buddies")
+      .delete()
+      .eq("id", inviteId)
+      .eq("buddy_id", user.id);
+
+    if (err1 && err2) {
       return NextResponse.json({ error: "Failed to cancel/decline invite" }, { status: 500 });
     }
 
@@ -252,15 +290,19 @@ export async function DELETE() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { error } = await supabase
+  // Delete where user is inviter
+  await supabase
     .from("accountability_buddies")
     .delete()
-    .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+    .eq("user_id", user.id)
     .eq("status", "active");
 
-  if (error) {
-    return NextResponse.json({ error: "Failed to remove buddy" }, { status: 500 });
-  }
+  // Delete where user is buddy
+  await supabase
+    .from("accountability_buddies")
+    .delete()
+    .eq("buddy_id", user.id)
+    .eq("status", "active");
 
   return NextResponse.json({ success: true });
 }
