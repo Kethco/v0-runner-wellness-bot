@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Plus, Footprints } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,16 @@ import {
 } from "@/components/ui/select";
 import { celebrateRun } from "@/lib/celebrations";
 import { PRCelebrationModal } from "@/components/pr-celebration-modal";
+
+interface Shoe {
+  id: string;
+  brand: string;
+  model: string;
+  nickname: string | null;
+  is_default: boolean;
+  total_miles: number;
+  max_miles: number;
+}
 
 interface PRResult {
   isNewPR: boolean;
@@ -47,6 +57,7 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [prCelebration, setPrCelebration] = useState<PRResult | null>(null);
+  const [shoes, setShoes] = useState<Shoe[]>([]);
   const [formData, setFormData] = useState({
     miles: "",
     pace: "",
@@ -55,7 +66,28 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
     feeling: "",
     notes: "",
     date: getLocalDateStr(),
+    shoeId: "",
   });
+
+  // Fetch shoes when modal opens
+  useEffect(() => {
+    if (open) {
+      fetch("/api/shoes")
+        .then(res => res.json())
+        .then(data => {
+          const activeShoes = (data.shoes || []).filter((s: Shoe) => !s.is_retired);
+          setShoes(activeShoes);
+          // Set default shoe if available and not already selected
+          if (!formData.shoeId) {
+            const defaultShoe = activeShoes.find((s: Shoe) => s.is_default);
+            if (defaultShoe) {
+              setFormData(prev => ({ ...prev, shoeId: defaultShoe.id }));
+            }
+          }
+        })
+        .catch(err => console.error("Failed to fetch shoes:", err));
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,6 +106,7 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
           feeling: formData.feeling || null,
           notes: formData.notes || null,
           date: formData.date,
+          shoeId: formData.shoeId || null,
         }),
       });
 
@@ -89,6 +122,7 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
           feeling: "",
           notes: "",
           date: getLocalDateStr(),
+          shoeId: "",
         });
         
         // Check if we got a new PR
@@ -245,6 +279,37 @@ export function LogRunModal({ onRunLogged, children }: LogRunModalProps) {
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             />
           </div>
+
+          {/* Shoe Selector */}
+          {shoes.length > 0 && (
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Footprints className="w-4 h-4 text-[#FF9500]" />
+                Shoe Used
+              </Label>
+              <Select
+                value={formData.shoeId}
+                onValueChange={(value) => setFormData({ ...formData, shoeId: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select shoe (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No shoe selected</SelectItem>
+                  {shoes.map((shoe) => (
+                    <SelectItem key={shoe.id} value={shoe.id}>
+                      <span className="flex items-center gap-2">
+                        {shoe.nickname || `${shoe.brand} ${shoe.model}`}
+                        {shoe.is_default && (
+                          <span className="text-xs text-[#FF9500]">(Default)</span>
+                        )}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <Button

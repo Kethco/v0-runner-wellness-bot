@@ -56,31 +56,65 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { miles, pace, duration_minutes, runType, feeling, notes, date } = body;
+    const { miles, pace, duration_minutes, runType, feeling, notes, date, shoeId } = body;
 
     if (!miles || miles <= 0) {
       return NextResponse.json({ error: "Miles is required and must be positive" }, { status: 400 });
     }
 
+    // Build the insert object
+    const runData: Record<string, unknown> = {
+      user_id: user.id,
+      date: date || new Date().toISOString().split("T")[0],
+      miles: parseFloat(miles),
+      pace,
+      duration_minutes: duration_minutes ? parseInt(duration_minutes) : null,
+      run_type: runType || "easy",
+      feeling,
+      notes,
+      source: "app",
+    };
+
+    // Add shoe_id if provided and not "none"
+    if (shoeId && shoeId !== "none") {
+      runData.shoe_id = shoeId;
+    }
+
     const { data: run, error } = await supabase
       .from("runs")
-      .insert({
-        user_id: user.id,
-        date: date || new Date().toISOString().split("T")[0],
-        miles: parseFloat(miles),
-        pace,
-        duration_minutes: duration_minutes ? parseInt(duration_minutes) : null,
-        run_type: runType || "easy",
-        feeling,
-        notes,
-        source: "app",
-      })
+      .insert(runData)
       .select()
       .single();
 
     if (error) {
       console.error("Error logging run:", error);
       return NextResponse.json({ error: "Failed to log run" }, { status: 500 });
+    }
+
+    // Update shoe mileage if a shoe was selected
+    if (shoeId && shoeId !== "none") {
+      try {
+        const { data: shoe } = await supabase
+          .from("shoes")
+          .select("total_miles")
+          .eq("id", shoeId)
+          .eq("user_id", user.id)
+          .single();
+        
+        if (shoe) {
+          await supabase
+            .from("shoes")
+            .update({ 
+              total_miles: (shoe.total_miles || 0) + parseFloat(miles),
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", shoeId)
+            .eq("user_id", user.id);
+        }
+      } catch (shoeError) {
+        console.error("Error updating shoe mileage:", shoeError);
+        // Don't fail the run log if shoe update fails
+      }
     }
 
     // Check if this run is a new PR

@@ -57,6 +57,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "next-themes";
 import { MeshBackground } from "@/components/mesh-background";
+import { ShoeTracker } from "@/components/shoe-tracker";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -340,6 +341,9 @@ return (
               </CollapsibleContent>
             </div>
           </Collapsible>
+
+          {/* Shoe Tracker */}
+          <ShoeTracker />
 
           {/* Privacy & Data Sharing */}
           <div className="section-card p-5">
