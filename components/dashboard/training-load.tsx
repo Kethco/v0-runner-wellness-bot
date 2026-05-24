@@ -182,7 +182,15 @@ export function TrainingLoadIndicator({ weeklyGoal = 20 }: TrainingLoadProps) {
         </div>
 
         {/* Mini 4-week chart */}
-        <div className="flex items-end gap-1.5 h-12 mb-3">
+        <div className="relative flex items-end gap-1.5 h-16 mb-3">
+          {/* Goal line - positioned within chart area */}
+          <div 
+            className="absolute left-0 right-0 border-t border-dashed border-white/30 z-10"
+            style={{ bottom: `${Math.min(goalHeight, 95)}%` }}
+          >
+            <span className="absolute -top-3 right-0 text-[8px] text-[#8E8E93]">Goal</span>
+          </div>
+          
           {loadData.weeks.map((miles, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-1">
               <motion.div
@@ -194,17 +202,19 @@ export function TrainingLoadIndicator({ weeklyGoal = 20 }: TrainingLoadProps) {
                 } ${i === 3 ? config.borderColor + " border-t-2" : ""}`}
                 style={{ minHeight: miles > 0 ? 4 : 0 }}
               />
+            </div>
+          ))}
+        </div>
+        
+        {/* Week labels */}
+        <div className="flex gap-1.5 mb-3 -mt-1">
+          {loadData.weeks.map((_, i) => (
+            <div key={i} className="flex-1 text-center">
               <span className="text-[9px] text-[#8E8E93]">
                 {i === 3 ? "This" : i === 2 ? "Last" : `-${3 - i}w`}
               </span>
             </div>
           ))}
-          
-          {/* Goal line */}
-          <div 
-            className="absolute left-0 right-0 border-t border-dashed border-white/20"
-            style={{ bottom: `${goalHeight}%` }}
-          />
         </div>
 
         {/* Stats row */}
