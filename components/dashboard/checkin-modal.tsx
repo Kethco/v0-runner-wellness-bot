@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { celebrateCheckin } from "@/lib/celebrations";
+import { hapticLight, hapticSuccess } from "@/lib/haptics";
 
 interface TodayWorkout {
   id: string;
@@ -118,6 +119,7 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange, todayWorkout
 
   const handleSelect = (value: string) => {
     if (!step) return;
+    hapticLight();
     setAnswers((prev) => ({ ...prev, [step.id]: value }));
 
     setTimeout(() => {
@@ -166,6 +168,7 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange, todayWorkout
       setIsComplete(true);
       
       // Celebrate the check-in
+      hapticSuccess();
       celebrateCheckin();
       setIsComplete(true);
       setAiAdvice(receivedAdvice);

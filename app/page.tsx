@@ -33,6 +33,8 @@ import { MeshBackground } from "@/components/mesh-background";
 import { DailyQuote } from "@/components/dashboard/daily-quote";
 import { WeeklyChallenges } from "@/components/dashboard/weekly-challenges";
 import { AICoachCard } from "@/components/dashboard/ai-coach-card";
+import { StreakCalendar } from "@/components/dashboard/streak-calendar";
+import { TrainingLoadIndicator } from "@/components/dashboard/training-load";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -438,6 +440,12 @@ return (
 
         {/* Weekly Challenges */}
         <WeeklyChallenges />
+
+        {/* Training Load Indicator */}
+        <TrainingLoadIndicator weeklyGoal={profileData?.profile?.weekly_goal || 20} />
+
+        {/* Run Streak Calendar */}
+        <StreakCalendar currentStreak={streakData?.streak || 0} />
 
         {/* Recent Runs - Use CSS display to prevent layout shift */}
         <div style={{ display: runs.length > 0 ? 'block' : 'none' }}>
