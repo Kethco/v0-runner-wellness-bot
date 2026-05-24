@@ -296,3 +296,64 @@ export async function PATCH(request: NextRequest) {
 
   return NextResponse.json({ workout });
 }
+
+// POST handler for workout actions (skip, adjust)
+export async function POST(request: NextRequest) {
+  const supabase = await createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { action, workoutId, reason, adjustedWorkout } = body;
+
+  if (!workoutId || !action) {
+    return NextResponse.json({ error: "Workout ID and action required" }, { status: 400 });
+  }
+
+  const updates: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+    adjusted_at: new Date().toISOString(),
+  };
+
+  switch (action) {
+    case "skip":
+      updates.status = "skipped";
+      updates.adjustment_reason = reason || "user_request";
+      updates.adjusted_by = "user";
+      break;
+    
+    case "adjust":
+      if (!adjustedWorkout) {
+        return NextResponse.json({ error: "Adjusted workout data required" }, { status: 400 });
+      }
+      updates.status = "modified";
+      updates.workout_type = adjustedWorkout.workoutType;
+      updates.title = adjustedWorkout.title;
+      updates.description = adjustedWorkout.description;
+      updates.target_miles = adjustedWorkout.targetMiles;
+      updates.target_pace_zone = adjustedWorkout.targetPaceZone;
+      updates.adjustment_reason = reason || "wellness_adjustment";
+      updates.adjusted_by = "user_accepted";
+      break;
+    
+    default:
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  }
+
+  const { data: workout, error } = await supabase
+    .from("planned_workouts")
+    .update(updates)
+    .eq("id", workoutId)
+    .eq("user_id", user.id)
+    .select()
+    .single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ workout, success: true });
+}

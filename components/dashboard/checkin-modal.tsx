@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Moon, Smile, Zap, Activity, Target, ChevronLeft, Check, Loader2, SkipForward, AlertTriangle } from "lucide-react";
+import { Moon, Smile, Zap, Activity, Target, ChevronLeft, Check, Loader2, SkipForward, AlertTriangle, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,14 @@ interface TodayWorkout {
   workout_type: string;
   target_miles: number;
   description?: string;
+}
+
+interface AdjustmentSuggestion {
+  originalWorkout: string;
+  adjustedWorkout: string;
+  adjustedMiles: number;
+  reason: string;
+  explanation: string;
 }
 
 interface CheckInModalProps {
@@ -101,6 +109,8 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange, todayWorkout
   const [aiAdvice, setAiAdvice] = useState<string | null>(null);
   const [showWorkoutActions, setShowWorkoutActions] = useState(false);
   const [skippingWorkout, setSkippingWorkout] = useState(false);
+  const [adjustingWorkout, setAdjustingWorkout] = useState(false);
+  const [adjustmentSuggestion, setAdjustmentSuggestion] = useState<AdjustmentSuggestion | null>(null);
 
   const step = STEPS[currentStep];
   const isLastStep = currentStep === STEPS.length - 1;
@@ -167,6 +177,47 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange, todayWorkout
       const sorenessHigh = ["Moderate", "High"].includes(answers.soreness);
       const readinessLow = ["No", "Maybe"].includes(answers.readiness);
       const wellnessIsPoor = (sleepPoor || energyLow || sorenessHigh || readinessLow) && todayWorkout && todayWorkout.workout_type !== "rest";
+      
+      // Generate adjustment suggestion with explanation
+      if (wellnessIsPoor && todayWorkout) {
+        const reasons: string[] = [];
+        if (sleepPoor) reasons.push("poor sleep");
+        if (energyLow) reasons.push("low energy");
+        if (sorenessHigh) reasons.push("muscle soreness");
+        if (readinessLow) reasons.push("not feeling ready");
+        
+        // Calculate readiness score (1-5)
+        const sleepScore = { "Poor": 1, "OK": 2, "Good": 4, "Great": 5 }[answers.sleep] || 3;
+        const energyScore = Number(answers.energy) || 3;
+        const sorenessScore = { "None": 5, "Mild": 4, "Moderate": 2, "High": 1 }[answers.soreness] || 3;
+        const readinessScore = { "No": 1, "Maybe": 3, "Yes": 5 }[answers.readiness] || 3;
+        const avgReadiness = Math.round((sleepScore + energyScore + sorenessScore + readinessScore) / 4);
+        
+        // Generate specific adjustment based on workout type
+        let adjustedType = "easy";
+        let adjustedMiles = Math.min(todayWorkout.target_miles || 4, 3);
+        let explanation = "";
+        
+        if (todayWorkout.workout_type === "intervals" || todayWorkout.workout_type === "tempo") {
+          adjustedMiles = Math.min(todayWorkout.target_miles || 4, 4);
+          explanation = `High-intensity workouts stress your body. With ${reasons.join(" and ")}, pushing hard today could lead to overtraining or injury. An easy run keeps you moving without the added stress.`;
+        } else if (todayWorkout.workout_type === "long") {
+          adjustedMiles = Math.round((todayWorkout.target_miles || 10) * 0.6);
+          explanation = `Long runs are demanding. Your ${reasons.join(" and ")} today means your body needs more recovery. A shorter run maintains your routine while respecting your body's signals.`;
+        } else {
+          adjustedMiles = Math.min(todayWorkout.target_miles || 4, 3);
+          explanation = `Even easy runs can feel hard when you're experiencing ${reasons.join(" and ")}. Taking it extra light today helps you recover faster for stronger runs ahead.`;
+        }
+        
+        setAdjustmentSuggestion({
+          originalWorkout: `${todayWorkout.title} (${todayWorkout.target_miles} mi)`,
+          adjustedWorkout: `Easy Run (${adjustedMiles} mi)`,
+          adjustedMiles,
+          reason: reasons.join(", "),
+          explanation,
+        });
+      }
+      
       setShowWorkoutActions(!!wellnessIsPoor);
       
       setTimeout(() => {
@@ -203,6 +254,38 @@ const handleClose = () => {
     setNotes("");
     setIsComplete(false);
     setShowWorkoutActions(false);
+    setAdjustmentSuggestion(null);
+  };
+
+  const handleAdjustWorkout = async () => {
+    if (!todayWorkout || !adjustmentSuggestion) return;
+    setAdjustingWorkout(true);
+    try {
+      const response = await fetch(`/api/training-plan/week`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "adjust",
+          workoutId: todayWorkout.id,
+          adjustedWorkout: {
+            workoutType: "easy",
+            title: "Adjusted: Easy Run",
+            description: adjustmentSuggestion.explanation,
+            targetMiles: adjustmentSuggestion.adjustedMiles,
+            targetPaceZone: "easy",
+          },
+          reason: `Wellness adjustment - ${adjustmentSuggestion.reason}`,
+        }),
+      });
+      if (response.ok) {
+        handleOpenChange(false);
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Failed to adjust workout:", error);
+    } finally {
+      setAdjustingWorkout(false);
+    }
   };
 
   const handleSkipWorkout = async () => {
@@ -254,44 +337,67 @@ const handleClose = () => {
               </div>
             )}
             
-            {showWorkoutActions && todayWorkout && (
+            {showWorkoutActions && todayWorkout && adjustmentSuggestion && (
               <div className="w-full bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
                 <div className="flex items-start gap-3 mb-3">
                   <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-amber-500">Low Wellness Detected</p>
+                    <p className="text-sm font-semibold text-amber-500">Workout Adjustment Suggested</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Today&apos;s workout: {todayWorkout.title} ({todayWorkout.target_miles} mi)
+                      {adjustmentSuggestion.originalWorkout} → {adjustmentSuggestion.adjustedWorkout}
                     </p>
                   </div>
                 </div>
+                
+                {/* Explanation Card */}
+                <div className="bg-background/50 rounded-lg p-3 mb-3">
+                  <p className="text-xs font-medium text-foreground mb-1">Why this change?</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {adjustmentSuggestion.explanation}
+                  </p>
+                </div>
+                
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                    className="flex-1 border-muted-foreground/30"
                     onClick={handleSkipWorkout}
-                    disabled={skippingWorkout}
+                    disabled={skippingWorkout || adjustingWorkout}
                   >
                     {skippingWorkout ? (
                       <Loader2 className="w-4 h-4 animate-spin mr-1" />
                     ) : (
                       <SkipForward className="w-4 h-4 mr-1" />
                     )}
-                    Skip Today
+                    Rest Instead
                   </Button>
                   <Button
                     variant="default"
                     size="sm"
-                    className="flex-1"
-                    onClick={() => {
-                      handleClose();
-                      window.location.reload();
-                    }}
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+                    onClick={handleAdjustWorkout}
+                    disabled={skippingWorkout || adjustingWorkout}
                   >
-                    Do Workout
+                    {adjustingWorkout ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                    )}
+                    Adjust Workout
                   </Button>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full mt-2 text-xs text-muted-foreground"
+                  onClick={() => {
+                    handleClose();
+                    window.location.reload();
+                  }}
+                >
+                  Keep Original Workout
+                </Button>
               </div>
             )}
           </div>
