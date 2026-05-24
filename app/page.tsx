@@ -35,6 +35,9 @@ import { WeeklyChallenges } from "@/components/dashboard/weekly-challenges";
 import { AICoachCard } from "@/components/dashboard/ai-coach-card";
 import { StreakCalendar } from "@/components/dashboard/streak-calendar";
 import { TrainingLoadIndicator } from "@/components/dashboard/training-load";
+import { RunningBuddy } from "@/components/running-buddy";
+import { OnboardingTour } from "@/components/onboarding-tour";
+import { useSearchParams } from "next/navigation";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -45,6 +48,7 @@ const fetcher = async (url: string) => {
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   // ALL HOOKS MUST BE AT THE TOP - before any conditional returns
   const [showCheckinModal, setShowCheckinModal] = useState(false);
@@ -52,6 +56,7 @@ export default function Dashboard() {
   const [newGoalValue, setNewGoalValue] = useState("");
   const [localGoal, setLocalGoal] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showFeatureTour, setShowFeatureTour] = useState(false);
   const [greeting, setGreeting] = useState({ text: "Welcome", gradient: "from-[#FF6B00] via-[#FF4500] to-[#FF2D00]" });
   
   // Compute dates directly (not in state to avoid hydration issues)
@@ -121,6 +126,15 @@ export default function Dashboard() {
   useEffect(() => {
     setGreeting(getGreeting());
   }, []);
+
+  // Check for feature tour parameter
+  useEffect(() => {
+    if (searchParams.get("tour") === "1") {
+      setShowFeatureTour(true);
+      // Clean up URL
+      window.history.replaceState({}, "", "/");
+    }
+  }, [searchParams]);
   
   // Derived state (safe to compute after hooks)
   const runs = runsData?.runs || [];
@@ -235,6 +249,11 @@ return (
             mutateProfile();
           }} 
         />
+      )}
+
+      {/* Feature Tour (triggered from profile settings) */}
+      {showFeatureTour && (
+        <OnboardingTour onComplete={() => setShowFeatureTour(false)} />
       )}
 
       {/* Premium Glass Header */}
@@ -446,6 +465,9 @@ return (
 
         {/* Run Streak Calendar */}
         <StreakCalendar currentStreak={streakData?.streak || 0} />
+
+        {/* Running Buddy - Accountability Partner */}
+        <RunningBuddy />
 
         {/* Recent Runs - Use CSS display to prevent layout shift */}
         <div style={{ display: runs.length > 0 ? 'block' : 'none' }}>
