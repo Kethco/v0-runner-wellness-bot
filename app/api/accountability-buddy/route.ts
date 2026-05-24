@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET - Fetch buddy connection and stats
+// GET - Fetch buddy connection and stats (simplified queries without FK joins)
 export async function GET() {
   const supabase = await createClient();
   
