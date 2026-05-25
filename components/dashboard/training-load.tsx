@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, AlertTriangle, Zap, Battery } from "lucide-react";
 import useSWR from "swr";
@@ -17,19 +17,42 @@ interface TrainingLoadProps {
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export function TrainingLoadIndicator({ weeklyGoal = 20 }: TrainingLoadProps) {
-  // Fetch last 4 weeks of runs
-  const { data: runsData } = useSWR("/api/runs?days=28", fetcher);
+  // Get client's local date to avoid timezone issues
+  const [clientDate, setClientDate] = useState<string>("");
+  
+  useEffect(() => {
+    const now = new Date();
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    setClientDate(localDate);
+  }, []);
+
+  // Fetch last 4 weeks of runs, passing client date for proper timezone handling
+  const { data: runsData } = useSWR(
+    clientDate ? `/api/runs?days=28&clientDate=${clientDate}` : null,
+    fetcher
+  );
 
   const loadData = useMemo(() => {
+    if (!clientDate) {
+      return {
+        currentWeek: 0,
+        lastWeek: 0,
+        avg4Week: 0,
+        weekChange: 0,
+        weeks: [0, 0, 0, 0],
+        phase: "build" as const,
+        riskLevel: "low" as const,
+        message: "Loading...",
+        recommendation: "",
+        weeklyGoal,
+      };
+    }
+    
     const runs: Run[] = runsData?.runs || [];
-    const now = new Date();
     
-    // Get today's date string in local timezone (YYYY-MM-DD)
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    
-    // Debug: log all runs and today's date
-    console.log("[v0] TrainingLoad - todayStr:", todayStr, "now.getDay():", now.getDay());
-    console.log("[v0] TrainingLoad - runs:", runs.map(r => ({ date: r.date.split('T')[0], miles: r.miles })));
+    // Parse client date for calculations
+    const [year, month, day] = clientDate.split('-').map(Number);
+    const now = new Date(year, month - 1, day);
     
     // Calculate weekly totals for last 4 weeks using string comparisons
     const weeks: number[] = [];
@@ -42,20 +65,15 @@ export function TrainingLoadIndicator({ weeklyGoal = 20 }: TrainingLoadProps) {
       weekEnd.setDate(weekEnd.getDate() + 6);
       const weekEndStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
       
-      console.log(`[v0] Week ${w}: ${weekStartStr} to ${weekEndStr}`);
-      
       // Use string comparison to avoid timezone issues
       const weekMiles = runs
         .filter(r => {
-          const runDateStr = r.date.split('T')[0]; // Handle ISO strings
-          const inRange = runDateStr >= weekStartStr && runDateStr <= weekEndStr;
-          if (w === 0 && inRange) console.log("[v0] Run in current week:", runDateStr, r.miles);
-          return inRange;
+          const runDateStr = r.date.split('T')[0];
+          return runDateStr >= weekStartStr && runDateStr <= weekEndStr;
         })
         .reduce((sum, r) => sum + r.miles, 0);
       
-      console.log(`[v0] Week ${w} miles: ${weekMiles}`);
-      weeks.unshift(weekMiles); // Add to beginning so oldest is first
+      weeks.unshift(weekMiles);
     }
     
     // Current week is the last element

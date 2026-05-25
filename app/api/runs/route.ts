@@ -13,15 +13,27 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get("days") || "7");
+    const clientDate = searchParams.get("clientDate"); // Client's local date YYYY-MM-DD
     
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    // Use client date if provided, otherwise fall back to server date
+    let startDateStr: string;
+    if (clientDate) {
+      // Parse client date and calculate start date
+      const [year, month, day] = clientDate.split('-').map(Number);
+      const clientDateObj = new Date(year, month - 1, day);
+      clientDateObj.setDate(clientDateObj.getDate() - days);
+      startDateStr = `${clientDateObj.getFullYear()}-${String(clientDateObj.getMonth() + 1).padStart(2, '0')}-${String(clientDateObj.getDate()).padStart(2, '0')}`;
+    } else {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      startDateStr = startDate.toISOString().split("T")[0];
+    }
 
     const { data: runs, error } = await supabase
       .from("runs")
       .select("*")
       .eq("user_id", user.id)
-      .gte("date", startDate.toISOString().split("T")[0])
+      .gte("date", startDateStr)
       .order("date", { ascending: false });
 
     if (error) {
@@ -29,11 +41,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch runs" }, { status: 500 });
     }
 
-    // Calculate weekly total
-    const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    // Calculate weekly total using client date if provided
+    let weekStartStr: string;
+    if (clientDate) {
+      const [year, month, day] = clientDate.split('-').map(Number);
+      const clientDateObj = new Date(year, month - 1, day);
+      const dayOfWeek = clientDateObj.getDay();
+      clientDateObj.setDate(clientDateObj.getDate() - dayOfWeek);
+      weekStartStr = `${clientDateObj.getFullYear()}-${String(clientDateObj.getMonth() + 1).padStart(2, '0')}-${String(clientDateObj.getDate()).padStart(2, '0')}`;
+    } else {
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      weekStartStr = startOfWeek.toISOString().split("T")[0];
+    }
     
-    const weeklyRuns = runs?.filter(r => new Date(r.date) >= startOfWeek) || [];
+    const weeklyRuns = runs?.filter(r => r.date.split('T')[0] >= weekStartStr) || [];
     const weeklyTotal = weeklyRuns.reduce((sum, r) => sum + Number(r.miles), 0);
 
     return NextResponse.json({ 
