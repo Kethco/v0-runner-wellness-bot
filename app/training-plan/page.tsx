@@ -190,18 +190,21 @@ export default function TrainingPlanPage() {
       if (!adjusted) return originalWorkout;
       
       // Check if this workout is blocked
-      const isBlocked = lifeEvents.some(event => {
+      const blockingLifeEvent = lifeEvents.find(event => {
         const shouldBlock = !event.can_run || event.training_impact === "no_training";
         const inDateRange = adjusted.scheduled_date >= event.start_date && 
                             adjusted.scheduled_date <= event.end_date;
         return shouldBlock && inDateRange;
-      }) || adjusted.status === "skipped";
+      });
+      const isBlocked = !!blockingLifeEvent || adjusted.status === "skipped";
       
       if (isBlocked) {
         return {
           ...adjusted,
           status: "blocked",
-          blocked_reason: `Life event`,
+          blocked_reason: blockingLifeEvent 
+            ? `Life event: ${blockingLifeEvent.start_date} to ${blockingLifeEvent.end_date}`
+            : `Skipped`,
         };
       }
       
@@ -434,9 +437,9 @@ export default function TrainingPlanPage() {
                           </p>
                         )}
                         
-                        {isBlocked && (
+                        {isBlocked && workout.blocked_reason && (
                           <p className="text-xs text-red-500/70 mt-1">
-                            Life event ({workout.scheduled_date})
+                            {workout.blocked_reason}
                           </p>
                         )}
                         
