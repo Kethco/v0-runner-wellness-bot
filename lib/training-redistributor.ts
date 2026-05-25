@@ -196,10 +196,12 @@ export function redistributeTraining(
   const adjustedWorkouts = sortedWorkouts.map(workout => {
     const adjustment = adjustmentMap.get(workout.id);
     if (adjustment) {
+      // Remove any existing (+X.Xmi) suffix before adding new one
+      const baseTitle = workout.title?.replace(/\s*\(\+[\d.]+mi\)+$/g, '') || workout.title;
       return {
         ...workout,
         target_miles: (workout.target_miles || 0) + adjustment.addedMiles,
-        title: workout.title + ` (+${adjustment.addedMiles.toFixed(1)}mi)`,
+        title: baseTitle + ` (+${adjustment.addedMiles.toFixed(1)}mi)`,
         adjustment_note: adjustment.reason,
       };
     }
