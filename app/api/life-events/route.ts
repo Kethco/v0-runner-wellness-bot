@@ -141,7 +141,61 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ event });
+  // After updating a life event, recalculate training adjustments
+  // First, reset any workouts that were blocked by the OLD dates
+  const { data: activePlan } = await supabase
+    .from("training_plans")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (activePlan) {
+    // Reset workouts that are no longer blocked (outside new date range)
+    // and re-block workouts that are now within the new date range
+    const { data: allWorkouts } = await supabase
+      .from("planned_workouts")
+      .select("id, scheduled_date, status")
+      .eq("plan_id", activePlan.id);
+
+    if (allWorkouts) {
+      for (const workout of allWorkouts) {
+        const isInEventRange = workout.scheduled_date >= event.start_date && 
+                               workout.scheduled_date <= event.end_date;
+        const shouldBlock = isInEventRange && (!event.can_run || event.training_impact === "no_training");
+        
+        if (shouldBlock && workout.status === "pending") {
+          // Block this workout
+          await supabase
+            .from("planned_workouts")
+            .update({ status: "blocked" })
+            .eq("id", workout.id);
+        } else if (!shouldBlock && workout.status === "blocked") {
+          // Unblock this workout - check if any OTHER life events still block it
+          const { data: otherEvents } = await supabase
+            .from("life_events")
+            .select("start_date, end_date, can_run, training_impact")
+            .eq("user_id", user.id)
+            .neq("id", event.id);
+          
+          const stillBlocked = otherEvents?.some(e => 
+            workout.scheduled_date >= e.start_date && 
+            workout.scheduled_date <= e.end_date &&
+            (!e.can_run || e.training_impact === "no_training")
+          );
+          
+          if (!stillBlocked) {
+            await supabase
+              .from("planned_workouts")
+              .update({ status: "pending" })
+              .eq("id", workout.id);
+          }
+        }
+      }
+    }
+  }
+
+  return NextResponse.json({ event, updated: true });
 }
 
 export async function DELETE(request: NextRequest) {
