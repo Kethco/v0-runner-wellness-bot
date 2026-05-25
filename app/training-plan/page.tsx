@@ -98,6 +98,15 @@ export default function TrainingPlanPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+  
+  // Calculate today's date on client-side only to use user's local timezone
+  const [today, setToday] = useState<string>("");
+  
+  useEffect(() => {
+    const now = new Date();
+    const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    setToday(localToday);
+  }, []);
 
   const { data, isLoading, error } = useSWR<PlanData>(
     user ? "/api/training-plan?includeWorkouts=true" : null,
@@ -201,15 +210,6 @@ export default function TrainingPlanPage() {
   } : null;
   
   const redistributionMessage = getRedistributionMessage(redistributionSummary);
-  
-  // Calculate today's date on client-side only to use user's local timezone
-  const [today, setToday] = useState<string>("");
-  
-  useEffect(() => {
-    const now = new Date();
-    const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    setToday(localToday);
-  }, []);
 
   // Calculate days until race
   const raceDate = plan.goal?.target_date || plan.end_date;
