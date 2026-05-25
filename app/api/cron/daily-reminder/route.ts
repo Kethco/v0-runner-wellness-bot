@@ -33,14 +33,12 @@ export async function GET(request: NextRequest) {
     // EXCLUDE coaches - they don't need check-in reminders
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, first_name, phone, notification_morning, role")
-      .not("phone", "is", null)
-      .or("notification_morning.is.null,notification_morning.eq.true")
-      .or("role.is.null,role.neq.coach");
+      .select("id, first_name, phone")
+      .not("phone", "is", null);
 
     if (profilesError) {
       console.error("[Cron] Error fetching profiles:", profilesError);
-      return NextResponse.json({ error: "Database error" }, { status: 500 });
+      return NextResponse.json({ error: "Database error", details: profilesError.message }, { status: 500 });
     }
 
     // Send reminders to users who haven't checked in
