@@ -77,12 +77,17 @@ export function RunningBuddy() {
         body: JSON.stringify({ action: "accept", inviteId }),
       });
       
+      const data = await res.json();
+      
       if (res.ok) {
         hapticSuccess();
         toast({ title: "Buddy connected!", description: "You now have an accountability partner." });
         mutate("/api/accountability-buddy");
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to accept invite", variant: "destructive" });
       }
-    } catch {
+    } catch (err) {
+      console.error("Accept invite error:", err);
       toast({ title: "Error", description: "Failed to accept invite", variant: "destructive" });
     } finally {
       setIsProcessing(false);

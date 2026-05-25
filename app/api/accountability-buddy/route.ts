@@ -267,7 +267,9 @@ export async function POST(request: NextRequest) {
     if (!inviteId) {
       return NextResponse.json({ error: "Invite ID required" }, { status: 400 });
     }
-
+    
+    console.log("[v0] Accepting invite:", inviteId, "for user:", user.id);
+    
     const { data: connection, error } = await supabase
       .from("accountability_buddies")
       .update({ status: "active", accepted_at: new Date().toISOString() })
@@ -276,11 +278,18 @@ export async function POST(request: NextRequest) {
       .eq("status", "pending")
       .select()
       .single();
-
-    if (error || !connection) {
+    
+    if (error) {
+      console.error("[v0] Accept invite error:", error);
+      return NextResponse.json({ error: "Failed to accept invite: " + error.message }, { status: 500 });
+    }
+    
+    if (!connection) {
+      console.error("[v0] No connection found after update");
       return NextResponse.json({ error: "Invite not found or already accepted" }, { status: 404 });
     }
-
+    
+    console.log("[v0] Invite accepted successfully:", connection);
     return NextResponse.json({ success: true, connection });
   }
 
