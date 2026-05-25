@@ -94,29 +94,23 @@ export function LifeEventsManager() {
   const handleResyncPlan = async () => {
     setIsResyncing(true);
     try {
-      // Call the direct skip endpoint
-      const response = await fetch("/api/debug/workouts", { method: "POST" });
+      // Call the resync endpoint to unblock/block workouts based on current life events
+      const response = await fetch("/api/training-plan/resync");
       const result = await response.json();
+      console.log("[v0] Resync result:", result);
       
-      if (result.updates && result.updates.length > 0) {
-        setAdjustmentResult({
-          adjustments: result.updates.map((u: any) => ({
-            workoutId: u.date,
-            originalDate: u.date,
-            newDate: null,
-            action: "skipped",
-            reason: `${u.type} workout skipped for life event`,
-          }))
-        });
+      // Show success message
+      if (result.unblocked > 0 || result.blocked > 0) {
+        alert(`Resync complete: ${result.unblocked} workout(s) unblocked, ${result.blocked} workout(s) blocked`);
       } else {
-        // Show debug info to help diagnose
-        const debugMsg = result.debug 
-          ? `\n\nDebug info:\n- Total workouts in plan: ${result.debug.totalWorkoutsInPlan}\n- Sample dates: ${result.debug.sampleDates?.slice(0,5).join(", ")}\n- Events: ${result.debug.events?.map((e: any) => `${e.start} to ${e.end}`).join(", ")}\n- Matches found: ${result.debug.matches?.length || 0}`
-          : "";
-        alert((result.message || "No workouts to skip") + debugMsg);
+        alert("Resync complete: No changes needed");
       }
+      
+      // Refresh the page data
+      mutate();
     } catch (err) {
-      alert("Failed to update plan: " + err);
+      console.error("Failed to resync:", err);
+      alert("Failed to resync training plan");
     }
     setIsResyncing(false);
   };
