@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { NextRequest, NextResponse } from "next/server";
 import { adjustWorkoutForReadiness } from "@/lib/training-plan-generator";
 import { redistributeTraining } from "@/lib/training-redistributor";
@@ -325,7 +326,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
-  const { data: workout, error } = await supabase
+  // Use service client to bypass RLS for the update
+  const serviceClient = createServiceClient();
+  const { data: workout, error } = await serviceClient
     .from("planned_workouts")
     .update(updates)
     .eq("id", workoutId)
