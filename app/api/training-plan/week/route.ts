@@ -96,12 +96,12 @@ export async function GET(request: NextRequest) {
 
   // Get actual runs for this week to calculate completed miles
   // Calculate the current calendar week boundaries (Sunday to Saturday) using user's timezone
-  const todayDate = new Date(todayStr + "T12:00:00Z");
-  const dayOfWeek = todayDate.getDay(); // 0 = Sunday
+  const calendarDate = new Date(todayStr + "T12:00:00Z");
+  const dayOfWeek = calendarDate.getDay(); // 0 = Sunday
   
   // Calculate week start (Sunday) and week end (Saturday) for the current calendar week
-  const weekStartDate = new Date(todayDate);
-  weekStartDate.setDate(todayDate.getDate() - dayOfWeek);
+  const weekStartDate = new Date(calendarDate);
+  weekStartDate.setDate(calendarDate.getDate() - dayOfWeek);
   const weekStartStr = weekStartDate.toISOString().split('T')[0];
   
   const weekEndDate = new Date(weekStartDate);
