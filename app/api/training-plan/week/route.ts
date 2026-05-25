@@ -303,14 +303,26 @@ export async function PATCH(request: NextRequest) {
   }
 
   // First verify the workout belongs to the user via the training plan
-  const { data: workoutCheck } = await supabase
+  const { data: workoutCheck, error: checkError } = await supabase
     .from("planned_workouts")
-    .select("id, plan_id, training_plans!inner(user_id)")
+    .select("id, plan_id")
     .eq("id", workoutId)
     .single();
 
-  if (!workoutCheck || (workoutCheck.training_plans as any)?.user_id !== user.id) {
-    return NextResponse.json({ error: "Workout not found or access denied" }, { status: 404 });
+  if (checkError || !workoutCheck) {
+    return NextResponse.json({ error: "Workout not found" }, { status: 404 });
+  }
+
+  // Verify the plan belongs to the user
+  const { data: planCheck } = await supabase
+    .from("training_plans")
+    .select("user_id")
+    .eq("id", workoutCheck.plan_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!planCheck) {
+    return NextResponse.json({ error: "Access denied" }, { status: 403 });
   }
 
   const { data: workout, error } = await supabase
