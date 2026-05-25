@@ -294,11 +294,21 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   }
 
+  // First verify the workout belongs to the user via the training plan
+  const { data: workoutCheck } = await supabase
+    .from("planned_workouts")
+    .select("id, plan_id, training_plans!inner(user_id)")
+    .eq("id", workoutId)
+    .single();
+
+  if (!workoutCheck || (workoutCheck.training_plans as any)?.user_id !== user.id) {
+    return NextResponse.json({ error: "Workout not found or access denied" }, { status: 404 });
+  }
+
   const { data: workout, error } = await supabase
     .from("planned_workouts")
     .update(updates)
     .eq("id", workoutId)
-    .eq("user_id", user.id)
     .select()
     .single();
 
