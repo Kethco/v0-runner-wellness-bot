@@ -52,57 +52,66 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get all future life events
-  const today = new Date().toISOString().split("T")[0];
-  console.log("[v0] Resync API called, today:", today);
-  
-  const { data: events, error: eventsError } = await supabase
-    .from("life_events")
-    .select("*")
+  // Get active training plan
+  const { data: activePlan } = await supabase
+    .from("training_plans")
+    .select("id")
     .eq("user_id", user.id)
-    .gte("end_date", today)
-    .order("start_date", { ascending: true });
+    .eq("status", "active")
+    .maybeSingle();
 
-  console.log("[v0] Found life events:", events?.length, events);
-
-  if (eventsError) {
-    console.log("[v0] Events error:", eventsError.message);
-    return NextResponse.json({ error: eventsError.message }, { status: 500 });
+  if (!activePlan) {
+    return NextResponse.json({ message: "No active training plan found" });
   }
 
-  if (!events || events.length === 0) {
-    return NextResponse.json({ message: "No upcoming life events found", results: [] });
+  // Get all life events for this user
+  const { data: allEvents } = await supabase
+    .from("life_events")
+    .select("start_date, end_date, can_run, training_impact")
+    .eq("user_id", user.id);
+
+  // Get all workouts
+  const { data: allWorkouts } = await supabase
+    .from("planned_workouts")
+    .select("id, scheduled_date, status, workout_type")
+    .eq("plan_id", activePlan.id);
+
+  if (!allWorkouts) {
+    return NextResponse.json({ message: "No workouts found" });
   }
 
-  // Process each event
-  const results = [];
-  for (const event of events) {
-    console.log("[v0] Processing event:", event.event_type, event.start_date, "-", event.end_date, "can_run:", event.can_run, "impact:", event.training_impact);
-    
-    // Process events where can_run is false OR training_impact is not "none"
-    if (!event.can_run || event.training_impact !== "none") {
-      console.log("[v0] Rescheduling for event:", event.id);
-      const result = await rescheduleForLifeEvent(user.id, {
-        id: event.id,
-        start_date: event.start_date,
-        end_date: event.end_date,
-        event_type: event.event_type,
-        training_impact: event.training_impact,
-        can_run: event.can_run,
-      });
-      console.log("[v0] Reschedule result:", result);
-      results.push({
-        event: event.title || event.event_type,
-        dates: `${event.start_date} to ${event.end_date}`,
-        ...result,
-      });
-    } else {
-      console.log("[v0] Skipping event - can_run is true and impact is none");
+  let unblocked = 0;
+  let blocked = 0;
+
+  for (const workout of allWorkouts) {
+    // Check if this workout falls within ANY blocking life event
+    const isBlocked = allEvents?.some(event => 
+      workout.scheduled_date >= event.start_date && 
+      workout.scheduled_date <= event.end_date &&
+      (!event.can_run || event.training_impact === "no_training")
+    ) || false;
+
+    if (isBlocked && workout.status === "pending") {
+      // Should be blocked but isn't
+      await supabase
+        .from("planned_workouts")
+        .update({ status: "blocked" })
+        .eq("id", workout.id);
+      blocked++;
+    } else if (!isBlocked && workout.status === "blocked") {
+      // Should NOT be blocked but is - unblock it
+      await supabase
+        .from("planned_workouts")
+        .update({ status: "pending" })
+        .eq("id", workout.id);
+      unblocked++;
     }
   }
 
   return NextResponse.json({ 
-    message: `Processed ${results.length} life event(s)`,
-    results,
+    message: `Resync complete`,
+    unblocked,
+    blocked,
+    totalWorkouts: allWorkouts.length,
   });
 }
