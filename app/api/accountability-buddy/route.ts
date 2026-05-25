@@ -76,22 +76,39 @@ export async function GET() {
     .single();
 
   // Get buddy's streak and recent activity
+  // Use admin client to bypass RLS for buddy's data (since they're connected)
   const today = new Date().toISOString().split("T")[0];
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-  const { data: buddyCheckins } = await supabase
-    .from("checkins")
-    .select("id, created_at, date")
-    .eq("user_id", buddyId)
-    .gte("date", weekAgo)
-    .order("date", { ascending: false });
-
-  const { data: buddyRuns } = await supabase
-    .from("runs")
-    .select("id, miles, date")
-    .eq("user_id", buddyId)
-    .gte("date", weekAgo)
-    .order("date", { ascending: false });
+  // Create admin client for buddy stats (bypasses RLS)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  
+  let buddyCheckins: { id: string; created_at: string; date: string }[] | null = null;
+  let buddyRuns: { id: string; miles: number; date: string }[] | null = null;
+  
+  if (serviceRoleKey) {
+    const { createClient: createAdminClient } = await import("@supabase/supabase-js");
+    const adminClient = createAdminClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+    
+    const { data: checkins } = await adminClient
+      .from("checkins")
+      .select("id, created_at, date")
+      .eq("user_id", buddyId)
+      .gte("date", weekAgo)
+      .order("date", { ascending: false });
+    buddyCheckins = checkins;
+    
+    const { data: runs } = await adminClient
+      .from("runs")
+      .select("id, miles, date")
+      .eq("user_id", buddyId)
+      .gte("date", weekAgo)
+      .order("date", { ascending: false });
+    buddyRuns = runs;
+  }
 
   // Calculate buddy streak (consecutive days with check-ins)
   let buddyStreak = 0;
