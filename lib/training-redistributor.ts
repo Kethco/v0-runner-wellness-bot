@@ -171,10 +171,19 @@ export function redistributeTraining(
       if (remainingCapacity > 0) {
         const milesToAdd = Math.min(milesToRedistribute, remainingCapacity);
         
+        // Calculate actual day name from scheduled_date instead of using stored day_of_week
+        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        let blockedDayName = blockedWorkout.day_of_week;
+        if (blockedWorkout.scheduled_date) {
+          const [y, m, d] = blockedWorkout.scheduled_date.split('-').map(Number);
+          const blockedDate = new Date(y, m - 1, d);
+          blockedDayName = dayNames[blockedDate.getDay()];
+        }
+        
         adjustmentMap.set(candidate.id, {
           workout: candidate,
           addedMiles: currentAddedMiles + milesToAdd,
-          reason: `+${milesToAdd.toFixed(1)}mi from ${blockedWorkout.day_of_week} (${blockedWorkout.workout_type})`,
+          reason: `+${milesToAdd.toFixed(1)}mi from ${blockedDayName} (${blockedWorkout.workout_type})`,
         });
 
         milesToRedistribute -= milesToAdd;

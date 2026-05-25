@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     // EXCLUDE coaches - they don't need check-in reminders
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, first_name, phone, notification_morning, role, timezone")
+      .select("id, first_name, phone, notification_morning, role")
       .not("phone", "is", null)
       .or("notification_morning.is.null,notification_morning.eq.true")
       .or("role.is.null,role.neq.coach");
@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
     let skippedLifeEvent = 0;
 
     for (const profile of profiles || []) {
-      // Calculate today's date in user's timezone (default to America/Los_Angeles)
-      const userTimezone = profile.timezone || "America/Los_Angeles";
+      // Calculate today's date in Pacific time (America/Los_Angeles)
+      const userTimezone = "America/Los_Angeles";
       const now = new Date();
       const todayStr = now.toLocaleDateString('en-CA', { timeZone: userTimezone }); // YYYY-MM-DD format
       const todayStart = new Date(todayStr + "T00:00:00");
