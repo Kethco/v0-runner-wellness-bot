@@ -91,6 +91,12 @@ export default function ProfilePage() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch for theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Initialize avatar URL from profile data
   useEffect(() => {
@@ -481,7 +487,7 @@ return (
                   key={opt.value}
                   onClick={() => setTheme(opt.value)}
                   className={`flex flex-col items-center gap-2.5 p-4 rounded-xl border transition-all ${
-                    theme === opt.value
+                    mounted && theme === opt.value
                       ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]"
                       : "border-[#3A3A3C] bg-[#1C1C1E] text-[#8E8E93] hover:text-white hover:border-[#4A4A4C]"
                   }`}
