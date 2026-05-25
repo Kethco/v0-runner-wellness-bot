@@ -28,17 +28,12 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Get today's date
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split("T")[0];
-
     // Get users with phones who have morning notifications enabled (or not explicitly disabled)
     // Default to sending if notification_morning is null (new users)
     // EXCLUDE coaches - they don't need check-in reminders
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, first_name, phone, notification_morning, role")
+      .select("id, first_name, phone, notification_morning, role, timezone")
       .not("phone", "is", null)
       .or("notification_morning.is.null,notification_morning.eq.true")
       .or("role.is.null,role.neq.coach");
@@ -48,14 +43,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
-    // Get today's check-ins to exclude users who already checked in
-    const { data: todayCheckins } = await supabase
-      .from("checkins")
-      .select("user_id")
-      .gte("created_at", today.toISOString());
-
-    const checkedInUserIds = new Set(todayCheckins?.map((c) => c.user_id) || []);
-
     // Send reminders to users who haven't checked in
     let sent = 0;
     let skipped = 0;
@@ -63,7 +50,20 @@ export async function GET(request: NextRequest) {
     let skippedLifeEvent = 0;
 
     for (const profile of profiles || []) {
-      if (checkedInUserIds.has(profile.id)) {
+      // Calculate today's date in user's timezone (default to America/Los_Angeles)
+      const userTimezone = profile.timezone || "America/Los_Angeles";
+      const now = new Date();
+      const todayStr = now.toLocaleDateString('en-CA', { timeZone: userTimezone }); // YYYY-MM-DD format
+      const todayStart = new Date(todayStr + "T00:00:00");
+
+      // Get today's check-ins for this user
+      const { data: todayCheckins } = await supabase
+        .from("checkins")
+        .select("user_id")
+        .eq("user_id", profile.id)
+        .eq("date", todayStr);
+
+      if (todayCheckins && todayCheckins.length > 0) {
         skipped++;
         continue;
       }

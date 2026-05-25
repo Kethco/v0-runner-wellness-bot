@@ -263,6 +263,7 @@ export function ThisWeeksPlan() {
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((dayAbbr, index) => {
               // Calculate date for this day using client's today
               // Parse client's today date
+              if (!clientToday) return null;
               const [year, month, day] = clientToday.split('-').map(Number);
               const todayDate = new Date(year, month - 1, day);
               const dayOfWeek = todayDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -280,7 +281,8 @@ export function ThisWeeksPlan() {
               // Find workout for this day
               const workout = workouts.find(w => w.scheduled_date === dateStr);
               
-              const isToday = dateStr === today;
+              // Use clientToday for comparison, not the 'today' variable which might be stale
+              const isToday = dateStr === clientToday;
               const isRest = !workout || workout.workout_type === "rest";
               const isCompleted = workout?.status === "completed";
               const isSkipped = workout?.status === "skipped" || workout?.status === "blocked";
