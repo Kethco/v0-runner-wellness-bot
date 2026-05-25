@@ -35,11 +35,13 @@ export async function GET(request: NextRequest) {
 
     // Get users with phones who have morning notifications enabled (or not explicitly disabled)
     // Default to sending if notification_morning is null (new users)
+    // EXCLUDE coaches - they don't need check-in reminders
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, first_name, phone, notification_morning")
+      .select("id, first_name, phone, notification_morning, role")
       .not("phone", "is", null)
-      .or("notification_morning.is.null,notification_morning.eq.true");
+      .or("notification_morning.is.null,notification_morning.eq.true")
+      .or("role.is.null,role.neq.coach");
 
     if (profilesError) {
       console.error("[Cron] Error fetching profiles:", profilesError);
