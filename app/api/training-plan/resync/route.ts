@@ -98,7 +98,7 @@ export async function GET() {
         .update({ status: "blocked" })
         .eq("id", workout.id);
       blocked++;
-    } else if (!isBlocked && workout.status === "blocked") {
+    } else if (!isBlocked && (workout.status === "blocked" || workout.status === "skipped")) {
       // Should NOT be blocked but is - unblock it
       await supabase
         .from("planned_workouts")
