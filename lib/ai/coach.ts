@@ -157,7 +157,9 @@ Based on ALL this context, provide:
 3. If there are upcoming life events, proactively suggest how to adjust (e.g., "I see you have travel in 3 days - consider doing your long run tomorrow instead")
 4. One recovery or wellness tip based on their data
 
-Keep response under 180 words. Be encouraging but data-driven. Be PROACTIVE about suggesting plan adjustments. ${firstName ? `Address ${firstName} by name.` : ''} If they have a race coming up, factor that into your recommendation.`
+Keep response under 180 words. Be encouraging but data-driven. Be PROACTIVE about suggesting plan adjustments. ${firstName ? `Address ${firstName} by name.` : ''} If they have a race coming up, factor that into your recommendation.
+
+IMPORTANT: Do NOT use asterisks, bullet points, markdown formatting, or numbered lists. Write in natural flowing paragraphs only.`
 
   const { text } = await generateText({
     model: 'openai/gpt-4o-mini',
@@ -178,7 +180,7 @@ export async function generateShortCoachAdvice(data: WellnessData): Promise<stri
 Today: Sleep ${todayCheckin?.sleep_quality || '?'}/5, Energy ${todayCheckin?.energy_level || '?'}/5, Soreness ${todayCheckin?.soreness_level || '?'}/5
 Week: ${weeklyMiles.toFixed(1)} miles, Avg readiness ${weeklyAverages.readiness}/5
 
-Respond in 2-3 sentences max. Be specific about what they should do today. If soreness is high or energy is low, suggest recovery.`
+Respond in 2-3 sentences max. Be specific about what they should do today. If soreness is high or energy is low, suggest recovery. Do NOT use asterisks, bullet points, or any markdown formatting.`
 
   try {
     const { text } = await generateText({
