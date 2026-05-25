@@ -54,7 +54,8 @@ export function StreakCalendar({ currentStreak = 0 }: StreakCalendarProps) {
     // Start from the first Sunday before or on Jan 1
     current.setDate(current.getDate() - current.getDay());
     
-    while (current <= endDate || weeks.length < 53) {
+    // Continue until we pass the end date AND have complete weeks
+    while (current <= endDate || current.getDay() !== 0) {
       const week: { date: Date; miles: number; isCurrentMonth: boolean }[] = [];
       
       for (let i = 0; i < 7; i++) {
@@ -71,7 +72,8 @@ export function StreakCalendar({ currentStreak = 0 }: StreakCalendarProps) {
       
       weeks.push(week);
       
-      if (weeks.length >= 53) break;
+      // Safety limit to prevent infinite loop
+      if (weeks.length >= 54) break;
     }
     
     return weeks;
@@ -153,13 +155,18 @@ export function StreakCalendar({ currentStreak = 0 }: StreakCalendarProps) {
         </button>
       </div>
 
-      {/* Month Labels */}
+      {/* Month Labels - positioned based on actual week positions */}
       <div className="flex mb-1 pl-6">
-        {months.map((month, i) => (
-          <div key={month} className="flex-1 text-[10px] text-[#8E8E93] text-center">
-            {i % 2 === 0 ? month : ""}
-          </div>
-        ))}
+        {calendarData.map((week, weekIndex) => {
+          // Show month label on the first week that starts in that month
+          const firstDayOfWeek = week[0]?.date;
+          const showLabel = firstDayOfWeek && firstDayOfWeek.getDate() <= 7 && firstDayOfWeek.getFullYear() === year;
+          return (
+            <div key={weekIndex} className="w-[11px] mr-0.5 text-[10px] text-[#8E8E93] text-center flex-shrink-0">
+              {showLabel ? months[firstDayOfWeek.getMonth()].slice(0, 1) : ""}
+            </div>
+          );
+        })}
       </div>
 
       {/* Calendar Grid */}
