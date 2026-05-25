@@ -1,12 +1,49 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { get } from '@vercel/blob'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
+    // Verify user is authenticated
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const pathname = request.nextUrl.searchParams.get('pathname')
 
     if (!pathname) {
       return NextResponse.json({ error: 'Missing pathname' }, { status: 400 })
+    }
+
+    // Security: Verify the pathname belongs to the requesting user
+    // Avatar pathnames follow pattern: avatars/{userId}/...
+    const pathParts = pathname.split('/')
+    if (pathParts[0] === 'avatars' && pathParts[1] !== user.id) {
+      // Allow if user is viewing someone else's avatar (e.g., accountability buddy)
+      // But verify they have a legitimate relationship
+      const { data: buddy } = await supabase
+        .from('accountability_buddies')
+        .select('id')
+        .or(`user_id.eq.${user.id},buddy_id.eq.${user.id}`)
+        .or(`user_id.eq.${pathParts[1]},buddy_id.eq.${pathParts[1]}`)
+        .limit(1)
+        .single()
+      
+      const { data: coachRelation } = await supabase
+        .from('coach_athletes')
+        .select('id')
+        .or(`coach_id.eq.${user.id},athlete_id.eq.${user.id}`)
+        .or(`coach_id.eq.${pathParts[1]},athlete_id.eq.${pathParts[1]}`)
+        .limit(1)
+        .single()
+      
+      // If no relationship exists, deny access
+      if (!buddy && !coachRelation) {
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+      }
     }
 
     const result = await get(pathname, {

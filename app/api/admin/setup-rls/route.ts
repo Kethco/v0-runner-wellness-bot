@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const key = searchParams.get("key");
-  
-  // Check admin key
-  const adminKey = process.env.ADMIN_API_KEY || "setup-rls-2026";
-  if (key !== adminKey) {
+  // Verify user is admin via session
+  const authSupabase = await createServerClient();
+  const { data: { user } } = await authSupabase.auth.getUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: profile } = await authSupabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.is_admin) {
+    return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
   }
 
   // Return the RLS SQL that needs to be run
@@ -110,7 +119,165 @@ CREATE POLICY "ai_advice_select_own" ON ai_advice FOR SELECT USING (auth.uid() =
 CREATE POLICY "ai_advice_insert_own" ON ai_advice FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "ai_advice_delete_own" ON ai_advice FOR DELETE USING (auth.uid() = user_id);
 
--- 6. Add unique constraint on phone (prevent duplicate phone signups)
+-- 6. TRAINING_PLANS TABLE
+ALTER TABLE training_plans ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "training_plans_select_own" ON training_plans;
+DROP POLICY IF EXISTS "training_plans_insert_own" ON training_plans;
+DROP POLICY IF EXISTS "training_plans_update_own" ON training_plans;
+DROP POLICY IF EXISTS "training_plans_delete_own" ON training_plans;
+
+CREATE POLICY "training_plans_select_own" ON training_plans FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "training_plans_insert_own" ON training_plans FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "training_plans_update_own" ON training_plans FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "training_plans_delete_own" ON training_plans FOR DELETE USING (auth.uid() = user_id);
+
+-- 7. WORKOUTS TABLE
+ALTER TABLE workouts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "workouts_select_own" ON workouts;
+DROP POLICY IF EXISTS "workouts_insert_own" ON workouts;
+DROP POLICY IF EXISTS "workouts_update_own" ON workouts;
+DROP POLICY IF EXISTS "workouts_delete_own" ON workouts;
+
+CREATE POLICY "workouts_select_own" ON workouts FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "workouts_insert_own" ON workouts FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "workouts_update_own" ON workouts FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "workouts_delete_own" ON workouts FOR DELETE USING (auth.uid() = user_id);
+
+-- 8. LIFE_EVENTS TABLE
+ALTER TABLE life_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "life_events_select_own" ON life_events;
+DROP POLICY IF EXISTS "life_events_insert_own" ON life_events;
+DROP POLICY IF EXISTS "life_events_update_own" ON life_events;
+DROP POLICY IF EXISTS "life_events_delete_own" ON life_events;
+
+CREATE POLICY "life_events_select_own" ON life_events FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "life_events_insert_own" ON life_events FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "life_events_update_own" ON life_events FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "life_events_delete_own" ON life_events FOR DELETE USING (auth.uid() = user_id);
+
+-- 9. GOALS TABLE
+ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "goals_select_own" ON goals;
+DROP POLICY IF EXISTS "goals_insert_own" ON goals;
+DROP POLICY IF EXISTS "goals_update_own" ON goals;
+DROP POLICY IF EXISTS "goals_delete_own" ON goals;
+
+CREATE POLICY "goals_select_own" ON goals FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "goals_insert_own" ON goals FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "goals_update_own" ON goals FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "goals_delete_own" ON goals FOR DELETE USING (auth.uid() = user_id);
+
+-- 10. SHOES TABLE
+ALTER TABLE shoes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "shoes_select_own" ON shoes;
+DROP POLICY IF EXISTS "shoes_insert_own" ON shoes;
+DROP POLICY IF EXISTS "shoes_update_own" ON shoes;
+DROP POLICY IF EXISTS "shoes_delete_own" ON shoes;
+
+CREATE POLICY "shoes_select_own" ON shoes FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "shoes_insert_own" ON shoes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "shoes_update_own" ON shoes FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "shoes_delete_own" ON shoes FOR DELETE USING (auth.uid() = user_id);
+
+-- 11. PERSONAL_RECORDS TABLE
+ALTER TABLE personal_records ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "personal_records_select_own" ON personal_records;
+DROP POLICY IF EXISTS "personal_records_insert_own" ON personal_records;
+DROP POLICY IF EXISTS "personal_records_update_own" ON personal_records;
+DROP POLICY IF EXISTS "personal_records_delete_own" ON personal_records;
+
+CREATE POLICY "personal_records_select_own" ON personal_records FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "personal_records_insert_own" ON personal_records FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "personal_records_update_own" ON personal_records FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "personal_records_delete_own" ON personal_records FOR DELETE USING (auth.uid() = user_id);
+
+-- 12. RESILIENCE_JOURNAL TABLE
+ALTER TABLE resilience_journal ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "resilience_journal_select_own" ON resilience_journal;
+DROP POLICY IF EXISTS "resilience_journal_insert_own" ON resilience_journal;
+DROP POLICY IF EXISTS "resilience_journal_update_own" ON resilience_journal;
+DROP POLICY IF EXISTS "resilience_journal_delete_own" ON resilience_journal;
+
+CREATE POLICY "resilience_journal_select_own" ON resilience_journal FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "resilience_journal_insert_own" ON resilience_journal FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "resilience_journal_update_own" ON resilience_journal FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "resilience_journal_delete_own" ON resilience_journal FOR DELETE USING (auth.uid() = user_id);
+
+-- 13. REFLECTIONS TABLE
+ALTER TABLE reflections ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "reflections_select_own" ON reflections;
+DROP POLICY IF EXISTS "reflections_insert_own" ON reflections;
+DROP POLICY IF EXISTS "reflections_update_own" ON reflections;
+DROP POLICY IF EXISTS "reflections_delete_own" ON reflections;
+
+CREATE POLICY "reflections_select_own" ON reflections FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "reflections_insert_own" ON reflections FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "reflections_update_own" ON reflections FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "reflections_delete_own" ON reflections FOR DELETE USING (auth.uid() = user_id);
+
+-- 14. DAILY_INTENTIONS TABLE
+ALTER TABLE daily_intentions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "daily_intentions_select_own" ON daily_intentions;
+DROP POLICY IF EXISTS "daily_intentions_insert_own" ON daily_intentions;
+DROP POLICY IF EXISTS "daily_intentions_update_own" ON daily_intentions;
+DROP POLICY IF EXISTS "daily_intentions_delete_own" ON daily_intentions;
+
+CREATE POLICY "daily_intentions_select_own" ON daily_intentions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "daily_intentions_insert_own" ON daily_intentions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "daily_intentions_update_own" ON daily_intentions FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "daily_intentions_delete_own" ON daily_intentions FOR DELETE USING (auth.uid() = user_id);
+
+-- 15. AI_COACH_MESSAGES TABLE
+ALTER TABLE ai_coach_messages ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "ai_coach_messages_select_own" ON ai_coach_messages;
+DROP POLICY IF EXISTS "ai_coach_messages_insert_own" ON ai_coach_messages;
+DROP POLICY IF EXISTS "ai_coach_messages_delete_own" ON ai_coach_messages;
+
+CREATE POLICY "ai_coach_messages_select_own" ON ai_coach_messages FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "ai_coach_messages_insert_own" ON ai_coach_messages FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "ai_coach_messages_delete_own" ON ai_coach_messages FOR DELETE USING (auth.uid() = user_id);
+
+-- 16. ACCOUNTABILITY_BUDDIES TABLE
+ALTER TABLE accountability_buddies ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "accountability_buddies_select_own" ON accountability_buddies;
+DROP POLICY IF EXISTS "accountability_buddies_insert_own" ON accountability_buddies;
+DROP POLICY IF EXISTS "accountability_buddies_update_own" ON accountability_buddies;
+DROP POLICY IF EXISTS "accountability_buddies_delete_own" ON accountability_buddies;
+
+CREATE POLICY "accountability_buddies_select_own" ON accountability_buddies FOR SELECT 
+  USING (auth.uid() = user_id OR auth.uid() = buddy_id);
+CREATE POLICY "accountability_buddies_insert_own" ON accountability_buddies FOR INSERT 
+  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "accountability_buddies_update_own" ON accountability_buddies FOR UPDATE 
+  USING (auth.uid() = user_id OR auth.uid() = buddy_id);
+CREATE POLICY "accountability_buddies_delete_own" ON accountability_buddies FOR DELETE 
+  USING (auth.uid() = user_id);
+
+-- 17. JOURNAL TABLE
+ALTER TABLE journal ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "journal_select_own" ON journal;
+DROP POLICY IF EXISTS "journal_insert_own" ON journal;
+DROP POLICY IF EXISTS "journal_update_own" ON journal;
+DROP POLICY IF EXISTS "journal_delete_own" ON journal;
+
+CREATE POLICY "journal_select_own" ON journal FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "journal_insert_own" ON journal FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "journal_update_own" ON journal FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "journal_delete_own" ON journal FOR DELETE USING (auth.uid() = user_id);
+
+-- 18. Add unique constraint on phone (prevent duplicate phone signups)
 CREATE UNIQUE INDEX IF NOT EXISTS profiles_phone_unique ON profiles(phone) 
   WHERE phone IS NOT NULL AND phone != '';
 

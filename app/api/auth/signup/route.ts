@@ -141,8 +141,9 @@ async function createProfile(userId: string, data: {
   coach_id?: string;
 }) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     // Only use basic columns that definitely exist
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from("profiles")
       .upsert({
         id: userId,
