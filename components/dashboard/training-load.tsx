@@ -24,21 +24,25 @@ export function TrainingLoadIndicator({ weeklyGoal = 20 }: TrainingLoadProps) {
     const runs: Run[] = runsData?.runs || [];
     const now = new Date();
     
-    // Calculate weekly totals for last 4 weeks
+    // Get today's date string in local timezone (YYYY-MM-DD)
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
+    // Calculate weekly totals for last 4 weeks using string comparisons
     const weeks: number[] = [];
     for (let w = 0; w < 4; w++) {
       const weekStart = new Date(now);
       weekStart.setDate(weekStart.getDate() - (7 * w) - now.getDay());
-      weekStart.setHours(0, 0, 0, 0);
+      const weekStartStr = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`;
       
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
-      weekEnd.setHours(23, 59, 59, 999);
+      const weekEndStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
       
+      // Use string comparison to avoid timezone issues
       const weekMiles = runs
         .filter(r => {
-          const runDate = new Date(r.date);
-          return runDate >= weekStart && runDate <= weekEnd;
+          const runDateStr = r.date.split('T')[0]; // Handle ISO strings
+          return runDateStr >= weekStartStr && runDateStr <= weekEndStr;
         })
         .reduce((sum, r) => sum + r.miles, 0);
       
