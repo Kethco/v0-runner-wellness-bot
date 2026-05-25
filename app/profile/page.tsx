@@ -482,20 +482,25 @@ return (
                 { value: "light", label: "Light", icon: Sun },
                 { value: "dark", label: "Dark", icon: MoonIcon },
                 { value: "system", label: "System", icon: Monitor },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setTheme(opt.value)}
-                  className={`flex flex-col items-center gap-2.5 p-4 rounded-xl border transition-all ${
-                    mounted && theme === opt.value
-                      ? "border-[#FF6B00] bg-[#FF6B00]/10 text-[#FF6B00]"
-                      : "border-[#3A3A3C] bg-[#1C1C1E] text-[#8E8E93] hover:text-white hover:border-[#4A4A4C]"
-                  }`}
-                >
-                  <opt.icon className="w-5 h-5" />
-                  <span className="text-sm font-medium">{opt.label}</span>
-                </button>
-              ))}
+              ].map((opt) => {
+                // Determine if this option is selected - only after mount to avoid hydration mismatch
+                const isSelected = mounted ? theme === opt.value : false;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setTheme(opt.value)}
+                    className="flex flex-col items-center gap-2.5 p-4 rounded-xl border transition-all"
+                    style={{
+                      borderColor: isSelected ? '#FF6B00' : '#3A3A3C',
+                      backgroundColor: isSelected ? 'rgba(255, 107, 0, 0.1)' : '#1C1C1E',
+                      color: isSelected ? '#FF6B00' : '#8E8E93',
+                    }}
+                  >
+                    <opt.icon className="w-5 h-5" />
+                    <span className="text-sm font-medium">{opt.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
