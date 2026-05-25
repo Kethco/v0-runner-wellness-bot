@@ -1,7 +1,25 @@
 import { NextResponse } from "next/server";
 import { Pool } from "pg";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
+  // Verify user is admin
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.is_admin) {
+    return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
+  }
+
   const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.DATABASE_URL;
   
   if (!connectionString) {

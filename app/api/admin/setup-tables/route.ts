@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const key = searchParams.get("key");
-  
-  // Check admin key
-  const adminKey = process.env.ADMIN_API_KEY || "fix-runner-2026";
-  if (key !== adminKey) {
-    return NextResponse.json({ error: "Invalid key" }, { status: 401 });
+  // Verify user is admin via session
+  const authSupabase = await createServerClient();
+  const { data: { user } } = await authSupabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: profile } = await authSupabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.is_admin) {
+    return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
   }
 
   const supabase = createClient(
