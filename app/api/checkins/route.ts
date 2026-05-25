@@ -51,27 +51,31 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   
   // Map feeling values to match database constraint
-  // The UI sends lowercase: "low", "fine", "good", "great"
-  // The DB constraint expects: 1-4 numeric
-  const feelingMap: Record<string, number> = {
-    "low": 1,
-    "Low": 1,
-    "fine": 2,
-    "Fine": 2,
-    "ok": 2,
-    "OK": 2,
-    "good": 3,
-    "Good": 3,
-    "great": 4,
-    "Great": 4,
+  // The DB constraint expects: "great", "good", "okay", "tired", "exhausted"
+  const feelingMap: Record<string, string> = {
+    "low": "tired",
+    "fine": "okay",
+    "ok": "okay",
+    "good": "good",
+    "great": "great",
+    "tired": "tired",
+    "exhausted": "exhausted",
+    "okay": "okay",
   };
+  
+  // Normalize feeling value to match DB constraint
+  let feelingValue: string | undefined = undefined;
+  if (body.feeling) {
+    const rawFeeling = String(body.feeling).toLowerCase();
+    feelingValue = feelingMap[rawFeeling] || "okay";
+  }
   
   const checkinData = {
     user_id: user.id,
     date: body.date || new Date().toISOString().split("T")[0],
     sleep_rating: body.sleepRating,
     sleep_hours: body.sleepHours,
-    feeling: typeof body.feeling === 'string' ? (feelingMap[body.feeling] || 2) : body.feeling,
+    feeling: feelingValue,
     energy: typeof body.energy === 'string' ? parseInt(body.energy) || 3 : body.energy,
     soreness: typeof body.soreness === 'string' ? parseInt(body.soreness) || 1 : body.soreness,
     soreness_location: body.sorenessLocation,
