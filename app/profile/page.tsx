@@ -100,7 +100,14 @@ export default function ProfilePage() {
   // Initialize avatar URL from profile data
   useEffect(() => {
     if (profileData?.profile?.avatar_url) {
-      setAvatarUrl(profileData.profile.avatar_url);
+      // Check if it's a pathname (from private blob) or full URL (from OAuth)
+      const avatarValue = profileData.profile.avatar_url;
+      if (avatarValue.startsWith('http') || avatarValue.startsWith('/api/')) {
+        setAvatarUrl(avatarValue);
+      } else {
+        // It's a pathname, convert to serve URL
+        setAvatarUrl(`/api/avatar/serve?pathname=${encodeURIComponent(avatarValue)}`);
+      }
     } else if (user?.user_metadata?.avatar_url) {
       setAvatarUrl(user.user_metadata.avatar_url);
     }

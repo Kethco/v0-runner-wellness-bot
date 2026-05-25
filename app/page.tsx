@@ -253,17 +253,26 @@ return (
                 style={{ boxShadow: '0 0 16px rgba(255,69,0,0.4)' }}
               >
                 <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                  {(profileData?.profile?.avatar_url || user?.user_metadata?.avatar_url) ? (
-                    <img 
-                      src={profileData?.profile?.avatar_url || user?.user_metadata?.avatar_url} 
-                      alt={userName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-base font-bold text-white">
-                      {userName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                    </span>
-                  )}
+                  {(() => {
+                    // Get avatar URL, handling pathname vs full URL
+                    const avatarValue = profileData?.profile?.avatar_url || user?.user_metadata?.avatar_url;
+                    if (!avatarValue) return (
+                      <span className="text-base font-bold text-white">
+                        {userName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                      </span>
+                    );
+                    // Check if it's a pathname (from private blob) or full URL
+                    const avatarSrc = avatarValue.startsWith('http') || avatarValue.startsWith('/api/')
+                      ? avatarValue
+                      : `/api/avatar/serve?pathname=${encodeURIComponent(avatarValue)}`;
+                    return (
+                      <img 
+                        src={avatarSrc} 
+                        alt={userName}
+                        className="w-full h-full object-cover"
+                      />
+                    );
+                  })()}
                 </div>
               </div>
               {/* Online indicator */}

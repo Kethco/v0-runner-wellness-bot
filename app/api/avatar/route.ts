@@ -31,21 +31,25 @@ export async function POST(request: NextRequest) {
 
     // Upload to Vercel Blob with user-specific path
     const blob = await put(`avatars/${user.id}/${Date.now()}-${file.name}`, file, {
-      access: 'public',
+      access: 'private',
     })
 
-    // Save avatar URL to profiles table
+    // For private blobs, we need to store the pathname, not the URL
+    // The URL will be served through an API route
+    const avatarPath = blob.pathname
+
+    // Save avatar pathname to profiles table
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ avatar_url: blob.url })
+      .update({ avatar_url: avatarPath })
       .eq('id', user.id)
 
     if (updateError) {
       console.error('Error updating profile:', updateError)
-      // Still return the URL even if profile update fails
+      // Still return the path even if profile update fails
     }
 
-    return NextResponse.json({ url: blob.url })
+    return NextResponse.json({ url: `/api/avatar/serve?pathname=${encodeURIComponent(avatarPath)}` })
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
