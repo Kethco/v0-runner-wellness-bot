@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -202,9 +202,14 @@ export default function TrainingPlanPage() {
   
   const redistributionMessage = getRedistributionMessage(redistributionSummary);
   
-  // Use local date, not UTC
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  // Calculate today's date on client-side only to use user's local timezone
+  const [today, setToday] = useState<string>("");
+  
+  useEffect(() => {
+    const now = new Date();
+    const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    setToday(localToday);
+  }, []);
 
   // Calculate days until race
   const raceDate = plan.goal?.target_date || plan.end_date;
