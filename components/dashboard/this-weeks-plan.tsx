@@ -153,6 +153,9 @@ export function ThisWeeksPlan() {
     if (!todayAdjustment) return;
     setActionLoading(true);
     try {
+      console.log("[v0] Accepting adjustment for workout:", todayAdjustment.originalWorkout.id);
+      console.log("[v0] Adjusted workout data:", todayAdjustment.suggestedWorkout);
+      
       const response = await fetch("/api/training-plan/week", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -163,12 +166,15 @@ export function ThisWeeksPlan() {
         }),
       });
       
+      const responseData = await response.json();
+      console.log("[v0] Accept response:", response.ok, responseData);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("[v0] Failed to accept adjustment:", errorData);
-        alert("Failed to save adjustment: " + (errorData.error || "Unknown error"));
+        console.error("[v0] Failed to accept adjustment:", responseData);
+        alert("Failed to save adjustment: " + (responseData.error || "Unknown error"));
       } else {
-        mutate();
+        console.log("[v0] Adjustment saved, refreshing data...");
+        await mutate();
         setShowAdjustmentDialog(false);
       }
     } catch (e) {

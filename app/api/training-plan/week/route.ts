@@ -174,7 +174,8 @@ export async function GET(request: NextRequest) {
   let todayWorkout = workoutsWithRuns?.find(w => w.scheduled_date === todayStr);
   let todayAdjustment = null;
   
-  if (todayWorkout && todayWorkout.status !== "blocked" && readinessScore !== null && readinessScore <= 3) {
+  // Only suggest adjustment if workout is pending (not already modified, blocked, completed, or skipped)
+  if (todayWorkout && todayWorkout.status === "pending" && readinessScore !== null && readinessScore <= 3) {
     // Strip ALL existing (+X.Xmi) suffixes from title - keep replacing until none left
     let cleanTitle = todayWorkout.title || '';
     while (/\(\+[\d.]+mi\)/.test(cleanTitle)) {
