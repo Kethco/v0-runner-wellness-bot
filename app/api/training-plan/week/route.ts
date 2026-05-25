@@ -172,17 +172,17 @@ export async function GET(request: NextRequest) {
 
   // Find today's workout and apply adjustments if needed
   let todayWorkout = workoutsWithRuns?.find(w => w.scheduled_date === todayStr);
-  console.log("[v0] todayStr:", todayStr, "todayWorkout:", todayWorkout?.id, "status:", todayWorkout?.status);
-  console.log("[v0] readinessScore:", readinessScore);
-  
   let todayAdjustment = null;
   
-  // Only suggest adjustment if workout is not already modified, blocked, completed, or skipped
-  const excludedStatuses = ["modified", "blocked", "completed", "skipped"];
-  const canSuggestAdjustment = todayWorkout && !excludedStatuses.includes(todayWorkout.status);
-  console.log("[v0] canSuggestAdjustment:", canSuggestAdjustment, "excluded:", excludedStatuses.includes(todayWorkout?.status));
+  // Only suggest adjustment if workout exists, is not blocked/modified, and readiness is low
+  const shouldSuggestAdjustment = todayWorkout && 
+    todayWorkout.status !== "blocked" && 
+    todayWorkout.status !== "modified" &&
+    todayWorkout.status !== "completed" &&
+    readinessScore !== null && 
+    readinessScore <= 3;
   
-  if (canSuggestAdjustment && readinessScore !== null && readinessScore <= 3) {
+  if (shouldSuggestAdjustment) {
     // Strip ALL existing (+X.Xmi) suffixes from title - keep replacing until none left
     let cleanTitle = todayWorkout.title || '';
     while (/\(\+[\d.]+mi\)/.test(cleanTitle)) {
