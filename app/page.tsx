@@ -127,14 +127,22 @@ export default function Dashboard() {
 
   // Check for feature tour parameter (using window.location to avoid Suspense requirement)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("tour") === "1") {
-        setShowFeatureTour(true);
-        // Clean up URL
-        window.history.replaceState({}, "", "/");
+    // Small delay to ensure URL is fully loaded after navigation
+    const checkTourParam = () => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("tour") === "1") {
+          setShowFeatureTour(true);
+          // Clean up URL
+          window.history.replaceState({}, "", "/");
+        }
       }
-    }
+    };
+    
+    // Check immediately and again after a short delay
+    checkTourParam();
+    const timeout = setTimeout(checkTourParam, 100);
+    return () => clearTimeout(timeout);
   }, []);
   
   // Derived state (safe to compute after hooks)
