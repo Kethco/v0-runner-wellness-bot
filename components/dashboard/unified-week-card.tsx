@@ -250,7 +250,9 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
     if (!planData?.todayAdjustment) return;
     setActionLoading(true);
     try {
-      await fetch("/api/training-plan/week", {
+      console.log("[v0] Accepting adjustment for workout:", planData.todayAdjustment.originalWorkout.id);
+      
+      const response = await fetch("/api/training-plan/week", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -259,10 +261,21 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
           adjustedWorkout: planData.todayAdjustment.suggestedWorkout,
         }),
       });
-      mutate();
-      setShowAdjustmentDialog(false);
+      
+      const responseData = await response.json();
+      console.log("[v0] Accept response:", response.ok, responseData);
+      
+      if (!response.ok) {
+        console.error("[v0] Failed to accept adjustment:", responseData);
+        alert("Failed to save adjustment: " + (responseData.error || "Unknown error"));
+      } else {
+        console.log("[v0] Adjustment saved successfully");
+        await mutate();
+        setShowAdjustmentDialog(false);
+      }
     } catch (e) {
-      console.error("Failed to accept adjustment:", e);
+      console.error("[v0] Failed to accept adjustment:", e);
+      alert("Failed to save adjustment. Please try again.");
     }
     setActionLoading(false);
   };
