@@ -404,6 +404,9 @@ export default function TrainingPlanPage() {
                             isBlocked ? "text-red-500" : isCompleted ? "text-[#30D158]" : "text-foreground"
                           }`}>
                             {actualDayName}
+                            <span className="text-muted-foreground font-normal ml-1">
+                              ({new Date(workout.scheduled_date + "T12:00:00").toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})
+                            </span>
                           </p>
                           {isBlocked && (
                             <Badge className="text-[10px] h-4 bg-red-500/20 text-red-500">Blocked</Badge>
@@ -431,9 +434,9 @@ export default function TrainingPlanPage() {
                           </p>
                         )}
                         
-                        {isBlocked && workout.blocked_reason && (
+                        {isBlocked && (
                           <p className="text-xs text-red-500/70 mt-1">
-                            {workout.blocked_reason}
+                            Life event ({workout.scheduled_date})
                           </p>
                         )}
                         
