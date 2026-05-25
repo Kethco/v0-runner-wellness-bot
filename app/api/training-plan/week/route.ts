@@ -328,18 +328,24 @@ export async function PATCH(request: NextRequest) {
 
   // Use service client to bypass RLS for the update
   const serviceClient = createServiceClient();
+  
+  console.log("[v0] Updating workout", workoutId, "with updates:", JSON.stringify(updates));
+  
   const { data: workout, error } = await serviceClient
     .from("planned_workouts")
     .update(updates)
     .eq("id", workoutId)
     .select()
     .single();
-
+  
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[v0] Update error:", error);
+    return NextResponse.json({ error: error.message, details: error }, { status: 500 });
   }
+  
+  console.log("[v0] Updated workout:", workout);
 
-  return NextResponse.json({ workout });
+  return NextResponse.json({ workout, success: true });
 }
 
 // POST handler for workout actions (skip, adjust)
