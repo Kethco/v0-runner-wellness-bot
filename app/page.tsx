@@ -37,7 +37,6 @@ import { StreakCalendar } from "@/components/dashboard/streak-calendar";
 import { TrainingLoadIndicator } from "@/components/dashboard/training-load";
 import { RunningBuddy } from "@/components/running-buddy";
 import { OnboardingTour } from "@/components/onboarding-tour";
-import { useSearchParams } from "next/navigation";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -48,7 +47,6 @@ const fetcher = async (url: string) => {
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
   
   // ALL HOOKS MUST BE AT THE TOP - before any conditional returns
   const [showCheckinModal, setShowCheckinModal] = useState(false);
@@ -127,14 +125,17 @@ export default function Dashboard() {
     setGreeting(getGreeting());
   }, []);
 
-  // Check for feature tour parameter
+  // Check for feature tour parameter (using window.location to avoid Suspense requirement)
   useEffect(() => {
-    if (searchParams.get("tour") === "1") {
-      setShowFeatureTour(true);
-      // Clean up URL
-      window.history.replaceState({}, "", "/");
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("tour") === "1") {
+        setShowFeatureTour(true);
+        // Clean up URL
+        window.history.replaceState({}, "", "/");
+      }
     }
-  }, [searchParams]);
+  }, []);
   
   // Derived state (safe to compute after hooks)
   const runs = runsData?.runs || [];
