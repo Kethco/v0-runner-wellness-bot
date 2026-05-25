@@ -27,6 +27,10 @@ export function TrainingLoadIndicator({ weeklyGoal = 20 }: TrainingLoadProps) {
     // Get today's date string in local timezone (YYYY-MM-DD)
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
+    // Debug: log all runs and today's date
+    console.log("[v0] TrainingLoad - todayStr:", todayStr, "now.getDay():", now.getDay());
+    console.log("[v0] TrainingLoad - runs:", runs.map(r => ({ date: r.date.split('T')[0], miles: r.miles })));
+    
     // Calculate weekly totals for last 4 weeks using string comparisons
     const weeks: number[] = [];
     for (let w = 0; w < 4; w++) {
@@ -38,14 +42,19 @@ export function TrainingLoadIndicator({ weeklyGoal = 20 }: TrainingLoadProps) {
       weekEnd.setDate(weekEnd.getDate() + 6);
       const weekEndStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
       
+      console.log(`[v0] Week ${w}: ${weekStartStr} to ${weekEndStr}`);
+      
       // Use string comparison to avoid timezone issues
       const weekMiles = runs
         .filter(r => {
           const runDateStr = r.date.split('T')[0]; // Handle ISO strings
-          return runDateStr >= weekStartStr && runDateStr <= weekEndStr;
+          const inRange = runDateStr >= weekStartStr && runDateStr <= weekEndStr;
+          if (w === 0 && inRange) console.log("[v0] Run in current week:", runDateStr, r.miles);
+          return inRange;
         })
         .reduce((sum, r) => sum + r.miles, 0);
       
+      console.log(`[v0] Week ${w} miles: ${weekMiles}`);
       weeks.unshift(weekMiles); // Add to beginning so oldest is first
     }
     
