@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
     
     const { data: connection, error } = await supabase
       .from("accountability_buddies")
-      .update({ status: "active", accepted_at: new Date().toISOString() })
+      .update({ status: "active" })
       .eq("id", inviteId)
       .eq("buddy_id", user.id)
       .eq("status", "pending")
