@@ -51,13 +51,18 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   
   // Map feeling values to match database constraint
-  // The UI sends: "Low", "Fine", "Good", "Great"
-  // The DB constraint may expect: 1-5 numeric or specific text
+  // The UI sends lowercase: "low", "fine", "good", "great"
+  // The DB constraint expects: 1-4 numeric
   const feelingMap: Record<string, number> = {
+    "low": 1,
     "Low": 1,
+    "fine": 2,
     "Fine": 2,
+    "ok": 2,
     "OK": 2,
+    "good": 3,
     "Good": 3,
+    "great": 4,
     "Great": 4,
   };
   
