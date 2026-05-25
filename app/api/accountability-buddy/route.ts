@@ -162,12 +162,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email required" }, { status: 400 });
     }
 
-    // Find user by email in profiles
-    const { data: buddyProfile } = await supabase
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // First try to find user by email in profiles table
+    let { data: buddyProfile } = await supabase
       .from("profiles")
       .select("id, email")
-      .eq("email", email.toLowerCase().trim())
-      .single();
+      .eq("email", normalizedEmail)
+      .maybeSingle();
+
+    // If not found in profiles, try using admin client to look up in auth.users
+    if (!buddyProfile) {
+      // Use service role to query auth users
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+      
+      if (serviceRoleKey) {
+        const { createClient } = await import("@supabase/supabase-js");
+        const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+          auth: { autoRefreshToken: false, persistSession: false }
+        });
+        
+        // List users and find by email
+        const { data: authData } = await adminClient.auth.admin.listUsers();
+        const authUser = authData?.users?.find(u => u.email?.toLowerCase() === normalizedEmail);
+        
+        if (authUser) {
+          // User exists in auth but profile might not have email - update it
+          await supabase
+            .from("profiles")
+            .update({ email: normalizedEmail })
+            .eq("id", authUser.id);
+          
+          buddyProfile = { id: authUser.id, email: normalizedEmail };
+        }
+      }
+    }
 
     if (!buddyProfile) {
       return NextResponse.json({ error: "User not found. They need to sign up first." }, { status: 404 });

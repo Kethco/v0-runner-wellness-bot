@@ -50,16 +50,27 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   
+  // Map feeling values to match database constraint
+  // The UI sends: "Low", "Fine", "Good", "Great"
+  // The DB constraint may expect: 1-5 numeric or specific text
+  const feelingMap: Record<string, number> = {
+    "Low": 1,
+    "Fine": 2,
+    "OK": 2,
+    "Good": 3,
+    "Great": 4,
+  };
+  
   const checkinData = {
     user_id: user.id,
     date: body.date || new Date().toISOString().split("T")[0],
     sleep_rating: body.sleepRating,
     sleep_hours: body.sleepHours,
-    feeling: body.feeling,
-    energy: body.energy,
-    soreness: body.soreness,
+    feeling: typeof body.feeling === 'string' ? (feelingMap[body.feeling] || 2) : body.feeling,
+    energy: typeof body.energy === 'string' ? parseInt(body.energy) || 3 : body.energy,
+    soreness: typeof body.soreness === 'string' ? parseInt(body.soreness) || 1 : body.soreness,
     soreness_location: body.sorenessLocation,
-    readiness: body.readiness,
+    readiness: typeof body.readiness === 'string' ? parseInt(body.readiness) || 3 : body.readiness,
     notes: body.notes,
     is_afternoon_update: body.isAfternoonUpdate || false,
   };
