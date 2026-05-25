@@ -55,14 +55,19 @@ export function TrainingLoadIndicator({ weeklyGoal = 20 }: TrainingLoadProps) {
     const now = new Date(year, month - 1, day);
     
     // Calculate weekly totals for last 4 weeks using string comparisons
+    // Week starts on Monday, ends on Sunday
     const weeks: number[] = [];
     for (let w = 0; w < 4; w++) {
+      // Calculate Monday of the week (w weeks ago)
+      const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      
       const weekStart = new Date(now);
-      weekStart.setDate(weekStart.getDate() - (7 * w) - now.getDay());
+      weekStart.setDate(now.getDate() - daysToMonday - (7 * w));
       const weekStartStr = `${weekStart.getFullYear()}-${String(weekStart.getMonth() + 1).padStart(2, '0')}-${String(weekStart.getDate()).padStart(2, '0')}`;
       
       const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
+      weekEnd.setDate(weekStart.getDate() + 6); // Sunday
       const weekEndStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
       
       // Use string comparison to avoid timezone issues

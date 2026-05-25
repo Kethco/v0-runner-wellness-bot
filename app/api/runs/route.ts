@@ -42,16 +42,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate weekly total using client date if provided
+    // Week starts on Monday, ends on Sunday
     let weekStartStr: string;
     if (clientDate) {
       const [year, month, day] = clientDate.split('-').map(Number);
       const clientDateObj = new Date(year, month - 1, day);
-      const dayOfWeek = clientDateObj.getDay();
-      clientDateObj.setDate(clientDateObj.getDate() - dayOfWeek);
+      const dayOfWeek = clientDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      // If Sunday (0), go back 6 days. Otherwise go back (dayOfWeek - 1) days.
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      clientDateObj.setDate(clientDateObj.getDate() - daysToMonday);
       weekStartStr = `${clientDateObj.getFullYear()}-${String(clientDateObj.getMonth() + 1).padStart(2, '0')}-${String(clientDateObj.getDate()).padStart(2, '0')}`;
     } else {
       const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+      const dayOfWeek = startOfWeek.getDay();
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      startOfWeek.setDate(startOfWeek.getDate() - daysToMonday);
       weekStartStr = startOfWeek.toISOString().split("T")[0];
     }
     

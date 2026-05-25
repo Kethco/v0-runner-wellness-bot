@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useSWR from "swr";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,7 +98,22 @@ const DAY_ABBREV: Record<string, string> = {
 };
 
 export function ThisWeeksPlan() {
-  const { data, error, isLoading, mutate } = useSWR<WeekData>("/api/training-plan/week", fetcher);
+  // Get client timezone and today's date
+  const [clientTimezone, setClientTimezone] = useState<string>("");
+  const [clientToday, setClientToday] = useState<string>("");
+  
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setClientTimezone(tz);
+    const now = new Date();
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    setClientToday(localDate);
+  }, []);
+
+  const { data, error, isLoading, mutate } = useSWR<WeekData>(
+    clientTimezone ? `/api/training-plan/week?tz=${encodeURIComponent(clientTimezone)}` : null,
+    fetcher
+  );
   const [showAdjustmentDialog, setShowAdjustmentDialog] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -131,7 +146,8 @@ export function ThisWeeksPlan() {
   }
 
   const { workouts, todayWorkout, todayAdjustment, plan, weekStats, readinessScore } = data;
-  const today = new Date().toISOString().split("T")[0];
+  // Use client's local today, not server's
+  const today = clientToday;
 
   const handleAcceptAdjustment = async () => {
     if (!todayAdjustment) return;
@@ -242,19 +258,24 @@ export function ThisWeeksPlan() {
             <Progress value={weekStats.completionPercent} className="h-2" />
           </div>
 
-          {/* Weekly Workout Strip - All 7 days */}
+          {/* Weekly Workout Strip - All 7 days (Monday to Sunday) */}
           <div className="grid grid-cols-7 gap-1">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((dayAbbr, index) => {
-              // Calculate date for this day
-              const todayDate = new Date();
-              const dayOfWeek = todayDate.getDay();
-              const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+              // Calculate date for this day using client's today
+              // Parse client's today date
+              const [year, month, day] = clientToday.split('-').map(Number);
+              const todayDate = new Date(year, month - 1, day);
+              const dayOfWeek = todayDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+              
+              // Calculate Monday of this week (week starts on Monday)
+              // If today is Sunday (0), go back 6 days. Otherwise go back (dayOfWeek - 1) days.
+              const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
               const monday = new Date(todayDate);
-              monday.setDate(todayDate.getDate() + mondayOffset);
+              monday.setDate(todayDate.getDate() - daysToMonday);
               
               const date = new Date(monday);
               date.setDate(monday.getDate() + index);
-              const dateStr = date.toISOString().split("T")[0];
+              const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
               
               // Find workout for this day
               const workout = workouts.find(w => w.scheduled_date === dateStr);
