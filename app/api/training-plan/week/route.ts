@@ -175,8 +175,12 @@ export async function GET(request: NextRequest) {
   let todayAdjustment = null;
   
   if (todayWorkout && todayWorkout.status !== "blocked" && readinessScore !== null && readinessScore <= 3) {
-    // Strip any existing (+X.Xmi) suffixes from title before adjusting
-    const cleanTitle = todayWorkout.title?.replace(/\s*\(\+[\d.]+mi\)+/g, '') || todayWorkout.title;
+    // Strip ALL existing (+X.Xmi) suffixes from title - keep replacing until none left
+    let cleanTitle = todayWorkout.title || '';
+    while (/\(\+[\d.]+mi\)/.test(cleanTitle)) {
+      cleanTitle = cleanTitle.replace(/\s*\(\+[\d.]+mi\)/g, '');
+    }
+    cleanTitle = cleanTitle.trim();
     
     const { adjustedWorkout, recommendation } = adjustWorkoutForReadiness(
       {
