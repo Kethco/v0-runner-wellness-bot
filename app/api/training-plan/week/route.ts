@@ -70,8 +70,18 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Apply redistribution (same as training plan page does on client side)
-  const { adjustedWorkouts } = redistributeTraining(allWorkouts, lifeEvents || []);
+  // Apply redistribution BUT preserve modified workouts (user-accepted adjustments)
+  const { adjustedWorkouts: redistributedWorkouts } = redistributeTraining(allWorkouts, lifeEvents || []);
+  
+  // Merge: use DB values for modified workouts, redistributed values for others
+  const adjustedWorkouts = redistributedWorkouts.map(redistributed => {
+    const original = allWorkouts.find(w => w.id === redistributed.id);
+    if (original?.status === "modified") {
+      // Preserve the user's accepted adjustment - use DB values
+      return original;
+    }
+    return redistributed;
+  });
 
   // Mark blocked workouts (same as training plan page)
   const processedAllWorkouts = adjustedWorkouts.map(workout => {
@@ -175,8 +185,8 @@ export async function GET(request: NextRequest) {
   let todayWorkout = workoutsWithRuns?.find(w => w.scheduled_date === todayStr);
   let todayAdjustment = null;
   
-  // Suggest adjustment if workout exists, not blocked, and readiness score is low (3 or below)
-  if (todayWorkout && todayWorkout.status !== "blocked" && readinessScore !== null && readinessScore <= 3) {
+  // Suggest adjustment if workout exists, not blocked, not already modified, and readiness score is low
+  if (todayWorkout && todayWorkout.status !== "blocked" && todayWorkout.status !== "modified" && readinessScore !== null && readinessScore <= 3) {
     // Strip ALL existing (+X.Xmi) suffixes from title - keep replacing until none left
     let cleanTitle = todayWorkout.title || '';
     while (/\(\+[\d.]+mi\)/.test(cleanTitle)) {
