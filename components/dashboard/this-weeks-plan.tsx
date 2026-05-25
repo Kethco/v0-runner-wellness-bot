@@ -402,10 +402,12 @@ export function ThisWeeksPlan() {
 
               {/* Suggested Adjustment */}
               <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                <p className="text-xs text-green-600 mb-1">Suggested Adjustment</p>
-                <p className="font-medium">{todayAdjustment.suggestedWorkout.title}</p>
+                <p className="text-xs text-green-600 mb-1">Suggested Instead</p>
+                <p className="font-medium">
+                  {(todayAdjustment.suggestedWorkout.title || '').replace(/\s*\(\+[\d.]+mi\)/g, '')}
+                </p>
                 <p className="text-sm text-muted-foreground">
-                  {todayAdjustment.suggestedWorkout.targetMiles} miles - {todayAdjustment.suggestedWorkout.workoutType}
+                  {todayAdjustment.suggestedWorkout.targetMiles} mi &bull; {todayAdjustment.suggestedWorkout.description}
                 </p>
               </div>
 
