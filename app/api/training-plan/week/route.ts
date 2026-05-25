@@ -78,10 +78,12 @@ export async function GET(request: NextRequest) {
       const shouldBlock = !event.can_run || event.training_impact === "no_training";
       const inDateRange = workout.scheduled_date >= event.start_date && 
                           workout.scheduled_date <= event.end_date;
+      console.log(`[v0] Checking workout ${workout.scheduled_date} against event ${event.start_date}-${event.end_date}: shouldBlock=${shouldBlock}, inDateRange=${inDateRange}`);
       return shouldBlock && inDateRange;
     });
     
     if (blockingEvent && workout.status !== "skipped" && workout.status !== "completed") {
+      console.log(`[v0] Blocking workout on ${workout.scheduled_date} due to event: ${blockingEvent.start_date}-${blockingEvent.end_date}`);
       return {
         ...workout,
         status: "blocked",
