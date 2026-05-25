@@ -95,18 +95,26 @@ export async function GET(request: NextRequest) {
   const thisWeekWorkouts = processedAllWorkouts.filter(w => w.week_number === planWeekNumber);
 
   // Get actual runs for this week to calculate completed miles
-  // Use scheduled_date range from workouts plus today for immediate feedback
-  // This handles both current week (plan started) and preview week (plan not started)
-  const workoutDates = thisWeekWorkouts.map(w => w.scheduled_date).filter(Boolean);
-  const minWorkoutDate = workoutDates.length > 0 ? workoutDates.sort()[0] : todayStr;
-  const maxWorkoutDate = workoutDates.length > 0 ? workoutDates.sort().reverse()[0] : todayStr;
+  // Calculate the current calendar week boundaries (Sunday to Saturday) using user's timezone
+  const todayDate = new Date(todayStr + "T12:00:00Z");
+  const dayOfWeek = todayDate.getDay(); // 0 = Sunday
   
-  // Also fetch runs for TODAY regardless of plan week (for immediate feedback)
+  // Calculate week start (Sunday) and week end (Saturday) for the current calendar week
+  const weekStartDate = new Date(todayDate);
+  weekStartDate.setDate(todayDate.getDate() - dayOfWeek);
+  const weekStartStr = weekStartDate.toISOString().split('T')[0];
+  
+  const weekEndDate = new Date(weekStartDate);
+  weekEndDate.setDate(weekStartDate.getDate() + 6);
+  const weekEndStr = weekEndDate.toISOString().split('T')[0];
+  
+  // Fetch runs only for the current calendar week
   const { data: weekRuns } = await supabase
     .from("runs")
     .select("id, date, miles, run_type")
     .eq("user_id", user.id)
-    .or(`and(date.gte.${minWorkoutDate},date.lte.${maxWorkoutDate}),date.eq.${todayStr}`);
+    .gte("date", weekStartStr)
+    .lte("date", weekEndStr);
 
   // Create a map of runs by date for easy lookup
   const runsByDate: Record<string, { miles: number; run_type: string }[]> = {};

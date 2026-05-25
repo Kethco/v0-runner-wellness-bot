@@ -54,9 +54,44 @@ export function ReadinessScore() {
   // Use client's local date instead of server UTC
   const hasCheckedInToday = clientDate && todayCheckin?.date === clientDate;
   
-  // Return empty fragment if no data - parent handles loading state
-  if (!data?.readiness) {
+  // Return empty fragment if still loading
+  if (!clientDate || !data) {
     return <></>;
+  }
+  
+  // If user hasn't checked in today, show a prompt instead of stale data
+  if (!data?.readiness?.hasCheckedIn) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/10 p-4"
+      >
+        <div className="flex items-center gap-4">
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+              <circle
+                cx="50"
+                cy="50"
+                r="42"
+                stroke="rgba(255, 255, 255, 0.1)"
+                strokeWidth="8"
+                fill="none"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-2xl font-bold text-white/40">--</span>
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm font-semibold text-white">Recovery Score</span>
+            </div>
+            <p className="text-xs text-white/50 mb-3">Check in today to see your score</p>
+          </div>
+        </div>
+      </motion.div>
+    );
   }
 
   const { readiness, patterns: insights, recoverySuggestions: tips, weeklyStats } = data;
