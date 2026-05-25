@@ -35,6 +35,7 @@ import {
   X,
   Loader2,
   ArrowRight,
+  Pencil,
 } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -68,6 +69,7 @@ const TRAINING_IMPACTS = [
 export function LifeEventsManager() {
   const { data, error, isLoading, mutate } = useSWR<{ events: LifeEvent[] }>("/api/life-events", fetcher);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<LifeEvent | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isResyncing, setIsResyncing] = useState(false);
   const [adjustmentResult, setAdjustmentResult] = useState<{
@@ -133,10 +135,15 @@ export function LifeEventsManager() {
 
     setIsSaving(true);
     try {
+      const method = editingEvent ? "PUT" : "POST";
+      const body = editingEvent 
+        ? { ...newEvent, id: editingEvent.id }
+        : newEvent;
+      
       const response = await fetch("/api/life-events", {
-        method: "POST",
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newEvent),
+        body: JSON.stringify(body),
       });
 
       if (response.ok) {
@@ -157,12 +164,41 @@ export function LifeEventsManager() {
           canRun: true,
           notes: "",
         });
+        setEditingEvent(null);
         setIsDialogOpen(false);
       }
     } catch (err) {
-      console.error("Failed to add life event:", err);
+      console.error("Failed to save life event:", err);
     }
     setIsSaving(false);
+  };
+
+  const handleEditEvent = (event: LifeEvent) => {
+    setEditingEvent(event);
+    setNewEvent({
+      eventType: event.event_type,
+      title: event.title || "",
+      startDate: event.start_date,
+      endDate: event.end_date,
+      trainingImpact: event.training_impact,
+      canRun: event.can_run,
+      notes: event.notes || "",
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingEvent(null);
+    setNewEvent({
+      eventType: "travel",
+      title: "",
+      startDate: "",
+      endDate: "",
+      trainingImpact: "reduced",
+      canRun: true,
+      notes: "",
+    });
   };
 
   const handleDeleteEvent = async (id: string) => {
@@ -296,14 +332,24 @@ export function LifeEventsManager() {
                         </p>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                      onClick={() => handleDeleteEvent(event.id)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-foreground hover:bg-white/10"
+                        onClick={() => handleEditEvent(event)}
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                        onClick={() => handleDeleteEvent(event.id)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -312,13 +358,15 @@ export function LifeEventsManager() {
         )}
       </CardContent>
 
-      {/* Add Event Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Add/Edit Event Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Life Event</DialogTitle>
+            <DialogTitle>{editingEvent ? "Edit Life Event" : "Add Life Event"}</DialogTitle>
             <DialogDescription>
-              Mark periods that might affect your training so your plan can adapt.
+              {editingEvent 
+                ? "Update the details of your life event."
+                : "Mark periods that might affect your training so your plan can adapt."}
             </DialogDescription>
           </DialogHeader>
 
@@ -432,7 +480,7 @@ export function LifeEventsManager() {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={handleCloseDialog}>
               Cancel
             </Button>
             <Button
@@ -440,7 +488,7 @@ export function LifeEventsManager() {
               disabled={isSaving || !newEvent.startDate || !newEvent.endDate}
             >
               {isSaving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Add Event
+              {editingEvent ? "Save Changes" : "Add Event"}
             </Button>
           </DialogFooter>
         </DialogContent>
