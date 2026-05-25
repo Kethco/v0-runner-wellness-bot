@@ -236,7 +236,9 @@ export function RunningBuddy() {
   // Has pending invite received
   if (data?.pendingInvite) {
     const inviter = data.pendingInvite.inviter;
-    const inviterName = `${inviter.first_name || ""} ${inviter.last_name || ""}`.trim() || inviter.email;
+    const inviterName = inviter 
+      ? `${inviter.first_name || ""} ${inviter.last_name || ""}`.trim() || inviter.email 
+      : "Someone";
 
     return (
       <motion.div 
