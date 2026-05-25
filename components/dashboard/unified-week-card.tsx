@@ -265,13 +265,15 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
       if (!response.ok) {
         alert("Failed to save adjustment: " + (responseData.error || "Unknown error"));
       } else {
-        alert("Adjustment saved! Refreshing...");
-        await mutate();
+        // Show what was saved
+        const savedMiles = responseData.workout?.target_miles;
+        const savedStatus = responseData.workout?.status;
+        alert(`Saved! New miles: ${savedMiles}, Status: ${savedStatus}`);
         setShowAdjustmentDialog(false);
-        window.location.reload();
+        await mutate();
       }
     } catch (e) {
-      alert("Failed to save adjustment. Please try again.");
+      alert("Failed to save adjustment: " + String(e));
     }
     setActionLoading(false);
   };

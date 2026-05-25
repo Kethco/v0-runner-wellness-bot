@@ -175,8 +175,16 @@ export async function GET(request: NextRequest) {
   let todayWorkout = workoutsWithRuns?.find(w => w.scheduled_date === todayStr);
   let todayAdjustment = null;
   
-  // Suggest adjustment if workout exists, not blocked, and readiness score is low (3 or below)
-  if (todayWorkout && todayWorkout.status !== "blocked" && readinessScore !== null && readinessScore <= 3) {
+  // Suggest adjustment if workout exists, not blocked/modified/completed, and readiness score is low (3 or below)
+  // Don't suggest if already modified (user already accepted an adjustment)
+  const canSuggestAdjustment = todayWorkout && 
+    todayWorkout.status !== "blocked" && 
+    todayWorkout.status !== "modified" && 
+    todayWorkout.status !== "completed" &&
+    readinessScore !== null && 
+    readinessScore <= 3;
+    
+  if (canSuggestAdjustment) {
     // Strip ALL existing (+X.Xmi) suffixes from title - keep replacing until none left
     let cleanTitle = todayWorkout.title || '';
     while (/\(\+[\d.]+mi\)/.test(cleanTitle)) {
@@ -329,8 +337,6 @@ export async function PATCH(request: NextRequest) {
   // Use service client to bypass RLS for the update
   const serviceClient = createServiceClient();
   
-  console.log("[v0] Updating workout", workoutId, "with updates:", JSON.stringify(updates));
-  
   const { data: workout, error } = await serviceClient
     .from("planned_workouts")
     .update(updates)
@@ -339,13 +345,14 @@ export async function PATCH(request: NextRequest) {
     .single();
   
   if (error) {
-    console.error("[v0] Update error:", error);
     return NextResponse.json({ error: error.message, details: error }, { status: 500 });
   }
   
-  console.log("[v0] Updated workout:", workout);
+  if (!workout) {
+    return NextResponse.json({ error: "Update returned no data" }, { status: 500 });
+  }
 
-  return NextResponse.json({ workout, success: true });
+  return NextResponse.json({ workout, success: true, updatedFields: Object.keys(updates) });
 }
 
 // POST handler for workout actions (skip, adjust)
