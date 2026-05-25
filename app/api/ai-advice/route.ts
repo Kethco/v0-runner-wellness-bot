@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -10,29 +10,31 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get today's date string (YYYY-MM-DD format)
-  const todayStr = new Date().toISOString().split("T")[0];
+  // Get client's local date from query param (YYYY-MM-DD format)
+  const { searchParams } = new URL(request.url);
+  const clientDate = searchParams.get("clientDate");
   
-  // Also get 24 hours ago for timezone-safe queries
-  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  // Use client date if provided, otherwise fall back to server date
+  const todayStr = clientDate || new Date().toISOString().split("T")[0];
 
-  // Check if user has checked in today
+  // Check if user has checked in today (using client's local date)
   const { data: todayCheckin } = await supabase
     .from("checkins")
-    .select("id, sleep_rating, energy, soreness, readiness, created_at")
+    .select("id, sleep_rating, energy, soreness, readiness, created_at, date")
     .eq("user_id", user.id)
     .eq("date", todayStr)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  // Find the most recent AI advice from the last 24 hours
-  // This handles timezone issues where "today" might be different on server vs client
+  // Find AI advice for today (using client's local date)
+  // First try to find advice where the created_at date matches today
   const { data: advice } = await supabase
     .from("ai_advice")
     .select("*")
     .eq("user_id", user.id)
-    .gte("created_at", last24Hours)
+    .gte("created_at", `${todayStr}T00:00:00`)
+    .lt("created_at", `${todayStr}T23:59:59.999`)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();

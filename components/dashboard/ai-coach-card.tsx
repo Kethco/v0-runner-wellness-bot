@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Sparkles, RefreshCw, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import useSWR from "swr";
@@ -154,8 +154,17 @@ const TONE_STYLES = {
 };
 
 export function AICoachCard() {
+  // Get client's local date
+  const [clientDate, setClientDate] = useState<string>("");
+  
+  useEffect(() => {
+    const now = new Date();
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    setClientDate(localDate);
+  }, []);
+
   const { data, isLoading, mutate } = useSWR<AIAdviceResponse>(
-    "/api/ai-advice",
+    clientDate ? `/api/ai-advice?clientDate=${clientDate}` : null,
     fetcher,
     { 
       refreshInterval: 60000,

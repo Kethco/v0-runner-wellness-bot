@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 interface CheckIn {
   id: string;
@@ -22,7 +22,7 @@ interface Run {
   effort_level?: number;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -31,10 +31,19 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Get last 30 days of check-ins and runs for pattern analysis
-  const thirtyDaysAgo = new Date();
+  // Get client's local date from query param
+  const { searchParams } = new URL(request.url);
+  const clientDate = searchParams.get("clientDate");
+  
+  // Use client date if provided for "today" calculation, otherwise fall back to server date
+  const todayStr = clientDate || new Date().toISOString().split("T")[0];
+  
+  // Calculate 30 days ago from today (using client's today if provided)
+  const [year, month, day] = todayStr.split('-').map(Number);
+  const todayDate = new Date(year, month - 1, day);
+  const thirtyDaysAgo = new Date(todayDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split("T")[0];
+  const thirtyDaysAgoStr = `${thirtyDaysAgo.getFullYear()}-${String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(thirtyDaysAgo.getDate()).padStart(2, '0')}`;
 
   const [checkinsRes, runsRes, goalsRes] = await Promise.all([
     supabase
@@ -61,17 +70,24 @@ export async function GET() {
   const runs: Run[] = runsRes.data || [];
   const goals = goalsRes.data || [];
 
-  // Calculate Readiness Score (today)
-  const todayStr = new Date().toISOString().split("T")[0];
+  // Calculate Readiness Score (today - using clientDate if provided)
+  // todayStr is already set above from clientDate
   const todayCheckin = checkins.find(c => c.date === todayStr);
-  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  
+  // Calculate yesterday relative to client's today
+  const yesterdayDate = new Date(todayDate);
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayStr = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
   const yesterdayRun = runs.find(r => r.date?.split("T")[0] === yesterdayStr);
   
-  // Get recent runs for recovery calculation
+  // Get recent runs for recovery calculation (last 3 days from client's today)
+  const threeDaysAgoDate = new Date(todayDate);
+  threeDaysAgoDate.setDate(threeDaysAgoDate.getDate() - 3);
+  const threeDaysAgoStr = `${threeDaysAgoDate.getFullYear()}-${String(threeDaysAgoDate.getMonth() + 1).padStart(2, '0')}-${String(threeDaysAgoDate.getDate()).padStart(2, '0')}`;
+  
   const last3DaysRuns = runs.filter(r => {
-    const runDate = new Date(r.date);
-    const threeDaysAgo = new Date(Date.now() - 3 * 86400000);
-    return runDate >= threeDaysAgo;
+    const runDateStr = r.date?.split("T")[0];
+    return runDateStr && runDateStr >= threeDaysAgoStr && runDateStr <= todayStr;
   });
   const recentMiles = last3DaysRuns.reduce((sum, r) => sum + (r.miles || 0), 0);
   const hardRunsRecently = last3DaysRuns.filter(r => 

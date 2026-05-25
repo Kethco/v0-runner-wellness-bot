@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Moon, Zap, Activity, TrendingUp, TrendingDown, Minus,
@@ -37,12 +38,21 @@ function getTrend(current: number, average: number): "up" | "down" | "stable" {
 }
 
 export function ReadinessScore() {
-  const { data } = useSWR("/api/wellness-insights");
-  const { data: checkinData } = useSWR("/api/checkins?limit=1");
+  // Get client's local date
+  const [clientDate, setClientDate] = useState<string>("");
+  
+  useEffect(() => {
+    const now = new Date();
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    setClientDate(localDate);
+  }, []);
+
+  const { data } = useSWR(clientDate ? `/api/wellness-insights?clientDate=${clientDate}` : null, fetcher);
+  const { data: checkinData } = useSWR(clientDate ? `/api/checkins?limit=1&clientDate=${clientDate}` : null, fetcher);
   
   const todayCheckin = checkinData?.checkins?.[0];
-  const todayStr = new Date().toISOString().split("T")[0];
-  const hasCheckedInToday = todayCheckin?.date === todayStr;
+  // Use client's local date instead of server UTC
+  const hasCheckedInToday = clientDate && todayCheckin?.date === clientDate;
   
   // Return empty fragment if no data - parent handles loading state
   if (!data?.readiness) {
