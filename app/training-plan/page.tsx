@@ -361,6 +361,12 @@ export default function TrainingPlanPage() {
                 const isCompleted = workout.status === "completed";
                 const isBlocked = workout.status === "blocked" || workout.status === "skipped";
                 const isRest = workout.workout_type === "rest";
+                
+                // Calculate day name from scheduled_date instead of using stored day_of_week
+                const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                const [wYear, wMonth, wDay] = workout.scheduled_date.split('-').map(Number);
+                const workoutDate = new Date(wYear, wMonth - 1, wDay);
+                const actualDayName = dayNames[workoutDate.getDay()];
 
                 return (
                   <div
@@ -397,7 +403,7 @@ export default function TrainingPlanPage() {
                           <p className={`text-sm font-semibold ${
                             isBlocked ? "text-red-500" : isCompleted ? "text-[#30D158]" : "text-foreground"
                           }`}>
-                            {workout.day_of_week}
+                            {actualDayName}
                           </p>
                           {isBlocked && (
                             <Badge className="text-[10px] h-4 bg-red-500/20 text-red-500">Blocked</Badge>
