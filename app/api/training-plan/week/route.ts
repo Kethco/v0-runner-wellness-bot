@@ -175,11 +175,14 @@ export async function GET(request: NextRequest) {
   let todayAdjustment = null;
   
   if (todayWorkout && todayWorkout.status !== "blocked" && readinessScore !== null && readinessScore <= 3) {
+    // Strip any existing (+X.Xmi) suffixes from title before adjusting
+    const cleanTitle = todayWorkout.title?.replace(/\s*\(\+[\d.]+mi\)+/g, '') || todayWorkout.title;
+    
     const { adjustedWorkout, recommendation } = adjustWorkoutForReadiness(
       {
         dayOfWeek: todayWorkout.day_of_week,
         workoutType: todayWorkout.workout_type,
-        title: todayWorkout.title,
+        title: cleanTitle,
         description: todayWorkout.description,
         targetMiles: todayWorkout.target_miles,
         targetPaceZone: todayWorkout.target_pace_zone,
