@@ -36,7 +36,6 @@ import { AICoachCard } from "@/components/dashboard/ai-coach-card";
 import { StreakCalendar } from "@/components/dashboard/streak-calendar";
 import { TrainingLoadIndicator } from "@/components/dashboard/training-load";
 import { RunningBuddy } from "@/components/running-buddy";
-import { OnboardingTour } from "@/components/onboarding-tour";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
@@ -54,7 +53,6 @@ export default function Dashboard() {
   const [newGoalValue, setNewGoalValue] = useState("");
   const [localGoal, setLocalGoal] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showFeatureTour, setShowFeatureTour] = useState(false);
   const [greeting, setGreeting] = useState({ text: "Welcome", gradient: "from-[#FF6B00] via-[#FF4500] to-[#FF2D00]" });
   
   // Compute dates directly (not in state to avoid hydration issues)
@@ -123,26 +121,6 @@ export default function Dashboard() {
   // Set greeting on client
   useEffect(() => {
     setGreeting(getGreeting());
-  }, []);
-
-  // Check for feature tour parameter (using window.location to avoid Suspense requirement)
-  useEffect(() => {
-    // Small delay to ensure URL is fully loaded after navigation
-    const checkTourParam = () => {
-      if (typeof window !== 'undefined') {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("tour") === "1") {
-          setShowFeatureTour(true);
-          // Clean up URL
-          window.history.replaceState({}, "", "/");
-        }
-      }
-    };
-    
-    // Check immediately and again after a short delay
-    checkTourParam();
-    const timeout = setTimeout(checkTourParam, 100);
-    return () => clearTimeout(timeout);
   }, []);
   
   // Derived state (safe to compute after hooks)
@@ -258,11 +236,6 @@ return (
             mutateProfile();
           }} 
         />
-      )}
-
-      {/* Feature Tour (triggered from profile settings) */}
-      {showFeatureTour && (
-        <OnboardingTour onComplete={() => setShowFeatureTour(false)} />
       )}
 
       {/* Premium Glass Header */}
