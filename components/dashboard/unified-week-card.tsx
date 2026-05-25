@@ -149,6 +149,9 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
   // Use local timezone for today's date
   const todayStr = getLocalDateString(timezone);
+  
+  // Debug logging
+  console.log("[v0] UnifiedWeekCard - todayStr:", todayStr, "timezone:", timezone);
 
   // Check if we have an active training plan
   const hasPlan = planData?.plan && planData?.workouts?.length > 0;
@@ -172,6 +175,8 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
     const weekStart = new Date(todayLocal);
     weekStart.setDate(todayLocal.getDate() + mondayOffset);
+    
+    console.log("[v0] ChartData - todayStr:", todayStr, "dayOfWeek:", dayOfWeek, "mondayOffset:", mondayOffset);
     
     // Create a map of workouts by scheduled_date from the plan
     const workoutsByDate: Record<string, any> = {};
