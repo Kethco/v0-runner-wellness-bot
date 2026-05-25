@@ -174,15 +174,8 @@ export async function GET(request: NextRequest) {
   let todayWorkout = workoutsWithRuns?.find(w => w.scheduled_date === todayStr);
   let todayAdjustment = null;
   
-  // Only suggest adjustment if workout exists, is not blocked/modified, and readiness is low
-  const shouldSuggestAdjustment = todayWorkout && 
-    todayWorkout.status !== "blocked" && 
-    todayWorkout.status !== "modified" &&
-    todayWorkout.status !== "completed" &&
-    readinessScore !== null && 
-    readinessScore <= 3;
-  
-  if (shouldSuggestAdjustment) {
+  // Suggest adjustment if workout exists, not blocked, and readiness score is low (3 or below)
+  if (todayWorkout && todayWorkout.status !== "blocked" && readinessScore !== null && readinessScore <= 3) {
     // Strip ALL existing (+X.Xmi) suffixes from title - keep replacing until none left
     let cleanTitle = todayWorkout.title || '';
     while (/\(\+[\d.]+mi\)/.test(cleanTitle)) {
