@@ -175,7 +175,7 @@ export function StreakCalendar({ currentStreak = 0 }: StreakCalendarProps) {
         <div className="flex flex-col gap-0.5 mr-1">
           {days.map((day, i) => (
             <div key={i} className="w-4 h-[11px] text-[8px] text-[#8E8E93] flex items-center justify-center">
-              {i % 2 === 1 ? day : ""}
+              {day}
             </div>
           ))}
         </div>
