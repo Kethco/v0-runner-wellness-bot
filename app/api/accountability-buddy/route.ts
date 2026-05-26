@@ -122,23 +122,34 @@ export async function GET() {
     buddyRuns = runs;
   }
 
-  // Calculate buddy streak (consecutive days with check-ins) - use all checkins, not just last 7 days
+  // Calculate buddy streak (consecutive days with check-ins)
+  // Handle timezone differences by allowing the streak to start from today OR yesterday
   let buddyStreak = 0;
   if (allBuddyCheckins && allBuddyCheckins.length > 0) {
     const uniqueDates = [...new Set(allBuddyCheckins.map(c => c.date))].sort((a, b) => 
       new Date(b).getTime() - new Date(a).getTime()
     );
 
+    // Find the most recent checkin date
+    const mostRecentCheckin = uniqueDates[0];
     const todayDate = new Date(today);
-    for (let i = 0; i < uniqueDates.length; i++) {
-      const checkDate = new Date(uniqueDates[i]);
-      const expectedDate = new Date(todayDate);
-      expectedDate.setDate(todayDate.getDate() - i);
-      
-      if (checkDate.toISOString().split("T")[0] === expectedDate.toISOString().split("T")[0]) {
-        buddyStreak++;
-      } else {
-        break;
+    const yesterdayDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const yesterdayStr = yesterdayDate.toISOString().split("T")[0];
+    
+    // Streak starts if most recent checkin is today or yesterday (timezone tolerance)
+    if (mostRecentCheckin === today || mostRecentCheckin === yesterdayStr) {
+      // Start counting from the most recent checkin date
+      const startDate = new Date(mostRecentCheckin);
+      for (let i = 0; i < uniqueDates.length; i++) {
+        const expectedDate = new Date(startDate);
+        expectedDate.setDate(startDate.getDate() - i);
+        const expectedStr = expectedDate.toISOString().split("T")[0];
+        
+        if (uniqueDates[i] === expectedStr) {
+          buddyStreak++;
+        } else {
+          break;
+        }
       }
     }
   }
