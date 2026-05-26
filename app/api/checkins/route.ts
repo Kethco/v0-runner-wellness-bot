@@ -163,7 +163,7 @@ export async function POST(request: NextRequest) {
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     
-    const [checkinsRes, runsRes, goalsRes, streakRes, profileRes, trainingPlanRes, lifeEventsRes] = await Promise.all([
+    const [checkinsRes, runsRes, goalsRes, streakRes, profileRes, trainingPlanRes, lifeEventsRes, todayWorkoutRes] = await Promise.all([
       supabase
         .from("checkins")
         .select("*")
@@ -191,10 +191,10 @@ export async function POST(request: NextRequest) {
         .select("first_name")
         .eq("id", user.id)
         .single(),
-      // Fetch active training plan with weekly structure
+      // Fetch active training plan
       supabase
         .from("training_plans")
-        .select("id, plan_type, start_date, weekly_structure")
+        .select("id, plan_type, start_date, total_weeks")
         .eq("user_id", user.id)
         .eq("status", "active")
         .maybeSingle(),
@@ -206,6 +206,13 @@ export async function POST(request: NextRequest) {
         .gte("end_date", today)
         .order("start_date", { ascending: true })
         .limit(5),
+      // Fetch today's planned workout directly from planned_workouts
+      supabase
+        .from("planned_workouts")
+        .select("workout_type, title, target_miles, description, status, week_number")
+        .eq("user_id", user.id)
+        .eq("scheduled_date", today)
+        .maybeSingle(),
     ]);
 
     const recentCheckins = checkinsRes.data || [];
@@ -215,6 +222,7 @@ export async function POST(request: NextRequest) {
     const firstName = profileRes.data?.first_name;
     const trainingPlan = trainingPlanRes.data;
     const lifeEvents = lifeEventsRes.data || [];
+    const todayPlannedWorkout = todayWorkoutRes.data;
 
     // Calculate hard runs in last 3 days
     const hardRunsLast3Days = recentRuns.filter(r => {
@@ -243,51 +251,49 @@ export async function POST(request: NextRequest) {
     if (hardRunsLast3Days >= 2) readinessScore -= 8;
     readinessScore = Math.max(0, Math.min(100, readinessScore));
 
-    // Build training plan context for AI
+    // Build training plan context for AI using actual planned_workouts data
     let trainingPlanContext = undefined;
-    if (trainingPlan && trainingPlan.weekly_structure) {
+    if (trainingPlan) {
       const startDate = new Date(trainingPlan.start_date);
       const daysSinceStart = Math.floor((new Date().getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
-      const currentWeekNumber = daysSinceStart < 0 ? 1 : Math.floor(daysSinceStart / 7) + 1;
+      const currentWeekNumber = todayPlannedWorkout?.week_number || (daysSinceStart < 0 ? 1 : Math.floor(daysSinceStart / 7) + 1);
+      const totalWeeks = trainingPlan.total_weeks || 12;
       
-      const weekStructure = trainingPlan.weekly_structure as any[];
-      const currentWeek = weekStructure.find((w: any) => w.weekNumber === currentWeekNumber);
+      // Get this week's workouts for weekly stats
+      const weekStart = new Date(startDate);
+      weekStart.setDate(weekStart.getDate() + (currentWeekNumber - 1) * 7);
+      const weekStartStr = weekStart.toISOString().split("T")[0];
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      const weekEndStr = weekEnd.toISOString().split("T")[0];
       
-      if (currentWeek) {
-        // Find today's workout
-        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-        const todayDayName = dayNames[new Date().getDay()];
-        const todayWorkout = currentWeek.workouts?.find((w: any) => w.dayOfWeek === todayDayName);
-        
-        // Calculate weekly progress
-        const plannedMilesThisWeek = currentWeek.workouts?.reduce((sum: number, w: any) => sum + (w.targetMiles || 0), 0) || 0;
-        const completedMilesThisWeek = recentRuns
-          .filter(r => {
-            const runDate = new Date(r.date);
-            const weekStart = new Date(startDate);
-            weekStart.setDate(weekStart.getDate() + (currentWeekNumber - 1) * 7);
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekEnd.getDate() + 6);
-            return runDate >= weekStart && runDate <= weekEnd;
-          })
-          .reduce((sum, r) => sum + Number(r.miles), 0);
-        
-        trainingPlanContext = {
-          planType: trainingPlan.plan_type,
-          currentWeek: currentWeekNumber,
-          totalWeeks: weekStructure.length,
-          weekType: currentWeek.weekType || "training",
-          weekFocus: currentWeek.weekFocus || currentWeek.theme || "",
-          todayWorkout: todayWorkout ? {
-            type: todayWorkout.workoutType,
-            title: todayWorkout.title,
-            targetMiles: todayWorkout.targetMiles,
-            description: todayWorkout.description,
-          } : undefined,
-          plannedMilesThisWeek,
-          completedMilesThisWeek,
-        };
-      }
+      const { data: weekWorkouts } = await supabase
+        .from("planned_workouts")
+        .select("target_miles, status")
+        .eq("user_id", user.id)
+        .gte("scheduled_date", weekStartStr)
+        .lte("scheduled_date", weekEndStr);
+      
+      const plannedMilesThisWeek = weekWorkouts?.reduce((sum, w) => sum + (w.target_miles || 0), 0) || 0;
+      const completedMilesThisWeek = recentRuns
+        .filter(r => r.date >= weekStartStr && r.date <= weekEndStr)
+        .reduce((sum, r) => sum + Number(r.miles), 0);
+      
+      trainingPlanContext = {
+        planType: trainingPlan.plan_type,
+        currentWeek: currentWeekNumber,
+        totalWeeks: totalWeeks,
+        weekType: currentWeekNumber <= 2 ? "base" : currentWeekNumber >= totalWeeks - 1 ? "taper" : "build",
+        weekFocus: "",
+        todayWorkout: todayPlannedWorkout && todayPlannedWorkout.status !== "blocked" ? {
+          type: todayPlannedWorkout.workout_type,
+          title: todayPlannedWorkout.title,
+          targetMiles: todayPlannedWorkout.target_miles,
+          description: todayPlannedWorkout.description,
+        } : undefined,
+        plannedMilesThisWeek,
+        completedMilesThisWeek,
+      };
     }
 
     // Build life events context for AI
