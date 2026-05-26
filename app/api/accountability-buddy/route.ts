@@ -143,9 +143,12 @@ export async function GET() {
     }
   }
 
-  // Check if buddy has been active today
-  const buddyActiveToday = buddyCheckins?.some(c => c.date === today) || false;
-  const buddyRanToday = buddyRuns?.some(r => r.date === today) || false;
+  // Check if buddy has been active today - compare just the date portion
+  // Also check yesterday in case of timezone differences
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const buddyActiveToday = buddyCheckins?.some(c => c.date === today || c.date === yesterday) || false;
+  const buddyRanToday = buddyRuns?.some(r => r.date === today || r.date === yesterday) || false;
+  const todayRun = buddyRuns?.find(r => r.date === today || r.date === yesterday);
 
   // Weekly miles
   const weeklyMiles = buddyRuns?.reduce((sum, r) => sum + (r.miles || 0), 0) || 0;
@@ -165,6 +168,7 @@ export async function GET() {
       streak: buddyStreak,
       activeToday: buddyActiveToday,
       ranToday: buddyRanToday,
+      todayMiles: todayRun?.miles || 0,
       weeklyMiles: Math.round(weeklyMiles * 10) / 10,
       lastCheckin: buddyCheckins?.[0]?.date || null,
       lastRun: buddyRuns?.[0] || null,
