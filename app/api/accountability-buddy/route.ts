@@ -79,6 +79,7 @@ export async function GET() {
   // Use admin client to bypass RLS for buddy's data (since they're connected)
   const today = new Date().toISOString().split("T")[0];
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
   // Create admin client for buddy stats (bypasses RLS)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -86,6 +87,7 @@ export async function GET() {
   
   let buddyCheckins: { id: string; created_at: string; date: string }[] | null = null;
   let buddyRuns: { id: string; miles: number; date: string }[] | null = null;
+  let allBuddyCheckins: { id: string; date: string }[] | null = null;
   
   if (serviceRoleKey) {
     const { createClient: createAdminClient } = await import("@supabase/supabase-js");
@@ -93,6 +95,7 @@ export async function GET() {
       auth: { autoRefreshToken: false, persistSession: false }
     });
     
+    // Get recent checkins for "active today" display
     const { data: checkins } = await adminClient
       .from("checkins")
       .select("id, created_at, date")
@@ -100,6 +103,15 @@ export async function GET() {
       .gte("date", weekAgo)
       .order("date", { ascending: false });
     buddyCheckins = checkins;
+    
+    // Get ALL checkins for proper streak calculation (up to 30 days)
+    const { data: allCheckins } = await adminClient
+      .from("checkins")
+      .select("id, date")
+      .eq("user_id", buddyId)
+      .gte("date", monthAgo)
+      .order("date", { ascending: false });
+    allBuddyCheckins = allCheckins;
     
     const { data: runs } = await adminClient
       .from("runs")
@@ -110,10 +122,10 @@ export async function GET() {
     buddyRuns = runs;
   }
 
-  // Calculate buddy streak (consecutive days with check-ins)
+  // Calculate buddy streak (consecutive days with check-ins) - use all checkins, not just last 7 days
   let buddyStreak = 0;
-  if (buddyCheckins && buddyCheckins.length > 0) {
-    const uniqueDates = [...new Set(buddyCheckins.map(c => c.date))].sort((a, b) => 
+  if (allBuddyCheckins && allBuddyCheckins.length > 0) {
+    const uniqueDates = [...new Set(allBuddyCheckins.map(c => c.date))].sort((a, b) => 
       new Date(b).getTime() - new Date(a).getTime()
     );
 
