@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { generateCoachAdvice } from "@/lib/ai/coach";
+import { getServerToday, getServerYesterday } from "@/lib/date-utils";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -102,8 +103,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Update streak
-  const today = new Date().toISOString().split("T")[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  const today = getServerToday();
+  const yesterday = getServerYesterday();
   
   try {
     // Get current streak

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
+import { getServerToday, getServerDateDaysAgo, calculateStreak, isToday } from "@/lib/date-utils";
 
 // GET - Fetch buddy connection and stats (simplified queries without FK joins)
 export async function GET() {
@@ -77,9 +78,9 @@ export async function GET() {
 
   // Get buddy's streak and recent activity
   // Use admin client to bypass RLS for buddy's data (since they're connected)
-  const today = new Date().toISOString().split("T")[0];
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const today = getServerToday();
+  const weekAgo = getServerDateDaysAgo(7);
+  const monthAgo = getServerDateDaysAgo(30);
 
   // Create admin client for buddy stats (bypasses RLS)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -122,44 +123,15 @@ export async function GET() {
     buddyRuns = runs;
   }
 
-  // Calculate buddy streak (consecutive days with check-ins)
-  // Handle timezone differences by allowing the streak to start from today OR yesterday
-  let buddyStreak = 0;
-  if (allBuddyCheckins && allBuddyCheckins.length > 0) {
-    const uniqueDates = [...new Set(allBuddyCheckins.map(c => c.date))].sort((a, b) => 
-      new Date(b).getTime() - new Date(a).getTime()
-    );
+  // Calculate buddy streak using the date utility
+  const buddyStreak = allBuddyCheckins 
+    ? calculateStreak(allBuddyCheckins.map(c => c.date)) 
+    : 0;
 
-    // Find the most recent checkin date
-    const mostRecentCheckin = uniqueDates[0];
-    const todayDate = new Date(today);
-    const yesterdayDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const yesterdayStr = yesterdayDate.toISOString().split("T")[0];
-    
-    // Streak starts if most recent checkin is today or yesterday (timezone tolerance)
-    if (mostRecentCheckin === today || mostRecentCheckin === yesterdayStr) {
-      // Start counting from the most recent checkin date
-      const startDate = new Date(mostRecentCheckin);
-      for (let i = 0; i < uniqueDates.length; i++) {
-        const expectedDate = new Date(startDate);
-        expectedDate.setDate(startDate.getDate() - i);
-        const expectedStr = expectedDate.toISOString().split("T")[0];
-        
-        if (uniqueDates[i] === expectedStr) {
-          buddyStreak++;
-        } else {
-          break;
-        }
-      }
-    }
-  }
-
-  // Check if buddy has been active today - compare just the date portion
-  // Also check yesterday in case of timezone differences
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-  const buddyActiveToday = buddyCheckins?.some(c => c.date === today || c.date === yesterday) || false;
-  const buddyRanToday = buddyRuns?.some(r => r.date === today || r.date === yesterday) || false;
-  const todayRun = buddyRuns?.find(r => r.date === today || r.date === yesterday);
+  // Check if buddy has been active today (with timezone tolerance)
+  const buddyActiveToday = buddyCheckins?.some(c => isToday(c.date)) || false;
+  const buddyRanToday = buddyRuns?.some(r => isToday(r.date)) || false;
+  const todayRun = buddyRuns?.find(r => isToday(r.date));
 
   // Weekly miles
   const weeklyMiles = buddyRuns?.reduce((sum, r) => sum + (r.miles || 0), 0) || 0;
