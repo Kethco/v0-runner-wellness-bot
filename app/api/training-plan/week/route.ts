@@ -161,6 +161,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   // Calculate composite readiness if we have a check-in
+  // Convert to 0-100 scale for display
   let readinessScore: number | null = null;
   if (todayCheckin) {
     const scores = [
@@ -171,7 +172,9 @@ export async function GET(request: NextRequest) {
     ].filter((s): s is number => s != null);
     
     if (scores.length > 0) {
-      readinessScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+      // Average the 1-5 scores and convert to 0-100 scale
+      const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+      readinessScore = Math.round((avgScore / 5) * 100);
     }
   }
 
@@ -185,8 +188,17 @@ export async function GET(request: NextRequest) {
   let todayWorkout = workoutsWithRuns?.find(w => w.scheduled_date === todayStr);
   let todayAdjustment = null;
   
-  // Suggest adjustment if workout exists, not blocked, not already modified, and readiness score is low
-  if (todayWorkout && todayWorkout.status !== "blocked" && todayWorkout.status !== "modified" && readinessScore !== null && readinessScore <= 3) {
+  // Suggest adjustment ONLY if:
+  // - workout exists and not blocked/modified/completed
+  // - readiness score is low (below 60 on 0-100 scale)
+  const shouldSuggestAdjustment = todayWorkout && 
+    todayWorkout.status !== "blocked" && 
+    todayWorkout.status !== "modified" && 
+    todayWorkout.status !== "completed" &&
+    readinessScore !== null && 
+    readinessScore < 60;
+    
+  if (shouldSuggestAdjustment) {
     // Strip ALL existing (+X.Xmi) suffixes from title - keep replacing until none left
     let cleanTitle = todayWorkout.title || '';
     while (/\(\+[\d.]+mi\)/.test(cleanTitle)) {

@@ -380,8 +380,8 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
             </div>
           </div>
 
-          {/* Wellness Alert (if low readiness) */}
-          {hasPlan && planData?.todayAdjustment && (
+          {/* Wellness Alert (if low readiness and workout NOT completed) */}
+          {hasPlan && planData?.todayAdjustment && planData?.todayWorkout?.status !== "completed" && (
             <div className="mb-4 p-3.5 rounded-xl bg-amber-500/8 border border-amber-500/20 backdrop-blur-sm">
               <div className="flex items-start gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
