@@ -10,32 +10,46 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  // Extend to 48 hours to handle timezone edge cases
+  const last48Hours = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
-  // Get most recent checkin from last 24 hours
-  const { data: recentCheckin } = await supabase
+  // Get most recent checkin from last 48 hours
+  const { data: recentCheckin, error: checkinError } = await supabase
     .from("checkins")
     .select("id, sleep_rating, energy, soreness, readiness, created_at, date")
     .eq("user_id", user.id)
-    .gte("created_at", last24Hours)
+    .gte("created_at", last48Hours)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  // Get most recent advice from last 24 hours
-  const { data: recentAdvice } = await supabase
+  // Get most recent advice from last 48 hours
+  const { data: recentAdvice, error: adviceError } = await supabase
     .from("ai_advice")
     .select("*")
     .eq("user_id", user.id)
-    .gte("created_at", last24Hours)
+    .gte("created_at", last48Hours)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  // Check if checkin was within last 24 hours for "checked in today" status
+  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).getTime();
+  const checkinTime = recentCheckin?.created_at ? new Date(recentCheckin.created_at).getTime() : 0;
+  const checkedInRecently = checkinTime > last24Hours;
 
   return NextResponse.json({ 
     advice: recentAdvice?.advice || null,
     source: recentAdvice?.source || null,
-    hasCheckedInToday: !!recentCheckin,
+    hasCheckedInToday: checkedInRecently,
     todayCheckin: recentCheckin || null,
+    debug: {
+      checkinFound: !!recentCheckin,
+      adviceFound: !!recentAdvice,
+      checkinCreatedAt: recentCheckin?.created_at,
+      adviceCreatedAt: recentAdvice?.created_at,
+      checkinError: checkinError?.message,
+      adviceError: adviceError?.message,
+    }
   });
 }
