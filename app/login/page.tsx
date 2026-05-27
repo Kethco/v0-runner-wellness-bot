@@ -146,7 +146,7 @@ export default function LoginPage() {
         </div>
         
         {/* Right side - Login form */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-background">
           <div className="w-full max-w-md">
             {/* Logo (mobile only) */}
             <div className="flex items-center justify-center gap-2 mb-8 lg:hidden">
