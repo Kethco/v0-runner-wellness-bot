@@ -58,8 +58,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Find AI advice for today's checkin (linked by checkin_id for reliability)
+  // Find AI advice - try multiple methods to ensure we find it
   let advice = null;
+  
+  // Method 1: by checkin_id
   if (todayCheckin?.id) {
     const { data: adviceByCheckin } = await supabase
       .from("ai_advice")
@@ -71,18 +73,54 @@ export async function GET(request: NextRequest) {
     advice = adviceByCheckin;
   }
   
-  // Fallback: if no advice found by checkin_id, try by date range
+  // Method 2: by today's date range
   if (!advice) {
     const { data: adviceByDate } = await supabase
       .from("ai_advice")
       .select("*")
       .eq("user_id", user.id)
       .gte("created_at", `${todayStr}T00:00:00`)
-      .lt("created_at", `${todayStr}T23:59:59.999`)
+      .lte("created_at", `${todayStr}T23:59:59.999`)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     advice = adviceByDate;
+  }
+  
+  // Method 3: by yesterday's date range (timezone fallback)
+  if (!advice) {
+    const { data: adviceByYesterday } = await supabase
+      .from("ai_advice")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("created_at", `${yesterdayStr}T00:00:00`)
+      .lte("created_at", `${yesterdayStr}T23:59:59.999`)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    // Only use if created within last 24 hours
+    if (adviceByYesterday) {
+      const adviceTime = new Date(adviceByYesterday.created_at).getTime();
+      const hoursSinceAdvice = (Date.now() - adviceTime) / (1000 * 60 * 60);
+      if (hoursSinceAdvice < 24) {
+        advice = adviceByYesterday;
+      }
+    }
+  }
+  
+  // Method 4: just get most recent advice from last 24 hours
+  if (!advice) {
+    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentAdvice } = await supabase
+      .from("ai_advice")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("created_at", last24Hours)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    advice = recentAdvice;
   }
 
   return NextResponse.json({ 
