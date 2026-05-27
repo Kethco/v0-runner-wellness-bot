@@ -11,41 +11,65 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Get client's date from query param
+  const { searchParams } = new URL(request.url);
+  const clientDate = searchParams.get("clientDate");
+  
   // Use service client to bypass RLS
   const serviceClient = createServiceClient();
 
-  // Extend to 48 hours to handle timezone edge cases
-  const last48Hours = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  // Get today's checkin using client's date
+  let todayCheckin = null;
+  
+  if (clientDate) {
+    // First try exact date match
+    const { data: checkinByDate } = await serviceClient
+      .from("checkins")
+      .select("id, sleep_rating, energy, soreness, readiness, created_at, date")
+      .eq("user_id", user.id)
+      .eq("date", clientDate)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    todayCheckin = checkinByDate;
+  }
+  
+  // Fallback: check within last 24 hours
+  if (!todayCheckin) {
+    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentCheckin } = await serviceClient
+      .from("checkins")
+      .select("id, sleep_rating, energy, soreness, readiness, created_at, date")
+      .eq("user_id", user.id)
+      .gte("created_at", last24Hours)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    todayCheckin = recentCheckin;
+  }
 
-  // Get most recent checkin from last 48 hours
-  const { data: recentCheckin } = await serviceClient
-    .from("checkins")
-    .select("id, sleep_rating, energy, soreness, readiness, created_at, date")
-    .eq("user_id", user.id)
-    .gte("created_at", last48Hours)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  // Get most recent advice from last 48 hours
-  const { data: recentAdvice } = await serviceClient
-    .from("ai_advice")
-    .select("*")
-    .eq("user_id", user.id)
-    .gte("created_at", last48Hours)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  // Check if checkin was within last 24 hours for "checked in today" status
-  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).getTime();
-  const checkinTime = recentCheckin?.created_at ? new Date(recentCheckin.created_at).getTime() : 0;
-  const checkedInRecently = checkinTime > last24Hours;
+  // Get advice that matches today's checkin
+  let advice = null;
+  
+  if (todayCheckin?.id) {
+    // Get advice linked to this specific checkin
+    const { data: adviceByCheckin } = await serviceClient
+      .from("ai_advice")
+      .select("*")
+      .eq("checkin_id", todayCheckin.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    advice = adviceByCheckin;
+  }
 
   return NextResponse.json({ 
-    advice: recentAdvice?.advice || null,
-    source: recentAdvice?.source || null,
-    hasCheckedInToday: checkedInRecently,
-    todayCheckin: recentCheckin || null,
+    advice: advice?.advice || null,
+    source: advice?.source || null,
+    hasCheckedInToday: !!todayCheckin,
+    todayCheckin: todayCheckin || null,
   });
 }
