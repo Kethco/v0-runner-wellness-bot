@@ -44,8 +44,11 @@ export async function GET(request: NextRequest) {
   const thirtyDaysAgo = new Date(todayDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const thirtyDaysAgoStr = `${thirtyDaysAgo.getFullYear()}-${String(thirtyDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(thirtyDaysAgo.getDate()).padStart(2, '0')}`;
+  
+  // Also calculate 48 hours ago for timezone-safe recent checkin query
+  const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
-  const [checkinsRes, runsRes, goalsRes] = await Promise.all([
+  const [checkinsRes, runsRes, goalsRes, recentCheckinsRes] = await Promise.all([
     supabase
       .from("checkins")
       .select("*")
@@ -64,22 +67,31 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .eq("status", "active")
       .limit(3),
+    // Also fetch checkins by created_at to handle timezone mismatches
+    supabase
+      .from("checkins")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("created_at", fortyEightHoursAgo)
+      .order("created_at", { ascending: false })
+      .limit(1),
   ]);
 
   const checkins: CheckIn[] = checkinsRes.data || [];
   const runs: Run[] = runsRes.data || [];
   const goals = goalsRes.data || [];
+  const recentCheckin = recentCheckinsRes.data?.[0];
 
   // Find today's checkin - check both date match AND within last 24 hours for timezone issues
   const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
   let todayCheckin = checkins.find(c => c.date === todayStr);
   
-  // Fallback: if no exact date match, find most recent checkin within 24 hours
-  if (!todayCheckin) {
-    todayCheckin = checkins.find(c => {
-      const checkinTime = new Date(c.created_at).getTime();
-      return checkinTime > last24Hours;
-    });
+  // Fallback: if no exact date match, use most recent checkin if within 24 hours
+  if (!todayCheckin && recentCheckin) {
+    const checkinTime = new Date(recentCheckin.created_at).getTime();
+    if (checkinTime > last24Hours) {
+      todayCheckin = recentCheckin;
+    }
   }
   
   // Calculate yesterday relative to client's today
