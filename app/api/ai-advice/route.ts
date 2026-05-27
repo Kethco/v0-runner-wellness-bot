@@ -18,11 +18,11 @@ export async function GET(request: NextRequest) {
   // Use service client to bypass RLS
   const serviceClient = createServiceClient();
 
-  // Get today's checkin using client's date
+  // Get today's checkin using client's date - EXACT match only
   let todayCheckin = null;
   
   if (clientDate) {
-    // First try exact date match
+    // Only exact date match - no fallbacks
     const { data: checkinByDate } = await serviceClient
       .from("checkins")
       .select("id, sleep_rating, energy, soreness, readiness, created_at, date")
@@ -33,21 +33,6 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
     
     todayCheckin = checkinByDate;
-  }
-  
-  // Fallback: check within last 24 hours
-  if (!todayCheckin) {
-    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { data: recentCheckin } = await serviceClient
-      .from("checkins")
-      .select("id, sleep_rating, energy, soreness, readiness, created_at, date")
-      .eq("user_id", user.id)
-      .gte("created_at", last24Hours)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    
-    todayCheckin = recentCheckin;
   }
 
   // Get advice that matches today's checkin
