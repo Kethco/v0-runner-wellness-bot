@@ -90,10 +90,13 @@ ACTIVE TRAINING PLAN: ${trainingPlan.planType}
 - Week focus: ${trainingPlan.weekFocus}
 - Progress: ${trainingPlan.completedMilesThisWeek}/${trainingPlan.plannedMilesThisWeek} miles completed this week
 ${trainingPlan.todayWorkout ? `
-TODAY'S PLANNED WORKOUT:
-- ${trainingPlan.todayWorkout.title}: ${trainingPlan.todayWorkout.targetMiles} miles
-- ${trainingPlan.todayWorkout.description}
-- Consider readiness score when recommending whether to do this workout as planned, modify it, or suggest rest.` : '- Rest day or no workout planned'}`;
+**TODAY'S SCHEDULED WORKOUT (MUST REFERENCE THIS):**
+- Workout: ${trainingPlan.todayWorkout.title}
+- Distance: ${trainingPlan.todayWorkout.targetMiles} miles
+- Type: ${trainingPlan.todayWorkout.type}
+- Description: ${trainingPlan.todayWorkout.description}
+
+IMPORTANT: Your advice MUST mention this specific workout. If readiness >= 60, recommend doing the ${trainingPlan.todayWorkout.targetMiles}-mile ${trainingPlan.todayWorkout.title} as planned. If readiness < 60, suggest modifying it.` : '- Rest day or no workout planned today'}`;
   }
 
   // Life Events Context
@@ -113,7 +116,11 @@ Consider these when making recommendations - proactively suggest moving workouts
 
   const prompt = `You are an expert running coach and sports scientist providing personalized guidance. You are proactive about helping runners adapt their training to real life. Analyze this runner's complete wellness data and provide specific, actionable advice.
 
-CRITICAL: When the runner has a training plan with a scheduled workout for today, your mileage recommendations MUST align with that planned workout. Do NOT suggest different mileage unless their readiness score is below 60.
+CRITICAL RULES:
+1. If the runner has a scheduled workout today, you MUST mention it by name and distance (e.g., "your 5-mile Easy Run").
+2. If readiness score >= 60, recommend completing the scheduled workout as planned.
+3. If readiness score < 60, suggest a modified version (reduce distance or intensity).
+4. NEVER give generic advice when there's a specific workout scheduled - always reference it.
 
 ${firstName ? `Runner's name: ${firstName}` : ''}
 ${currentStreak ? `Current check-in streak: ${currentStreak} days (acknowledge their consistency!)` : ''}

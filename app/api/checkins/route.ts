@@ -161,6 +161,11 @@ export async function POST(request: NextRequest) {
     // Get recent data for AI
     // Use the client's date from the checkin for consistency
     const clientToday = checkin.date; // This is the date we stored in the checkin
+    
+    if (!clientToday) {
+      console.error("[v0] AI advice: checkin.date is missing, cannot fetch today's workout");
+    }
+    
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     const threeDaysAgo = new Date();
@@ -226,6 +231,17 @@ export async function POST(request: NextRequest) {
     const trainingPlan = trainingPlanRes.data;
     const lifeEvents = lifeEventsRes.data || [];
     const todayPlannedWorkout = todayWorkoutRes.data;
+    
+    // Log training plan data for debugging
+    console.log("[v0] AI advice context:", {
+      clientToday,
+      hasTrainingPlan: !!trainingPlan,
+      todayPlannedWorkout: todayPlannedWorkout ? {
+        title: todayPlannedWorkout.title,
+        targetMiles: todayPlannedWorkout.target_miles,
+        status: todayPlannedWorkout.status,
+      } : null,
+    });
 
     // Calculate hard runs in last 3 days
     const hardRunsLast3Days = recentRuns.filter(r => {
