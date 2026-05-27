@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { NextRequest, NextResponse } from "next/server";
 
 interface CheckIn {
@@ -47,28 +48,31 @@ export async function GET(request: NextRequest) {
   
   // Also calculate 48 hours ago for timezone-safe recent checkin query
   const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  
+  // Use service client to bypass RLS for reliable data access
+  const serviceClient = createServiceClient();
 
   const [checkinsRes, runsRes, goalsRes, recentCheckinsRes] = await Promise.all([
-    supabase
+    serviceClient
       .from("checkins")
       .select("*")
       .eq("user_id", user.id)
       .gte("date", thirtyDaysAgoStr)
       .order("date", { ascending: false }),
-    supabase
+    serviceClient
       .from("runs")
       .select("*")
       .eq("user_id", user.id)
       .gte("date", thirtyDaysAgoStr)
       .order("date", { ascending: false }),
-    supabase
+    serviceClient
       .from("goals")
       .select("*")
       .eq("user_id", user.id)
       .eq("status", "active")
       .limit(3),
     // Also fetch checkins by created_at to handle timezone mismatches
-    supabase
+    serviceClient
       .from("checkins")
       .select("*")
       .eq("user_id", user.id)
