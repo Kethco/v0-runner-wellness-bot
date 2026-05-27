@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { celebrateCheckin } from "@/lib/celebrations";
 import { hapticLight, hapticSuccess } from "@/lib/haptics";
+import { mutate } from "swr";
 
 interface TodayWorkout {
   id: string;
@@ -223,8 +224,17 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange, todayWorkout
       
       setShowWorkoutActions(!!wellnessIsPoor);
       
-      setTimeout(() => {
-        if (!showWorkoutActions) {
+      // Auto-close and refresh after showing the completion screen
+      setTimeout(async () => {
+        if (!wellnessIsPoor) {
+          // Invalidate all relevant SWR caches before closing
+          await Promise.all([
+            mutate("/api/checkins"),
+            mutate("/api/ai-advice"),
+            mutate((key) => typeof key === "string" && key.startsWith("/api/ai-advice"), undefined, { revalidate: true }),
+            mutate((key) => typeof key === "string" && key.startsWith("/api/checkins"), undefined, { revalidate: true }),
+          ]);
+          
           handleOpenChange(false);
           setCurrentStep(0);
           setAnswers({});
@@ -233,9 +243,11 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange, todayWorkout
           setIsSubmitting(false);
           setAiAdvice(null);
           setShowWorkoutActions(false);
+          
+          // Force reload to ensure all components update
           window.location.reload();
         }
-      }, receivedAdvice ? 8000 : 3000); // Show longer if AI advice or workout actions present
+      }, receivedAdvice ? 6000 : 3000);
     } catch (error) {
       console.error("[v0] Check-in error:", error);
       alert("Failed to submit check-in. Please try again.");
