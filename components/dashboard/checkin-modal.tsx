@@ -141,6 +141,10 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange, todayWorkout
       const readinessMap: Record<string, number> = { "No": 1, "Maybe": 3, "Yes": 5 };
       const sorenessMap: Record<string, number> = { "None": 1, "Mild": 2, "Moderate": 3, "High": 4 };
       
+      // Get client's local date to ensure timezone consistency
+      const now = new Date();
+      const clientDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      
       const checkinData = {
         sleepRating: sleepMap[answers.sleep] || 3,
         feeling: answers.feeling?.toLowerCase(),
@@ -148,6 +152,7 @@ export function CheckInModal({ isOpen, onClose, open, onOpenChange, todayWorkout
         soreness: sorenessMap[answers.soreness] || 1,
         readiness: readinessMap[answers.readiness] || 3,
         notes: notes || null,
+        date: clientDate, // Include client's local date
       };
 
       const response = await fetch("/api/checkins", {
