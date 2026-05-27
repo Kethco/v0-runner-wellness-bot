@@ -128,16 +128,12 @@ export default function Dashboard() {
   const checkins = checkinsData?.checkins || [];
   const profile = profileData?.profile;
   
-  // Check if any checkin was within last 24 hours (handles timezone issues)
-  const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
-  const hasCheckedInToday = checkins.some((c: { created_at: string }) => {
-    const checkinTime = new Date(c.created_at).getTime();
-    return checkinTime > last24Hours;
-  });
-  const todayCheckin = checkins.find((c: { created_at: string }) => {
-    const checkinTime = new Date(c.created_at).getTime();
-    return checkinTime > last24Hours;
-  });
+  // Get client's local date for strict date matching
+  const clientTodayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD format
+  
+  // Check if any checkin matches today's date exactly (strict matching)
+  const hasCheckedInToday = checkins.some((c: { date: string }) => c.date === clientTodayStr);
+  const todayCheckin = checkins.find((c: { date: string }) => c.date === clientTodayStr);
   
   // Calculate weekly miles from current calendar week (Sunday to Saturday)
   const startOfWeek = new Date();
