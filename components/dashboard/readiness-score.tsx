@@ -51,8 +51,11 @@ export function ReadinessScore() {
   const { data: checkinData } = useSWR(clientDate ? `/api/checkins?limit=1&clientDate=${clientDate}` : null, fetcher);
   
   const todayCheckin = checkinData?.checkins?.[0];
-  // Use client's local date instead of server UTC
-  const hasCheckedInToday = clientDate && todayCheckin?.date === clientDate;
+  
+  // Check if checkin was within last 24 hours (handles timezone issues)
+  const checkinTime = todayCheckin?.created_at ? new Date(todayCheckin.created_at).getTime() : 0;
+  const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
+  const hasCheckedInToday = checkinTime > last24Hours;
   
   // Return empty fragment if still loading
   if (!clientDate || !data) {

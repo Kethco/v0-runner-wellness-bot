@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Play, ChevronRight } from "lucide-react";
+import { Play, ChevronRight, CheckCircle } from "lucide-react";
 import { CheckInModal } from "./checkin-modal";
 
 interface TodayWorkout {
@@ -22,7 +22,23 @@ interface CheckInCardProps {
 export function CheckInCard({ streak = 0, hasCheckedInToday = false, todayWorkout }: CheckInCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  if (hasCheckedInToday) return null;
+  // Show "Done" state if already checked in
+  if (hasCheckedInToday) {
+    return (
+      <div className="relative rounded-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#30D158] via-[#34C759] to-[#32D74B]" />
+        <div className="relative p-5 flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-white text-lg">Daily Check-in</h3>
+            <p className="text-white/80 text-sm">Completed for today</p>
+          </div>
+          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <CheckCircle className="w-6 h-6 text-white" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
