@@ -241,8 +241,12 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
   // Use chartData totals for display (more accurate for current calendar week)
   const displayPlannedMiles = totalPlannedMiles > 0 ? totalPlannedMiles : weeklyGoal;
   const displayCompletedMiles = totalCompletedMiles;
+  
+  // Calculate progress - if completed >= planned (within small tolerance), show 100%
   const progressPercent = displayPlannedMiles > 0 
-    ? Math.min(100, Math.round((displayCompletedMiles / displayPlannedMiles) * 100))
+    ? (displayCompletedMiles >= displayPlannedMiles - 0.1 
+        ? 100 
+        : Math.min(100, Math.round((displayCompletedMiles / displayPlannedMiles) * 100)))
     : 0;
 
   // Handle adjustment actions

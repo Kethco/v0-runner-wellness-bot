@@ -159,6 +159,8 @@ export async function POST(request: NextRequest) {
   let aiAdvice = null;
   try {
     // Get recent data for AI
+    // Use the client's date from the checkin for consistency
+    const clientToday = checkin.date; // This is the date we stored in the checkin
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     const threeDaysAgo = new Date();
@@ -204,15 +206,15 @@ export async function POST(request: NextRequest) {
         .from("life_events")
         .select("event_type, title, start_date, end_date, training_impact, can_run")
         .eq("user_id", user.id)
-        .gte("end_date", today)
+        .gte("end_date", clientToday)
         .order("start_date", { ascending: true })
         .limit(5),
-      // Fetch today's planned workout directly from planned_workouts
+      // Fetch today's planned workout directly from planned_workouts using CLIENT's date
       supabase
         .from("planned_workouts")
         .select("workout_type, title, target_miles, description, status, week_number")
         .eq("user_id", user.id)
-        .eq("scheduled_date", today)
+        .eq("scheduled_date", clientToday)
         .maybeSingle(),
     ]);
 
