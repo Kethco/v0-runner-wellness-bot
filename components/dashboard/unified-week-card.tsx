@@ -438,6 +438,25 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
             </div>
           )}
 
+          {/* Rest Day Card */}
+          {hasPlan && planData?.todayWorkout?.workout_type === "rest" && (
+            <div className="mb-5 p-4 rounded-xl bg-[#1C1C1E] border border-white/10">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-[#8E8E93]/20 flex items-center justify-center">
+                  <Moon className="w-5 h-5 text-[#8E8E93]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">
+                    Today · Rest Day
+                  </p>
+                  <p className="text-xs text-white/50 truncate mt-0.5">
+                    Recovery and restoration
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Weekly Workout Strip */}
           <div className="flex items-end justify-between gap-1 bg-gradient-to-b from-[#0D0D0F] to-[#0A0A0C] rounded-2xl p-5 -mx-1 border border-white/[0.04]">
             {chartData.map((day, i) => {
