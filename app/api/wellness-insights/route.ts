@@ -86,16 +86,13 @@ export async function GET(request: NextRequest) {
   const goals = goalsRes.data || [];
   const recentCheckin = recentCheckinsRes.data?.[0];
 
-  // Find today's checkin - check both date match AND within last 24 hours for timezone issues
-  const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
+  // Find today's checkin - MUST match client's date exactly
+  // Only use the recentCheckin fallback if its date matches todayStr
   let todayCheckin = checkins.find(c => c.date === todayStr);
   
-  // Fallback: if no exact date match, use most recent checkin if within 24 hours
-  if (!todayCheckin && recentCheckin) {
-    const checkinTime = new Date(recentCheckin.created_at).getTime();
-    if (checkinTime > last24Hours) {
-      todayCheckin = recentCheckin;
-    }
+  // Fallback: if no exact date match in checkins array, check if recentCheckin matches today
+  if (!todayCheckin && recentCheckin && recentCheckin.date === todayStr) {
+    todayCheckin = recentCheckin;
   }
   
   // Calculate yesterday relative to client's today

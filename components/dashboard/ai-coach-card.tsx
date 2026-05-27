@@ -238,8 +238,18 @@ export function AICoachCard() {
                   {apiAdvice}
                 </p>
               </div>
+            ) : !hasCheckedIn ? (
+              // Show check-in prompt when not checked in today
+              <div className="space-y-2">
+                <p className={`text-base font-semibold bg-gradient-to-r ${style.gradient} bg-clip-text text-transparent`}>
+                  {coachMessage.greeting}
+                </p>
+                <p className="text-sm text-white/70 leading-relaxed">
+                  Complete your daily check-in for personalized coaching advice.
+                </p>
+              </div>
             ) : (
-              // Show generated contextual message
+              // Show generated contextual message only if checked in but no API advice
               <div className="space-y-2">
                 <p className={`text-base font-semibold bg-gradient-to-r ${style.gradient} bg-clip-text text-transparent`}>
                   {coachMessage.greeting}
