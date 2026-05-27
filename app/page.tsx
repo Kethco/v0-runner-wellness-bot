@@ -366,6 +366,19 @@ return (
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-4">
+          {isRestDay ? (
+            <div className="w-full flex items-center gap-4 p-5 btn-glass rounded-2xl">
+              <div 
+                className="w-12 h-12 rounded-xl bg-[#8E8E93]/20 flex items-center justify-center"
+              >
+                <Moon className="w-6 h-6 text-[#8E8E93]" />
+              </div>
+              <div className="text-left">
+                <p className="text-white font-bold text-lg">Rest Day</p>
+                <p className="text-white/70 text-xs font-medium">Recovery time</p>
+              </div>
+            </div>
+          ) : (
           <LogRunModal onRunLogged={() => { mutateRuns(); mutateWeekPlan(); }}>
             <button
               className="w-full flex items-center gap-4 p-5 btn-premium-orange transition-all active:scale-[0.98]"
@@ -382,6 +395,7 @@ return (
               </div>
             </button>
           </LogRunModal>
+          )}
 
           <button
             onClick={() => {

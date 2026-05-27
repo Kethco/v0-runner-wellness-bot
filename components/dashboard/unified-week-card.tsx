@@ -309,7 +309,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   const weekEnd = new Date(weekStart);
                   weekEnd.setDate(weekStart.getDate() + 6);
                   const formatDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-                  return `${formatDate(weekStart)} – ${formatDate(weekEnd)}`;
+                  return `${formatDate(weekStart)} ��� ${formatDate(weekEnd)}`;
                 })()}
               </p>
               {/* Mileage display */}
@@ -434,25 +434,6 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-white/30" />
-              </div>
-            </div>
-          )}
-
-          {/* Rest Day Card */}
-          {hasPlan && planData?.todayWorkout?.workout_type === "rest" && (
-            <div className="mb-5 p-4 rounded-xl bg-[#1C1C1E] border border-white/10">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#8E8E93]/20 flex items-center justify-center">
-                  <Moon className="w-5 h-5 text-[#8E8E93]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white truncate">
-                    Today · Rest Day
-                  </p>
-                  <p className="text-xs text-white/50 truncate mt-0.5">
-                    Recovery and restoration
-                  </p>
-                </div>
               </div>
             </div>
           )}
