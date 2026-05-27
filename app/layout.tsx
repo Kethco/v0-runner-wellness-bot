@@ -57,7 +57,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://api.stripe.com" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SWRProvider>
             <AuthProvider>
               <SplashProvider>
