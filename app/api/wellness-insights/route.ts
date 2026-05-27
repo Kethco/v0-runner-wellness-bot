@@ -86,14 +86,17 @@ export async function GET(request: NextRequest) {
   const goals = goalsRes.data || [];
   const recentCheckin = recentCheckinsRes.data?.[0];
 
-  // Find today's checkin - MUST match client's date exactly
-  // Only use the recentCheckin fallback if its date matches todayStr
+  // Find today's checkin - MUST match client's date EXACTLY
+  // Yesterday's checkin should never be used for today's wellness score
   let todayCheckin = checkins.find(c => c.date === todayStr);
   
   // Fallback: if no exact date match in checkins array, check if recentCheckin matches today
   if (!todayCheckin && recentCheckin && recentCheckin.date === todayStr) {
     todayCheckin = recentCheckin;
   }
+  
+  // IMPORTANT: If todayCheckin is null, hasCheckedIn will be false
+  // This means no wellness score or AI advice should show
   
   // Calculate yesterday relative to client's today
   const yesterdayDate = new Date(todayDate);
