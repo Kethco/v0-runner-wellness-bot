@@ -344,12 +344,15 @@ export async function POST(request: NextRequest) {
 
     // Save AI advice to database so it persists
     if (aiAdvice) {
-      await supabase.from("ai_advice").insert({
+      const { error: adviceError } = await supabase.from("ai_advice").insert({
         user_id: user.id,
         advice: aiAdvice,
         checkin_id: checkin.id,
         source: "app",
       });
+      if (adviceError) {
+        console.error("Failed to save AI advice:", adviceError);
+      }
     }
   } catch (aiError) {
     console.error("AI advice generation failed:", aiError);
