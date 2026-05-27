@@ -70,9 +70,17 @@ export async function GET(request: NextRequest) {
   const runs: Run[] = runsRes.data || [];
   const goals = goalsRes.data || [];
 
-  // Calculate Readiness Score (today - using clientDate if provided)
-  // todayStr is already set above from clientDate
-  const todayCheckin = checkins.find(c => c.date === todayStr);
+  // Find today's checkin - check both date match AND within last 24 hours for timezone issues
+  const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
+  let todayCheckin = checkins.find(c => c.date === todayStr);
+  
+  // Fallback: if no exact date match, find most recent checkin within 24 hours
+  if (!todayCheckin) {
+    todayCheckin = checkins.find(c => {
+      const checkinTime = new Date(c.created_at).getTime();
+      return checkinTime > last24Hours;
+    });
+  }
   
   // Calculate yesterday relative to client's today
   const yesterdayDate = new Date(todayDate);

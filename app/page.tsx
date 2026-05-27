@@ -127,8 +127,17 @@ export default function Dashboard() {
   const runs = runsData?.runs || [];
   const checkins = checkinsData?.checkins || [];
   const profile = profileData?.profile;
-  const hasCheckedInToday = checkins.some((c: { date: string }) => c.date === todayStr);
-  const todayCheckin = checkins.find((c: { date: string }) => c.date === todayStr);
+  
+  // Check if any checkin was within last 24 hours (handles timezone issues)
+  const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
+  const hasCheckedInToday = checkins.some((c: { created_at: string }) => {
+    const checkinTime = new Date(c.created_at).getTime();
+    return checkinTime > last24Hours;
+  });
+  const todayCheckin = checkins.find((c: { created_at: string }) => {
+    const checkinTime = new Date(c.created_at).getTime();
+    return checkinTime > last24Hours;
+  });
   
   // Calculate weekly miles from current calendar week (Sunday to Saturday)
   const startOfWeek = new Date();
