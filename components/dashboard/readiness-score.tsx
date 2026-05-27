@@ -48,14 +48,6 @@ export function ReadinessScore() {
   }, []);
 
   const { data } = useSWR(clientDate ? `/api/wellness-insights?clientDate=${clientDate}` : null, fetcher);
-  const { data: checkinData } = useSWR(clientDate ? `/api/checkins?limit=1&clientDate=${clientDate}` : null, fetcher);
-  
-  const todayCheckin = checkinData?.checkins?.[0];
-  
-  // Check if checkin was within last 24 hours (handles timezone issues)
-  const checkinTime = todayCheckin?.created_at ? new Date(todayCheckin.created_at).getTime() : 0;
-  const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
-  const hasCheckedInToday = checkinTime > last24Hours;
   
   // Return empty fragment if still loading
   if (!clientDate || !data) {
@@ -63,6 +55,7 @@ export function ReadinessScore() {
   }
   
   // If user hasn't checked in today, show a prompt instead of stale data
+  // Use ONLY the API's hasCheckedIn which does strict date matching
   if (!data?.readiness?.hasCheckedIn) {
     return (
       <motion.div
@@ -97,7 +90,8 @@ export function ReadinessScore() {
     );
   }
 
-  const { readiness, patterns: insights, recoverySuggestions: tips, weeklyStats } = data;
+  const { readiness, patterns: insights, recoverySuggestions: tips, weeklyStats, todayCheckin } = data;
+  const hasCheckedInToday = !!todayCheckin;
   const score = readiness.score;
   const scoreColor = getScoreColor(score);
   const scoreLabel = getScoreLabel(score);
@@ -106,8 +100,8 @@ export function ReadinessScore() {
   const circumference = 2 * Math.PI * 42;
   const strokeDashoffset = circumference - (score / 100) * circumference;
   
-  // Get individual metrics from today's check-in
-  const sleepRating = todayCheckin?.sleep_rating || 3;
+  // Get individual metrics from today's check-in (from API response)
+  const sleepRating = todayCheckin?.sleep || 3;
   const energyLevel = todayCheckin?.energy || 3;
   const sorenessLevel = todayCheckin?.soreness || 1;
   
