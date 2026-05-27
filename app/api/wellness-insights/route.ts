@@ -86,6 +86,14 @@ export async function GET(request: NextRequest) {
   const goals = goalsRes.data || [];
   const recentCheckin = recentCheckinsRes.data?.[0];
 
+  // DEBUG: Log all the dates we're comparing
+  console.log("[v0] wellness-insights DEBUG:", {
+    clientDateParam: clientDate,
+    todayStr,
+    checkinDatesInDB: checkins.map(c => c.date),
+    recentCheckinDate: recentCheckin?.date,
+  });
+
   // Find today's checkin - MUST match client's date EXACTLY
   // Yesterday's checkin should never be used for today's wellness score
   let todayCheckin = checkins.find(c => c.date === todayStr);
@@ -94,6 +102,11 @@ export async function GET(request: NextRequest) {
   if (!todayCheckin && recentCheckin && recentCheckin.date === todayStr) {
     todayCheckin = recentCheckin;
   }
+  
+  console.log("[v0] wellness-insights RESULT:", {
+    foundTodayCheckin: !!todayCheckin,
+    todayCheckinDate: todayCheckin?.date,
+  });
   
   // IMPORTANT: If todayCheckin is null, hasCheckedIn will be false
   // This means no wellness score or AI advice should show
