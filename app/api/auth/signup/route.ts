@@ -150,6 +150,7 @@ async function createProfile(userId: string, data: {
         first_name: data.first_name || "",
         last_name: data.last_name || "",
         role: data.user_type || "athlete",
+        onboarded: false, // New users need onboarding
       }, { onConflict: "id" });
     
     if (error) {
