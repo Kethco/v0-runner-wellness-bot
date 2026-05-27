@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { NextRequest, NextResponse } from "next/server";
 import { generateCoachAdvice } from "@/lib/ai/coach";
 import { getServerToday, getServerYesterday } from "@/lib/date-utils";
@@ -342,9 +343,10 @@ export async function POST(request: NextRequest) {
       upcomingEvents: upcomingEvents.length > 0 ? upcomingEvents : undefined,
     });
 
-    // Save AI advice to database so it persists
+    // Save AI advice to database using service client to bypass RLS
     if (aiAdvice) {
-      const { error: adviceError } = await supabase.from("ai_advice").insert({
+      const serviceClient = createServiceClient();
+      const { error: adviceError } = await serviceClient.from("ai_advice").insert({
         user_id: user.id,
         advice: aiAdvice,
         checkin_id: checkin.id,

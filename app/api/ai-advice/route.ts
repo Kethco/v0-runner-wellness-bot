@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -10,11 +11,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Use service client to bypass RLS
+  const serviceClient = createServiceClient();
+
   // Extend to 48 hours to handle timezone edge cases
   const last48Hours = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
   // Get most recent checkin from last 48 hours
-  const { data: recentCheckin, error: checkinError } = await supabase
+  const { data: recentCheckin } = await serviceClient
     .from("checkins")
     .select("id, sleep_rating, energy, soreness, readiness, created_at, date")
     .eq("user_id", user.id)
@@ -24,7 +28,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   // Get most recent advice from last 48 hours
-  const { data: recentAdvice, error: adviceError } = await supabase
+  const { data: recentAdvice } = await serviceClient
     .from("ai_advice")
     .select("*")
     .eq("user_id", user.id)
@@ -43,13 +47,5 @@ export async function GET(request: NextRequest) {
     source: recentAdvice?.source || null,
     hasCheckedInToday: checkedInRecently,
     todayCheckin: recentCheckin || null,
-    debug: {
-      checkinFound: !!recentCheckin,
-      adviceFound: !!recentAdvice,
-      checkinCreatedAt: recentCheckin?.created_at,
-      adviceCreatedAt: recentAdvice?.created_at,
-      checkinError: checkinError?.message,
-      adviceError: adviceError?.message,
-    }
   });
 }
