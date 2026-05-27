@@ -309,7 +309,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
                   const weekEnd = new Date(weekStart);
                   weekEnd.setDate(weekStart.getDate() + 6);
                   const formatDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-                  return `${formatDate(weekStart)} ��� ${formatDate(weekEnd)}`;
+                  return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
                 })()}
               </p>
               {/* Mileage display */}
