@@ -87,7 +87,8 @@ export async function GET(request: NextRequest) {
   const recentCheckin = recentCheckinsRes.data?.[0];
 
   // Find today's checkin - MUST match client's date EXACTLY
-  // Yesterday's checkin should never be used for today's wellness score
+  // Yesterday's checkin should NEVER be used for today's wellness score
+  // todayStr comes from clientDate param which is the user's local date
   let todayCheckin = checkins.find(c => c.date === todayStr);
   
   // Fallback: if no exact date match in checkins array, check if recentCheckin matches today
