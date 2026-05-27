@@ -56,7 +56,7 @@ export function ReadinessScore() {
   
   // If user hasn't checked in today, show a prompt instead of stale data
   // Use ONLY the API's hasCheckedIn which does strict date matching
-  if (!data?.hasCheckedIn) {
+  if (!data?.readiness?.hasCheckedIn) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
