@@ -27,17 +27,32 @@ export async function GET(request: NextRequest) {
     .limit(1)
     .maybeSingle();
 
-  // Find AI advice for today (using client's local date)
-  // First try to find advice where the created_at date matches today
-  const { data: advice } = await supabase
-    .from("ai_advice")
-    .select("*")
-    .eq("user_id", user.id)
-    .gte("created_at", `${todayStr}T00:00:00`)
-    .lt("created_at", `${todayStr}T23:59:59.999`)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Find AI advice for today's checkin (linked by checkin_id for reliability)
+  let advice = null;
+  if (todayCheckin?.id) {
+    const { data: adviceByCheckin } = await supabase
+      .from("ai_advice")
+      .select("*")
+      .eq("checkin_id", todayCheckin.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    advice = adviceByCheckin;
+  }
+  
+  // Fallback: if no advice found by checkin_id, try by date range
+  if (!advice) {
+    const { data: adviceByDate } = await supabase
+      .from("ai_advice")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("created_at", `${todayStr}T00:00:00`)
+      .lt("created_at", `${todayStr}T23:59:59.999`)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    advice = adviceByDate;
+  }
 
   return NextResponse.json({ 
     advice: advice?.advice || null,
