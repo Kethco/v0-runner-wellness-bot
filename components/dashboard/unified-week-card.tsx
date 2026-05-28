@@ -282,7 +282,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
   return (
     <>
-      <div className="glass-card-glow card-lift relative overflow-hidden min-h-[400px]">
+      <div className="glass-card-glow relative overflow-hidden min-h-[400px]">
         {/* Top gradient line */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FF4500] to-transparent" />
         
