@@ -61,7 +61,7 @@ export function ReadinessScore() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/10 p-4"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/15 p-4 shadow-lg shadow-black/20"
       >
         <div className="flex items-center gap-4">
           <div className="relative w-24 h-24 flex items-center justify-center">

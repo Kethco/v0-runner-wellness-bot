@@ -74,9 +74,9 @@ html, body {
 .dark {
   --background: #000000;
   --foreground: #FFFFFF;
-  --card: #1C1C1E;
+  --card: #161618;
   --card-foreground: #FFFFFF;
-  --popover: #1C1C1E;
+  --popover: #161618;
   --popover-foreground: #FFFFFF;
   --primary: #FF4500;
   --primary-foreground: #FFFFFF;
@@ -88,7 +88,7 @@ html, body {
   --accent-foreground: #000000;
   --destructive: #FF453A;
   --destructive-foreground: #FFFFFF;
-  --border: #3A3A3C;
+  --border: rgba(255, 255, 255, 0.12);
   --input: #2C2C2E;
   --ring: #FF4500;
   --chart-1: #FF4500;
@@ -100,9 +100,9 @@ html, body {
   --sidebar-foreground: #FFFFFF;
   --sidebar-primary: #FF4500;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1C1C1E;
+  --sidebar-accent: #161618;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #3A3A3C;
+  --sidebar-border: rgba(255, 255, 255, 0.12);
   --sidebar-ring: #FF4500;
 }
 

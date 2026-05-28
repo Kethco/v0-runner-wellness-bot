@@ -27,7 +27,7 @@ export function WellnessOrbs({ checkin, hasCheckedIn }: WellnessOrbsProps) {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-[#1C1C1E] border border-[#2C2C2E] p-5"
+      className="rounded-2xl bg-[#161618] border border-white/15 p-5 shadow-lg shadow-black/30"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
