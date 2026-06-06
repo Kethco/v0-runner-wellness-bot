@@ -89,38 +89,39 @@ body {
 }
 
 .dark {
-  --background: #000000;
-  --foreground: #FFFFFF;
-  --card: #161618;
-  --card-foreground: #FFFFFF;
-  --popover: #161618;
-  --popover-foreground: #FFFFFF;
-  --primary: #FF4500;
+  /* Rich dark gray, not pure black (gradient applied on body) */
+  --background: #141416;
+  --foreground: #FAFAFA;
+  --card: #1F1F23;
+  --card-foreground: #FAFAFA;
+  --popover: #1F1F23;
+  --popover-foreground: #FAFAFA;
+  --primary: #FF4D00;
   --primary-foreground: #FFFFFF;
-  --secondary: #2C2C2E;
-  --secondary-foreground: #FFFFFF;
-  --muted: #3A3A3C;
-  --muted-foreground: #AEAEB2;
+  --secondary: #25252A;
+  --secondary-foreground: #FAFAFA;
+  --muted: #2C2C32;
+  --muted-foreground: #A8A8B0;
   --accent: #00D4FF;
   --accent-foreground: #000000;
   --destructive: #FF453A;
   --destructive-foreground: #FFFFFF;
-  --border: rgba(255, 255, 255, 0.12);
-  --input: #2C2C2E;
-  --ring: #FF4500;
-  --chart-1: #FF4500;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: #25252A;
+  --ring: #FF4D00;
+  --chart-1: #FF4D00;
   --chart-2: #30D158;
   --chart-3: #BF5AF2;
-  --chart-4: #FF9F0A;
+  --chart-4: #FF8A00;
   --chart-5: #00D4FF;
-  --sidebar: #000000;
-  --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #FF4500;
+  --sidebar: #141416;
+  --sidebar-foreground: #FAFAFA;
+  --sidebar-primary: #FF4D00;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #161618;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: rgba(255, 255, 255, 0.12);
-  --sidebar-ring: #FF4500;
+  --sidebar-accent: #1F1F23;
+  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #FF4D00;
 }
 
 @theme inline {
@@ -174,6 +175,13 @@ body {
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Premium dark gradient background (Apple Park inspired), not pure black */
+  .dark body {
+    background-color: #141416;
+    background-image: linear-gradient(180deg, #0F0F0F 0%, #141416 45%, #1A1A1C 100%);
+    background-attachment: fixed;
   }
   
   /* Improved text readability */

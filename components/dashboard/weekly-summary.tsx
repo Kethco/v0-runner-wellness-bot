@@ -97,7 +97,7 @@ export function WeeklySummary() {
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="flex items-center gap-3 p-4 rounded-xl bg-[#161618] border border-white/15 hover:border-white/25 transition-all shadow-lg shadow-black/20"
+              className="flex items-center gap-3 p-4 rounded-xl bg-[#1F1F23] border border-white/[0.08] hover:border-white/20 transition-all shadow-lg shadow-black/20"
             >
               <div 
                 className="w-10 h-10 rounded-xl flex items-center justify-center" 

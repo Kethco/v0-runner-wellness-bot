@@ -87,7 +87,7 @@ export default function LoginPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen" style={{ background: "linear-gradient(180deg, #0F0F0F 0%, #141416 45%, #1A1A1C 100%)" }}>
       <div className="relative z-10 flex min-h-screen">
         {/* Left side - Benefits (hidden on mobile) */}
         <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#FF4500] via-[#FF6B00] to-[#FF8C00] p-12 flex-col justify-between">

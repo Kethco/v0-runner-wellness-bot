@@ -404,7 +404,7 @@ export function UnifiedWeekCard({ weeklyMiles, weeklyGoal, runsData }: UnifiedWe
 
           {/* Today's Workout Card */}
           {hasPlan && planData?.todayWorkout && planData.todayWorkout.workout_type !== "rest" && (
-            <div className="mb-5 p-4 rounded-xl bg-[#1A1A1C] border border-white/15 hover:border-white/25 transition-all shadow-lg shadow-black/20">
+            <div className="mb-5 p-4 rounded-xl bg-[#1F1F23] border border-white/[0.08] hover:border-white/20 transition-all shadow-lg shadow-black/20">
               <div className="flex items-center gap-4">
                 <div 
                   className="w-12 h-12 rounded-xl flex items-center justify-center"

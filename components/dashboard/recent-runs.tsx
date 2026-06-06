@@ -88,7 +88,7 @@ export function RecentRuns() {
             Recent Runs
           </p>
         </div>
-        <Card className="border-white/15 p-8 text-center bg-[#161618] shadow-lg shadow-black/20">
+        <Card className="border-white/[0.08] p-8 text-center bg-[#1F1F23] shadow-lg shadow-black/20">
           <Activity className="w-8 h-8 text-white/40 mx-auto mb-3" />
           <p className="text-sm font-medium mb-1 text-white">No runs logged yet</p>
           <p className="text-xs text-white/50">
@@ -117,7 +117,7 @@ export function RecentRuns() {
         {runs.slice(0, 4).map((run) => (
           <Card
             key={run.id}
-            className="border-white/15 hover:border-blue-500/40 p-4 flex items-center gap-4 cursor-pointer transition-all duration-200 group bg-[#161618] hover:shadow-lg hover:shadow-blue-500/10 shadow-lg shadow-black/20"
+            className="border-white/[0.08] hover:border-blue-500/40 p-4 flex items-center gap-4 cursor-pointer transition-all duration-200 group bg-[#1F1F23] hover:shadow-lg hover:shadow-blue-500/10 shadow-lg shadow-black/20"
           >
             <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
               <Activity className="w-4 h-4 text-blue-400 group-hover:text-blue-300 transition-colors" />
