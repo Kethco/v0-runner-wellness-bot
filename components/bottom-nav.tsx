@@ -6,7 +6,7 @@ import { Activity, TrendingUp, Sparkles, Target, User } from "lucide-react";
 import { hapticLight } from "@/lib/haptics";
 
 const navItems = [
-  { icon: Activity, label: "Home", href: "/", color: "#FF4500", bgColor: "rgba(255, 69, 0, 0.15)" },
+  { icon: Activity, label: "Home", href: "/", color: "#FF4D00", bgColor: "rgba(255, 77, 0, 0.18)" },
   { icon: TrendingUp, label: "Runs", href: "/runs", color: "#00D4FF", bgColor: "rgba(0, 212, 255, 0.15)" },
   { icon: Sparkles, label: "Mind", href: "/mind", color: "#A78BFA", bgColor: "rgba(167, 139, 250, 0.15)" },
   { icon: Target, label: "Goals", href: "/goals", color: "#22C55E", bgColor: "rgba(34, 197, 94, 0.15)" },
@@ -50,6 +50,7 @@ export function BottomNav() {
             x: `calc(${activeIndex * 100}% + ${activeIndex * 4}px)`,
             width: `calc(${100 / navItems.length}% - 8px)`,
             backgroundColor: activeIndex >= 0 ? navItems[activeIndex].bgColor : "transparent",
+            boxShadow: activeIndex >= 0 ? `0 0 16px ${navItems[activeIndex].bgColor}, inset 0 0 0 1px ${navItems[activeIndex].bgColor}` : "none",
           }}
           transition={{
             type: "spring",
